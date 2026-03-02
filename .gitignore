@@ -5,4 +5,4 @@ dist
 .env.*.local
 *.local
 md_files
-CLAUDE.md
+CLAUDE.MD
