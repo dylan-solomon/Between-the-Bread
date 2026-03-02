@@ -23,7 +23,7 @@ export const makeIngredient = (overrides: Partial<Ingredient> = {}): Ingredient 
 
 export const makePool = (count: number, slugPrefix = 'item'): Ingredient[] =>
   Array.from({ length: count }, (_, i) =>
-    makeIngredient({ name: `${slugPrefix}-${i}`, slug: `${slugPrefix}-${i}` }),
+    makeIngredient({ name: `${slugPrefix}-${String(i)}`, slug: `${slugPrefix}-${String(i)}` }),
   )
 
 export const makeComposition = (overrides: Partial<SandwichComposition> = {}): SandwichComposition => ({

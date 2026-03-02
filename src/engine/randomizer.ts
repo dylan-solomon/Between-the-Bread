@@ -1,5 +1,5 @@
 import type { CategorySlug, Ingredient } from '@/types'
-import { getCategories, getEnabledIngredients } from '@/data/ingredients'
+import { getCategories } from '@/data/ingredients'
 
 // ─── Internal utilities ───────────────────────────────────────────────────────
 
@@ -8,8 +8,8 @@ const shuffle = <T>(arr: readonly T[]): T[] => {
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
     const temp = result[i]
-    result[i] = result[j] as T
-    result[j] = temp as T
+    result[i] = result[j]
+    result[j] = temp
   }
   return result
 }
@@ -42,8 +42,7 @@ export const rollCategory = (slug: CategorySlug, pool: Ingredient[]): Ingredient
   if (!category) return []
 
   if (category.selection_type === 'single') {
-    const [picked] = shuffle(pool)
-    return picked ? [picked] : []
+    return shuffle(pool).slice(0, 1)
   }
 
   const count = randomIntInclusive(
@@ -61,9 +60,9 @@ export const rollAll = ({
   BASE_CATEGORIES.reduce(
     (acc, slug) => {
       if (lockedSlugs.has(slug)) {
-        return { ...acc, [slug]: currentSelections[slug] ?? rollCategory(slug, pools[slug] ?? getEnabledIngredients(slug)) }
+        return { ...acc, [slug]: currentSelections[slug] ?? rollCategory(slug, pools[slug]) }
       }
-      return { ...acc, [slug]: rollCategory(slug, pools[slug] ?? getEnabledIngredients(slug)) }
+      return { ...acc, [slug]: rollCategory(slug, pools[slug]) }
     },
     {} as Record<BaseCategory, Ingredient[]>,
   )

@@ -7,7 +7,7 @@ export const getCategories = (): Category[] =>
   [...data.categories].sort((a, b) => a.display_order - b.display_order)
 
 export const getIngredientsByCategory = (slug: CategorySlug): Ingredient[] =>
-  data.ingredients[slug] ?? []
+  data.ingredients[slug]
 
 export const getEnabledIngredients = (slug: CategorySlug): Ingredient[] =>
   getIngredientsByCategory(slug).filter((i) => i.enabled)
