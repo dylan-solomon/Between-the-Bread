@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-neutral-200 bg-neutral-50/80 backdrop-blur-sm">
-      <div className="mx-auto flex h-14 max-w-[480px] items-center justify-between px-4">
+      <div className="flex h-14 items-center justify-between px-6">
         <Link to="/" className="font-display text-lg font-bold text-neutral-900">
           Between the Bread
         </Link>
