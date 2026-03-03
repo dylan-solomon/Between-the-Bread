@@ -1,4 +1,18 @@
-import type { Ingredient, SandwichComposition } from '@/types'
+import type { Category, CategorySlug, Ingredient, SandwichComposition } from '@/types'
+
+export const makeCategory = (overrides: Partial<Category> = {}): Category => ({
+  name: 'Test Category',
+  slug: 'bread' as CategorySlug,
+  display_order: 1,
+  selection_type: 'single',
+  min_picks: 1,
+  max_picks: 1,
+  emoji: '🍞',
+  color: '#D4A056',
+  has_double_toggle: false,
+  is_bonus: false,
+  ...overrides,
+})
 
 export const makeIngredient = (overrides: Partial<Ingredient> = {}): Ingredient => ({
   name: 'Test Ingredient',

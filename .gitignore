@@ -6,3 +6,4 @@ dist
 *.local
 md_files
 CLAUDE.MD
+.claude

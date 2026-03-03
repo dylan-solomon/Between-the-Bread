@@ -2,6 +2,8 @@
 
 export type SelectionType = 'single' | 'multi'
 
+export type DoubleCategory = 'protein' | 'cheese'
+
 export type CategorySlug =
   | 'bread'
   | 'protein'
