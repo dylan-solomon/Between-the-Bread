@@ -30,7 +30,7 @@ export default function SessionHistory({ entries, onLoad }: Props) {
             >
               <span className="font-medium text-neutral-800">{entry.name}</span>
               <button
-                onClick={() => { onLoad(entry); setIsOpen(false) }}
+                onClick={() => { onLoad(entry) }}
                 className="ml-4 text-xs font-semibold text-primary hover:underline"
               >
                 Load
