@@ -1,6 +1,7 @@
 import type { CategorySlug, Ingredient, SandwichComposition } from '@/types'
 
 const FLAT_BREAD_SLUGS = new Set(['naan', 'tortilla', 'pita'])
+const NO_CHEESE_SLUG = 'no-cheese'
 
 const FILLING_ORDER: CategorySlug[] = [
   'condiments',
@@ -33,7 +34,9 @@ const buildLayers = (composition: SandwichComposition): Layer[] => {
     ingredient, slug: 'bread', position: 'bottom',
   }))
   const fillings: Layer[] = FILLING_ORDER.flatMap((slug) =>
-    (composition[slug] ?? []).map((ingredient) => ({ ingredient, slug, position: 'middle' }))
+    (composition[slug] ?? [])
+      .filter((ingredient) => !(slug === 'cheese' && ingredient.slug === NO_CHEESE_SLUG))
+      .map((ingredient) => ({ ingredient, slug, position: 'middle' }))
   )
 
   if (isFlat) return [...fillings, ...bottomBread]
