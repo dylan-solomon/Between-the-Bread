@@ -19,7 +19,7 @@ export default function Footer() {
             </Link>
           ))}
         </nav>
-        <p className="mt-6 text-xs text-neutral-400">
+        <p className="mt-6 text-center text-xs text-neutral-400">
           © 2026 Between the Bread. All rights reserved.
         </p>
       </div>
