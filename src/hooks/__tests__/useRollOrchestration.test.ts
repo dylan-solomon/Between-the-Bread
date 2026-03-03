@@ -91,6 +91,19 @@ describe('useRollOrchestration', () => {
       expect(partial?.bread).toHaveLength(1)
     })
 
+    it('starts the next unlocked category without waiting for locked category duration', () => {
+      const session = {
+        ...makeSession(),
+        lockedCategories: new Set(['protein'] as const),
+      }
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      // Protein (index 1) is locked. Cheese should roll at slot 1 (CATEGORY_DURATION + STAGGER),
+      // not at index 2 (2 × (CATEGORY_DURATION + STAGGER)) as if protein had animated.
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      expect(result.current.rollingCategory).toBe('cheese')
+    })
+
     it('does not animate locked categories during rollAll', () => {
       const session = {
         ...makeSession(),

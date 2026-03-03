@@ -133,11 +133,18 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
     const firstUnlocked = BASE_CATEGORIES.find((s) => !session.lockedCategories.has(s))
     setRollingCategory(firstUnlocked ?? null)
 
-    BASE_CATEGORIES.forEach((slug, index) => {
-      const isLocked = session.lockedCategories.has(slug)
-      const delay = index * (CATEGORY_DURATION + STAGGER_MS)
+    // animSlot counts only unlocked categories so locked ones don't consume stagger time
+    let animSlot = 0
 
-      if (index > 0 && !isLocked) {
+    BASE_CATEGORIES.forEach((slug) => {
+      const isLocked = session.lockedCategories.has(slug)
+      const slot = isLocked ? -1 : animSlot
+      if (!isLocked) animSlot++
+
+      // Locked categories settle immediately; unlocked use their animation slot for stagger
+      const delay = isLocked ? 0 : slot * (CATEGORY_DURATION + STAGGER_MS)
+
+      if (!isLocked && slot > 0) {
         setTimeout(() => { setRollingCategory(slug) }, delay)
       }
 
@@ -155,7 +162,7 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
           const full = Object.fromEntries(results) as Record<BaseCategory, Ingredient[]>
           resolveAndCommit(full)
         }
-      }, delay + CATEGORY_DURATION)
+      }, delay + (isLocked ? 0 : CATEGORY_DURATION))
     })
   }, [session, resolveAndCommit])
 
