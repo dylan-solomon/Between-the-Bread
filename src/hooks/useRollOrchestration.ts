@@ -113,18 +113,20 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
     const prior = session.composition
     const results = new Map<BaseCategory, Ingredient[]>()
 
-    // Set first category immediately so UI is in sync from the first render
-    setRollingCategory(BASE_CATEGORIES[0] ?? null)
+    // Only animate unlocked categories — locked rows stay static throughout the roll
+    const firstUnlocked = BASE_CATEGORIES.find((s) => !session.lockedCategories.has(s))
+    setRollingCategory(firstUnlocked ?? null)
 
     BASE_CATEGORIES.forEach((slug, index) => {
+      const isLocked = session.lockedCategories.has(slug)
       const delay = index * (CATEGORY_DURATION + STAGGER_MS)
 
-      if (index > 0) {
+      if (index > 0 && !isLocked) {
         setTimeout(() => { setRollingCategory(slug) }, delay)
       }
 
       setTimeout(() => {
-        const result = session.lockedCategories.has(slug)
+        const result = isLocked
           ? (prior?.[slug] ?? rollCategory(slug, pools[slug]))
           : rollCategory(slug, pools[slug], pickCount(slug, session.doubleCategories))
         results.set(slug, result)

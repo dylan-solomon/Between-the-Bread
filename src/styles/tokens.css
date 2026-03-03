@@ -21,6 +21,7 @@
   --color-neutral-900: #1A0E08;
 
   /* ─── Color: Primary (warm red — main action color) ────────────── */
+  --color-primary:     #C0392B;
   --color-primary-50:  #FEF2F0;
   --color-primary-100: #FDDDD8;
   --color-primary-200: #FAB9B0;

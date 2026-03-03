@@ -99,30 +99,32 @@ describe('CategoryRow', () => {
   })
 
   describe('double toggle', () => {
+    const proteinCategory = makeCategory({ name: 'Protein', slug: 'protein' })
+
     it('does not render a double button when onToggleDouble is not provided', () => {
       renderRow()
-      expect(screen.queryByRole('button', { name: /double/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /two proteins/i })).not.toBeInTheDocument()
     })
 
-    it('renders a double button when onToggleDouble is provided', () => {
-      renderRow({ onToggleDouble: vi.fn(), isDouble: false })
-      expect(screen.getByRole('button', { name: /double/i })).toBeInTheDocument()
+    it('renders a button labelled with the category name when onToggleDouble is provided', () => {
+      renderRow({ category: proteinCategory, onToggleDouble: vi.fn(), isDouble: false })
+      expect(screen.getByRole('button', { name: 'Two Proteins' })).toBeInTheDocument()
     })
 
     it('has aria-pressed="false" when not doubled', () => {
-      renderRow({ onToggleDouble: vi.fn(), isDouble: false })
-      expect(screen.getByRole('button', { name: /double/i })).toHaveAttribute('aria-pressed', 'false')
+      renderRow({ category: proteinCategory, onToggleDouble: vi.fn(), isDouble: false })
+      expect(screen.getByRole('button', { name: 'Two Proteins' })).toHaveAttribute('aria-pressed', 'false')
     })
 
     it('has aria-pressed="true" when doubled', () => {
-      renderRow({ onToggleDouble: vi.fn(), isDouble: true })
-      expect(screen.getByRole('button', { name: /double/i })).toHaveAttribute('aria-pressed', 'true')
+      renderRow({ category: proteinCategory, onToggleDouble: vi.fn(), isDouble: true })
+      expect(screen.getByRole('button', { name: 'Two Proteins' })).toHaveAttribute('aria-pressed', 'true')
     })
 
     it('calls onToggleDouble when clicked', async () => {
       const onToggleDouble = vi.fn()
-      renderRow({ onToggleDouble, isDouble: false })
-      await userEvent.click(screen.getByRole('button', { name: /double/i }))
+      renderRow({ category: proteinCategory, onToggleDouble, isDouble: false })
+      await userEvent.click(screen.getByRole('button', { name: 'Two Proteins' }))
       expect(onToggleDouble).toHaveBeenCalledOnce()
     })
   })

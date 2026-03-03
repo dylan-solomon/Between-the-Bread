@@ -68,12 +68,12 @@ export default function CategoryRow({
       {onToggleDouble !== undefined && (
         <button
           type="button"
-          aria-label="Double"
+          aria-label={`Two ${category.name}s`}
           aria-pressed={isDouble ?? false}
           onClick={onToggleDouble}
           className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors ${isDouble === true ? 'opacity-100' : 'opacity-50'}`}
         >
-          ×2
+          Two {category.name}s
         </button>
       )}
       <button

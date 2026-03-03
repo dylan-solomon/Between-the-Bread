@@ -79,6 +79,18 @@ describe('useRollOrchestration', () => {
       expect(session.setComposition).toHaveBeenCalledOnce()
     })
 
+    it('does not animate locked categories during rollAll', () => {
+      const session = {
+        ...makeSession(),
+        lockedCategories: new Set(['protein'] as const),
+      }
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      // Advance to the point where protein would normally start animating
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      expect(result.current.rollingCategory).not.toBe('protein')
+    })
+
     it('cannot start a new rollAll while already rolling', () => {
       const session = makeSession()
       const { result } = renderHook(() => useRollOrchestration(session))
