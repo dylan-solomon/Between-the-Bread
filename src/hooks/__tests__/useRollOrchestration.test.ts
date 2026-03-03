@@ -3,6 +3,9 @@ import { renderHook, act } from '@testing-library/react'
 import { useRollOrchestration } from '@/hooks/useRollOrchestration'
 import { makeComposition, makeIngredient } from '@/test/factories'
 import type { SandwichComposition } from '@/types'
+import * as events from '@/analytics/events'
+
+vi.mock('@/analytics/events')
 
 const CYCLE_MS = 80
 const CYCLES = 8
@@ -18,7 +21,7 @@ const makeSession = () => ({
   loadComposition: vi.fn(),
 })
 
-beforeEach(() => { vi.useFakeTimers() })
+beforeEach(() => { vi.useFakeTimers(); vi.clearAllMocks() })
 afterEach(() => { vi.useRealTimers() })
 
 describe('useRollOrchestration', () => {
@@ -333,6 +336,92 @@ describe('useRollOrchestration', () => {
       // Ensure the dummy variables are used
       void triggerTopping
       void normalTopping
+    })
+  })
+
+  describe('analytics events', () => {
+    it('fires captureRolledAll once when rollAll starts', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      expect(events.captureRolledAll).toHaveBeenCalledOnce()
+    })
+
+    it('fires captureRolledAll with rollNumber 1 on first roll', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      expect(events.captureRolledAll).toHaveBeenCalledWith(expect.objectContaining({ rollNumber: 1 }))
+    })
+
+    it('increments rollNumber on each subsequent rollAll', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      act(() => { result.current.rollAll() })
+      expect(events.captureRolledAll).toHaveBeenCalledTimes(2)
+      const secondCall = (events.captureRolledAll as ReturnType<typeof vi.fn>).mock.calls[1]?.[0] as { rollNumber: number } | undefined
+      expect(secondCall?.rollNumber).toBe(2)
+    })
+
+    it('fires captureRolledAll with the current locked categories', () => {
+      const session = {
+        ...makeSession(),
+        lockedCategories: new Set(['protein'] as const),
+      }
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      expect(events.captureRolledAll).toHaveBeenCalledWith(expect.objectContaining({ lockedCategories: ['protein'] }))
+    })
+
+    it('fires captureRolledCategory once after rollOne settles', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollOne('cheese') })
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      expect(events.captureRolledCategory).toHaveBeenCalledOnce()
+    })
+
+    it('fires captureRolledCategory with correct category and rollNumber', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollOne('cheese') })
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      expect(events.captureRolledCategory).toHaveBeenCalledWith(expect.objectContaining({ category: 'cheese', rollNumber: 1 }))
+    })
+
+    it('fires captureRolledCategory with previousIngredient null on first roll', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollOne('cheese') })
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      expect(events.captureRolledCategory).toHaveBeenCalledWith(expect.objectContaining({ previousIngredient: null }))
+    })
+
+    it('fires captureSandwichCompleted after rollAll when all categories settle', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      expect(events.captureSandwichCompleted).toHaveBeenCalledOnce()
+    })
+
+    it('does not fire captureSandwichCompleted after rollOne on a fresh session', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollOne('cheese') })
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      expect(events.captureSandwichCompleted).not.toHaveBeenCalled()
+    })
+
+    it('does not fire captureChefSpecialTriggered when rolling only bread', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      // Rolling bread only — toppings selection stays empty, so no trigger is possible
+      act(() => { result.current.rollOne('bread') })
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      expect(events.captureChefSpecialTriggered).not.toHaveBeenCalled()
     })
   })
 })

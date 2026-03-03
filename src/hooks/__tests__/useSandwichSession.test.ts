@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useSandwichSession } from '@/hooks/useSandwichSession'
 import { makeComposition } from '@/test/factories'
+import * as events from '@/analytics/events'
+
+vi.mock('@/analytics/events')
+beforeEach(() => { vi.clearAllMocks() })
 
 describe('useSandwichSession', () => {
   describe('initial state', () => {
@@ -79,6 +83,40 @@ describe('useSandwichSession', () => {
       act(() => { result.current.setComposition(makeComposition()) })
       act(() => { result.current.toggleLock('bread') })
       expect(result.current.isLocked('protein')).toBe(false)
+    })
+  })
+
+  describe('lock/unlock analytics', () => {
+    it('fires captureLockedCategory when locking an unlocked category', () => {
+      const { result } = renderHook(() => useSandwichSession())
+      act(() => { result.current.setComposition(makeComposition()) })
+      act(() => { result.current.toggleLock('bread') })
+      expect(events.captureLockedCategory).toHaveBeenCalledOnce()
+    })
+
+    it('fires captureLockedCategory with the correct category and ingredient slug', () => {
+      const { result } = renderHook(() => useSandwichSession())
+      const composition = makeComposition()
+      act(() => { result.current.setComposition(composition) })
+      act(() => { result.current.toggleLock('bread') })
+      expect(events.captureLockedCategory).toHaveBeenCalledWith(
+        expect.objectContaining({ category: 'bread', lockedIngredient: composition.bread[0]?.slug ?? '' }),
+      )
+    })
+
+    it('fires captureUnlockedCategory when unlocking a locked category', () => {
+      const { result } = renderHook(() => useSandwichSession())
+      act(() => { result.current.setComposition(makeComposition()) })
+      act(() => { result.current.toggleLock('bread') })
+      act(() => { result.current.toggleLock('bread') })
+      expect(events.captureUnlockedCategory).toHaveBeenCalledOnce()
+    })
+
+    it('does not fire lock or unlock analytics when composition is null', () => {
+      const { result } = renderHook(() => useSandwichSession())
+      act(() => { result.current.toggleLock('bread') })
+      expect(events.captureLockedCategory).not.toHaveBeenCalled()
+      expect(events.captureUnlockedCategory).not.toHaveBeenCalled()
     })
   })
 

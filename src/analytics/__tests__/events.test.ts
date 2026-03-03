@@ -1,0 +1,176 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import {
+  captureRolledAll,
+  captureRolledCategory,
+  captureLockedCategory,
+  captureUnlockedCategory,
+  captureSandwichCompleted,
+  captureChefSpecialTriggered,
+  capturePageView,
+  capturePerformance,
+} from '@/analytics/events'
+
+const { mockCapture } = vi.hoisted(() => ({ mockCapture: vi.fn() }))
+
+vi.mock('posthog-js', () => ({
+  default: { capture: mockCapture },
+}))
+
+beforeEach(() => { mockCapture.mockClear() })
+
+describe('captureRolledAll', () => {
+  it('calls posthog.capture with generator_rolled_all', () => {
+    captureRolledAll({ rollNumber: 1, lockedCategories: [] })
+    expect(mockCapture).toHaveBeenCalledWith('generator_rolled_all', expect.anything())
+  })
+
+  it('includes roll_number in properties', () => {
+    captureRolledAll({ rollNumber: 3, lockedCategories: [] })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ roll_number: 3 }))
+  })
+
+  it('includes locked_categories as array', () => {
+    captureRolledAll({ rollNumber: 1, lockedCategories: ['bread', 'protein'] })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ locked_categories: ['bread', 'protein'] }))
+  })
+})
+
+describe('captureRolledCategory', () => {
+  it('calls posthog.capture with generator_rolled_category', () => {
+    captureRolledCategory({ category: 'cheese', rollNumber: 1, previousIngredient: null, newIngredient: 'swiss' })
+    expect(mockCapture).toHaveBeenCalledWith('generator_rolled_category', expect.anything())
+  })
+
+  it('includes category, roll_number, previous_ingredient, new_ingredient', () => {
+    captureRolledCategory({ category: 'cheese', rollNumber: 2, previousIngredient: 'cheddar', newIngredient: 'swiss' })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      category: 'cheese',
+      roll_number: 2,
+      previous_ingredient: 'cheddar',
+      new_ingredient: 'swiss',
+    }))
+  })
+
+  it('sends null for previous_ingredient when there was none', () => {
+    captureRolledCategory({ category: 'bread', rollNumber: 1, previousIngredient: null, newIngredient: 'sourdough' })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ previous_ingredient: null }))
+  })
+})
+
+describe('captureLockedCategory', () => {
+  it('calls posthog.capture with generator_locked_category', () => {
+    captureLockedCategory({ category: 'protein', lockedIngredient: 'turkey' })
+    expect(mockCapture).toHaveBeenCalledWith('generator_locked_category', expect.anything())
+  })
+
+  it('includes category and locked_ingredient', () => {
+    captureLockedCategory({ category: 'protein', lockedIngredient: 'turkey' })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      category: 'protein',
+      locked_ingredient: 'turkey',
+    }))
+  })
+})
+
+describe('captureUnlockedCategory', () => {
+  it('calls posthog.capture with generator_unlocked_category', () => {
+    captureUnlockedCategory({ category: 'protein' })
+    expect(mockCapture).toHaveBeenCalledWith('generator_unlocked_category', expect.anything())
+  })
+
+  it('includes category', () => {
+    captureUnlockedCategory({ category: 'protein' })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ category: 'protein' }))
+  })
+})
+
+describe('captureSandwichCompleted', () => {
+  const baseProps = {
+    sandwichName: 'The Smoky Italian',
+    bread: ['sourdough'],
+    protein: ['turkey'],
+    cheese: ['swiss'],
+    toppings: ['lettuce', 'tomato'],
+    condiments: ['mustard'],
+    chefsSpecial: null,
+    totalRolls: 1,
+  }
+
+  it('calls posthog.capture with generator_sandwich_completed', () => {
+    captureSandwichCompleted(baseProps)
+    expect(mockCapture).toHaveBeenCalledWith('generator_sandwich_completed', expect.anything())
+  })
+
+  it('maps sandwichName to sandwich_name', () => {
+    captureSandwichCompleted(baseProps)
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ sandwich_name: 'The Smoky Italian' }))
+  })
+
+  it('maps chefsSpecial to chefs_special', () => {
+    captureSandwichCompleted({ ...baseProps, chefsSpecial: 'secret-sauce' })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ chefs_special: 'secret-sauce' }))
+  })
+
+  it('includes total_rolls', () => {
+    captureSandwichCompleted({ ...baseProps, totalRolls: 5 })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ total_rolls: 5 }))
+  })
+
+  it('includes all ingredient arrays', () => {
+    captureSandwichCompleted(baseProps)
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      bread: ['sourdough'],
+      protein: ['turkey'],
+      cheese: ['swiss'],
+      toppings: ['lettuce', 'tomato'],
+      condiments: ['mustard'],
+    }))
+  })
+})
+
+describe('captureChefSpecialTriggered', () => {
+  it('calls posthog.capture with generator_chefs_special_triggered', () => {
+    captureChefSpecialTriggered({ chefsSpecialIngredient: 'secret-sauce', triggerTopping: 'trigger-a', toppingCount: 3 })
+    expect(mockCapture).toHaveBeenCalledWith('generator_chefs_special_triggered', expect.anything())
+  })
+
+  it('includes chefs_special_ingredient, trigger_topping, topping_count', () => {
+    captureChefSpecialTriggered({ chefsSpecialIngredient: 'secret-sauce', triggerTopping: 'trigger-a', toppingCount: 3 })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      chefs_special_ingredient: 'secret-sauce',
+      trigger_topping: 'trigger-a',
+      topping_count: 3,
+    }))
+  })
+})
+
+describe('capturePageView', () => {
+  it('calls posthog.capture with $pageview', () => {
+    capturePageView('/')
+    expect(mockCapture).toHaveBeenCalledWith('$pageview', expect.anything())
+  })
+
+  it('includes current_url with the provided path', () => {
+    capturePageView('/about')
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ current_url: '/about' }))
+  })
+})
+
+describe('capturePerformance', () => {
+  it('calls posthog.capture with performance_page_load', () => {
+    capturePerformance({ lcpMs: 1200, fidMs: null, cls: 0.05, ttfbMs: 300, page: '/', connectionType: '4g' })
+    expect(mockCapture).toHaveBeenCalledWith('performance_page_load', expect.anything())
+  })
+
+  it('maps lcpMs to lcp_ms and cls to cls', () => {
+    capturePerformance({ lcpMs: 1200, fidMs: 50, cls: 0.05, ttfbMs: 300, page: '/about', connectionType: null })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      lcp_ms: 1200,
+      fid_ms: 50,
+      cls: 0.05,
+      ttfb_ms: 300,
+      page: '/about',
+      connection_type: null,
+    }))
+  })
+})
