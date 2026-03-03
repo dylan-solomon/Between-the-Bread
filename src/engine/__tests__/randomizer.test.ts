@@ -73,6 +73,28 @@ describe('rollCategory — edge cases', () => {
   })
 })
 
+describe('rollCategory — explicit count override (double mode)', () => {
+  it('returns exactly count items when count is specified', () => {
+    const pool = makePool(10)
+    expect(rollCategory('protein', pool, 2)).toHaveLength(2)
+  })
+
+  it('returns no duplicates when count is specified', () => {
+    const pool = makePool(10)
+    const results = Array.from({ length: 50 }, () => rollCategory('protein', pool, 2))
+    const hasDuplicates = results.some((roll) => {
+      const slugs = roll.map((i) => i.slug)
+      return new Set(slugs).size !== slugs.length
+    })
+    expect(hasDuplicates).toBe(false)
+  })
+
+  it('returns at most pool.length when count exceeds pool size', () => {
+    const pool = makePool(1)
+    expect(rollCategory('protein', pool, 2)).toHaveLength(1)
+  })
+})
+
 // ─── rollAll ─────────────────────────────────────────────────────────────────
 
 describe('rollAll', () => {
@@ -84,8 +106,10 @@ describe('rollAll', () => {
     condiments: getEnabledIngredients('condiments'),
   }
 
+  const noDoubles = new Set<'protein' | 'cheese'>()
+
   it('returns selections for all 5 base categories', () => {
-    const result = rollAll({ pools, lockedSlugs: new Set(), currentSelections: {} })
+    const result = rollAll({ pools, lockedSlugs: new Set(), currentSelections: {}, doubleCategories: noDoubles })
     expect(result).toHaveProperty('bread')
     expect(result).toHaveProperty('protein')
     expect(result).toHaveProperty('cheese')
@@ -99,19 +123,18 @@ describe('rollAll', () => {
       pools,
       lockedSlugs: new Set(['bread'] as const),
       currentSelections: { bread: lockedBread },
+      doubleCategories: noDoubles,
     })
     expect(result.bread).toBe(lockedBread)
   })
 
   it('re-rolls unlocked categories on each call', () => {
-    // Run rollAll 20 times with no locks — results should not all be identical
     const results = Array.from({ length: 20 }, () =>
-      rollAll({ pools, lockedSlugs: new Set(), currentSelections: {} }),
+      rollAll({ pools, lockedSlugs: new Set(), currentSelections: {}, doubleCategories: noDoubles }),
     )
     const breadSlugs = results.map((r) => r.bread[0]?.slug)
-    const uniqueSlugs = new Set(breadSlugs)
     // With 17 bread options, 20 rolls should produce more than 1 unique result
-    expect(uniqueSlugs.size).toBeGreaterThan(1)
+    expect(new Set(breadSlugs).size).toBeGreaterThan(1)
   })
 
   it('when all 5 categories are locked, returns all current selections unchanged', () => {
@@ -126,11 +149,39 @@ describe('rollAll', () => {
       pools,
       lockedSlugs: new Set(['bread', 'protein', 'cheese', 'toppings', 'condiments'] as const),
       currentSelections: current,
+      doubleCategories: noDoubles,
     })
     expect(result.bread).toBe(current.bread)
     expect(result.protein).toBe(current.protein)
     expect(result.cheese).toBe(current.cheese)
     expect(result.toppings).toBe(current.toppings)
     expect(result.condiments).toBe(current.condiments)
+  })
+
+  it('selects 2 protein when protein is doubled', () => {
+    const result = rollAll({
+      pools,
+      lockedSlugs: new Set(),
+      currentSelections: {},
+      doubleCategories: new Set(['protein'] as const),
+    })
+    expect(result.protein).toHaveLength(2)
+  })
+
+  it('selects 2 cheese when cheese is doubled', () => {
+    const result = rollAll({
+      pools,
+      lockedSlugs: new Set(),
+      currentSelections: {},
+      doubleCategories: new Set(['cheese'] as const),
+    })
+    expect(result.cheese).toHaveLength(2)
+  })
+
+  it('selects 1 protein when not doubled', () => {
+    const results = Array.from({ length: 20 }, () =>
+      rollAll({ pools, lockedSlugs: new Set(), currentSelections: {}, doubleCategories: noDoubles }),
+    )
+    expect(results.every((r) => r.protein.length === 1)).toBe(true)
   })
 })
