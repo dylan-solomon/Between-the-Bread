@@ -30,7 +30,7 @@ export default function SummaryCard({ composition }: Props) {
   const description = buildDescription(composition)
 
   return (
-    <div className="animate-in fade-in text-center">
+    <div className="animate-fade-up text-center">
       <h2 className="font-display text-2xl font-bold text-neutral-900">{name}</h2>
       <p
         data-testid="sandwich-description"

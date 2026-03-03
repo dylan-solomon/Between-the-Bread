@@ -15,7 +15,9 @@ export default function HomePage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-[480px] px-4 py-8 flex flex-col gap-6">
-        <SandwichVisual composition={session.composition} />
+        <div className={session.composition !== null && !isRolling ? 'animate-float' : undefined}>
+          <SandwichVisual composition={session.composition} />
+        </div>
 
         <div className="min-h-20">
           {!isRolling && <SummaryCard composition={session.composition} />}
