@@ -87,10 +87,13 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
       setChefsSpecial(null)
       setRollingCategory(slug)
 
+      const prior = session.composition
+      // On re-roll, clear the rolling category immediately so old selection doesn't show during animation
+      if (prior !== null) { session.setComposition({ ...prior, [slug]: [] }) }
+
       setTimeout(() => {
         const pool = getEnabledIngredients(slug)
         const result = rollCategory(slug, pool, pickCount(slug, session.doubleCategories))
-        const prior = session.composition
         const selections: Record<BaseCategory, Ingredient[]> = {
           bread:      prior?.bread      ?? [],
           protein:    prior?.protein    ?? [],
@@ -115,14 +118,16 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
     const prior = session.composition
     const results = new Map<BaseCategory, Ingredient[]>()
 
-    // Running composition updated after each category settles for incremental display
+    // Locked categories keep their current selection; unlocked start empty (cleared immediately)
     const running: Record<BaseCategory, Ingredient[]> = {
-      bread:      prior?.bread      ?? [],
-      protein:    prior?.protein    ?? [],
-      cheese:     prior?.cheese     ?? [],
-      toppings:   prior?.toppings   ?? [],
-      condiments: prior?.condiments ?? [],
+      bread:      session.lockedCategories.has('bread')      ? (prior?.bread      ?? []) : [],
+      protein:    session.lockedCategories.has('protein')    ? (prior?.protein    ?? []) : [],
+      cheese:     session.lockedCategories.has('cheese')     ? (prior?.cheese     ?? []) : [],
+      toppings:   session.lockedCategories.has('toppings')   ? (prior?.toppings   ?? []) : [],
+      condiments: session.lockedCategories.has('condiments') ? (prior?.condiments ?? []) : [],
     }
+    // On re-roll, wipe old layers from the visual immediately so they don't show during animation
+    if (prior !== null) { session.setComposition({ ...running }) }
 
     // Only animate unlocked categories — locked rows stay static throughout the roll
     const firstUnlocked = BASE_CATEGORIES.find((s) => !session.lockedCategories.has(s))
