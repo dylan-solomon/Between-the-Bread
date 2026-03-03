@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { DoubleCategory, SandwichComposition } from '@/types'
 import type { BaseCategory } from '@/engine/randomizer'
+import { captureLockedCategory, captureUnlockedCategory } from '@/analytics/events'
 
 export type SandwichSession = {
   composition: SandwichComposition | null
@@ -38,6 +39,12 @@ export const useSandwichSession = (): SandwichSession => {
   const toggleLock = useCallback(
     (category: BaseCategory) => {
       if (composition === null) return
+      const willLock = !lockedCategories.has(category)
+      if (willLock) {
+        captureLockedCategory({ category, lockedIngredient: composition[category][0]?.slug ?? '' })
+      } else {
+        captureUnlockedCategory({ category })
+      }
       setLockedCategories((prev) => {
         const next = new Set(prev)
         if (next.has(category)) {
@@ -48,7 +55,7 @@ export const useSandwichSession = (): SandwichSession => {
         return next
       })
     },
-    [composition],
+    [composition, lockedCategories],
   )
 
   const toggleDouble = useCallback((category: DoubleCategory) => {
