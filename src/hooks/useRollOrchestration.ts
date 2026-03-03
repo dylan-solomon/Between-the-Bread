@@ -84,6 +84,7 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
       if (rollingRef.current || session.lockedCategories.has(slug)) return
       rollingRef.current = true
       setIsRolling(true)
+      setChefsSpecial(null)
       setRollingCategory(slug)
 
       setTimeout(() => {
@@ -108,10 +109,20 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
     if (rollingRef.current) return
     rollingRef.current = true
     setIsRolling(true)
+    setChefsSpecial(null)
 
     const pools = buildPools()
     const prior = session.composition
     const results = new Map<BaseCategory, Ingredient[]>()
+
+    // Running composition updated after each category settles for incremental display
+    const running: Record<BaseCategory, Ingredient[]> = {
+      bread:      prior?.bread      ?? [],
+      protein:    prior?.protein    ?? [],
+      cheese:     prior?.cheese     ?? [],
+      toppings:   prior?.toppings   ?? [],
+      condiments: prior?.condiments ?? [],
+    }
 
     // Only animate unlocked categories — locked rows stay static throughout the roll
     const firstUnlocked = BASE_CATEGORIES.find((s) => !session.lockedCategories.has(s))
@@ -130,6 +141,10 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
           ? (prior?.[slug] ?? rollCategory(slug, pools[slug]))
           : rollCategory(slug, pools[slug], pickCount(slug, session.doubleCategories))
         results.set(slug, result)
+        running[slug] = result
+
+        // Show this category's result immediately — don't wait for all to finish
+        session.setComposition({ ...running })
 
         if (results.size === BASE_CATEGORIES.length) {
           const full = Object.fromEntries(results) as Record<BaseCategory, Ingredient[]>

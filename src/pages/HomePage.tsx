@@ -17,7 +17,7 @@ export default function HomePage() {
       <div className="mx-auto max-w-[480px] px-4 py-8 flex flex-col gap-6">
         <SandwichVisual composition={session.composition} />
 
-        <SummaryCard composition={session.composition} />
+        {!isRolling && <SummaryCard composition={session.composition} />}
 
         <RollAllButton
           hasRolled={session.hasRolled}
@@ -36,10 +36,7 @@ export default function HomePage() {
           onRoll={rollOne}
         />
 
-        <ChefSpecialRow
-          chefsSpecial={chefsSpecial}
-          isRolling={isRolling}
-        />
+        <ChefSpecialRow chefsSpecial={chefsSpecial} />
       </div>
     </AppShell>
   )

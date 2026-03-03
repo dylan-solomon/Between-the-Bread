@@ -54,6 +54,16 @@ describe('HomePage', () => {
   })
 
   describe('after rolling', () => {
+    it('does not show the summary card while the roll is in progress', () => {
+      vi.useFakeTimers()
+      renderPage()
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: /roll the dice/i }))
+        vi.advanceTimersByTime(640) // only bread has settled
+      })
+      expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
+    })
+
     it('changes button label to "Roll Again" after a full roll', () => {
       vi.useFakeTimers()
       renderPage()

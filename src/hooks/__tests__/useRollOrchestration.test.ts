@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useRollOrchestration } from '@/hooks/useRollOrchestration'
 import { makeComposition, makeIngredient } from '@/test/factories'
+import type { SandwichComposition } from '@/types'
 
 const CYCLE_MS = 80
 const CYCLES = 8
@@ -76,7 +77,18 @@ describe('useRollOrchestration', () => {
       const { result } = renderHook(() => useRollOrchestration(session))
       act(() => { result.current.rollAll() })
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      expect(session.setComposition).toHaveBeenCalled()
+    })
+
+    it('updates composition incrementally as each category settles', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      // Only bread has settled (640ms) — protein hasn't started yet
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION) })
       expect(session.setComposition).toHaveBeenCalledOnce()
+      const partial = session.setComposition.mock.calls[0]?.[0] as SandwichComposition | undefined
+      expect(partial?.bread).toHaveLength(1)
     })
 
     it('does not animate locked categories during rollAll', () => {
@@ -89,6 +101,17 @@ describe('useRollOrchestration', () => {
       // Advance to the point where protein would normally start animating
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(result.current.rollingCategory).not.toBe('protein')
+    })
+
+    it('resets chefsSpecial to null the moment a new rollAll begins', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      // Complete a first roll so any chefsSpecial state is settled
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      // Start a second roll — chefsSpecial must be null synchronously (before timeouts fire)
+      act(() => { result.current.rollAll() })
+      expect(result.current.chefsSpecial).toBeNull()
     })
 
     it('cannot start a new rollAll while already rolling', () => {
@@ -153,14 +176,14 @@ describe('useRollOrchestration', () => {
       expect(result.current.isRolling).toBe(false)
     })
 
-    it('clears chefs special when re-rolling toppings without a trigger', () => {
+    it('resets chefsSpecial to null the moment rollOne starts', () => {
       const session = makeSession()
       const { result } = renderHook(() => useRollOrchestration(session))
-      // Manually set a chefs special by rolling once with a trigger
-      // Then roll toppings only (no trigger in pool) and verify it clears
+      // Complete a full roll first so any chefsSpecial state is settled
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      // Starting a rollOne must clear chefsSpecial synchronously, before timeouts fire
       act(() => { result.current.rollOne('toppings') })
-      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
-      // chefsSpecial should be null after a clean toppings roll (no trigger in test pool)
       expect(result.current.chefsSpecial).toBeNull()
     })
 
