@@ -15,6 +15,7 @@ const makeSession = () => ({
   doubleCategories: new Set<'protein' | 'cheese'>(),
   setComposition: vi.fn(),
   addHistoryEntry: vi.fn(),
+  loadComposition: vi.fn(),
 })
 
 beforeEach(() => { vi.useFakeTimers() })
@@ -236,6 +237,35 @@ describe('useRollOrchestration', () => {
       const [, name] = session.addHistoryEntry.mock.calls[0] as [unknown, string]
       expect(typeof name).toBe('string')
       expect(name.length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('loadFromHistory', () => {
+    it('calls session.loadComposition with the provided composition', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      const composition = makeComposition()
+      act(() => { result.current.loadFromHistory(composition) })
+      expect(session.loadComposition).toHaveBeenCalledOnce()
+      expect(session.loadComposition).toHaveBeenCalledWith(composition)
+    })
+
+    it('clears chefsSpecial immediately when loading from history', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      // Complete a full roll so chefsSpecial state could be set
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      // Now load from history — chefsSpecial must be null synchronously
+      act(() => { result.current.loadFromHistory(makeComposition()) })
+      expect(result.current.chefsSpecial).toBeNull()
+    })
+
+    it('does not trigger a roll when loading from history', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.loadFromHistory(makeComposition()) })
+      expect(result.current.isRolling).toBe(false)
     })
   })
 

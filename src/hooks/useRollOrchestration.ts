@@ -16,6 +16,7 @@ type Session = {
   doubleCategories: ReadonlySet<DoubleCategory>
   setComposition: (c: SandwichComposition) => void
   addHistoryEntry: (composition: SandwichComposition, name: string) => void
+  loadComposition: (c: SandwichComposition) => void
 }
 
 type RollOrchestration = {
@@ -24,6 +25,7 @@ type RollOrchestration = {
   chefsSpecial: Ingredient[] | null
   rollAll: () => void
   rollOne: (slug: BaseCategory) => void
+  loadFromHistory: (composition: SandwichComposition) => void
 }
 
 const buildPools = (): Record<BaseCategory, Ingredient[]> =>
@@ -170,11 +172,21 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
     })
   }, [session, resolveAndCommit])
 
+  const loadFromHistory = useCallback(
+    (composition: SandwichComposition) => {
+      setChefsSpecial(null)
+      session.loadComposition(composition)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [session.loadComposition],
+  )
+
   return {
     isRolling,
     rollingCategory,
     chefsSpecial,
     rollAll: rollAllCategories,
     rollOne,
+    loadFromHistory,
   }
 }

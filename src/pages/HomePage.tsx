@@ -12,7 +12,7 @@ import { useRollOrchestration } from '@/hooks/useRollOrchestration'
 export default function HomePage() {
   const session = useSandwichSession()
   const history = useSessionHistory()
-  const { isRolling, rollingCategory, chefsSpecial, rollAll, rollOne } =
+  const { isRolling, rollingCategory, chefsSpecial, rollAll, rollOne, loadFromHistory } =
     useRollOrchestration({ ...session, addHistoryEntry: history.addEntry })
 
   return (
@@ -47,7 +47,7 @@ export default function HomePage() {
 
         <SessionHistory
           entries={history.entries}
-          onLoad={(entry) => { session.loadComposition(entry.composition) }}
+          onLoad={(entry) => { loadFromHistory(entry.composition) }}
         />
       </div>
     </AppShell>
