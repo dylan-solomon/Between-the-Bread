@@ -91,6 +91,35 @@
   /* ─── Layout ────────────────────────────────────────────────────── */
   --width-content:  480px;   /* generator column max-width  */
   --width-prose:    720px;   /* about/legal pages max-width */
+
+  /* ─── Animations ────────────────────────────────────────────────── */
+  --animate-fade-up:   fade-up var(--duration-fade-up) var(--ease-standard) both;
+  --animate-slide-up:  slide-up 300ms var(--ease-spring) both;
+  --animate-spring-in: spring-in 400ms var(--ease-spring) both;
+  --animate-float:     float var(--duration-float-cycle) var(--ease-float) infinite;
+}
+
+/* ─── Keyframes ───────────────────────────────────────────────────────
+ * Paired with --animate-* entries in @theme above.
+ * ─────────────────────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(var(--distance-fade-up)); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spring-in {
+  from { opacity: 0; transform: scaleX(0.8); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(calc(var(--distance-float) * -1)); }
 }
 
 /* ─── Animation & motion tokens ──────────────────────────────────────

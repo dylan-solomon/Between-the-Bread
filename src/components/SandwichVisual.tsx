@@ -66,7 +66,7 @@ export default function SandwichVisual({ composition }: Props) {
         <div
           key={`${slug}-${position}-${ingredient.slug}`}
           aria-label={ingredient.name}
-          className={`w-full rounded border ${LAYER_STYLES[slug]} transition-all`}
+          className={`w-full rounded border animate-spring-in ${LAYER_STYLES[slug]}`}
         />
       ))}
     </div>
