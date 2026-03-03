@@ -8,6 +8,7 @@ export type SandwichSession = {
   doubleCategories: ReadonlySet<DoubleCategory>
   hasRolled: boolean
   setComposition: (composition: SandwichComposition) => void
+  loadComposition: (composition: SandwichComposition) => void
   toggleLock: (category: BaseCategory) => void
   toggleDouble: (category: DoubleCategory) => void
   isLocked: (category: BaseCategory) => boolean
@@ -22,6 +23,11 @@ export const useSandwichSession = (): SandwichSession => {
 
   const setComposition = useCallback((next: SandwichComposition) => {
     setCompositionState(next)
+  }, [])
+
+  const loadComposition = useCallback((next: SandwichComposition) => {
+    setCompositionState(next)
+    setLockedCategories(new Set())
   }, [])
 
   const canLock = useCallback(
@@ -73,6 +79,7 @@ export const useSandwichSession = (): SandwichSession => {
     doubleCategories,
     hasRolled: composition !== null,
     setComposition,
+    loadComposition,
     toggleLock,
     toggleDouble,
     isLocked,

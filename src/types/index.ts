@@ -79,6 +79,13 @@ export type SandwichComposition = {
   'chefs-special'?: Ingredient[]
 }
 
+export type HistoryEntry = {
+  id: string
+  composition: SandwichComposition
+  name: string
+  timestamp: Date
+}
+
 // ─── Root JSON shape (src/data/ingredients.json) ─────────────────────────────
 
 export type IngredientsData = {
