@@ -267,6 +267,24 @@ describe('useRollOrchestration', () => {
       act(() => { result.current.loadFromHistory(makeComposition()) })
       expect(result.current.isRolling).toBe(false)
     })
+
+    it('restores chefsSpecial when loading a history entry that included one', () => {
+      const chefsSpecialIngredient = makeIngredient({ name: 'Secret Sauce', slug: 'secret-sauce' })
+      const composition = makeComposition({ 'chefs-special': [chefsSpecialIngredient] })
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.loadFromHistory(composition) })
+      expect(result.current.chefsSpecial).toEqual([chefsSpecialIngredient])
+    })
+
+    it('clears chefsSpecial when loading a history entry that had no chef\'s special', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      act(() => { result.current.loadFromHistory(makeComposition()) })
+      expect(result.current.chefsSpecial).toBeNull()
+    })
   })
 
   describe('chef\'s special detection', () => {
