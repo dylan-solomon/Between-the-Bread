@@ -1,6 +1,7 @@
 import type { CategorySlug, Ingredient, SandwichComposition } from '@/types'
 
 const FLAT_BREAD_SLUGS = new Set(['naan', 'tortilla', 'pita'])
+const NO_CHEESE_SLUG = 'no-cheese'
 
 const FILLING_ORDER: CategorySlug[] = [
   'condiments',
@@ -33,7 +34,9 @@ const buildLayers = (composition: SandwichComposition): Layer[] => {
     ingredient, slug: 'bread', position: 'bottom',
   }))
   const fillings: Layer[] = FILLING_ORDER.flatMap((slug) =>
-    (composition[slug] ?? []).map((ingredient) => ({ ingredient, slug, position: 'middle' }))
+    (composition[slug] ?? [])
+      .filter((ingredient) => !(slug === 'cheese' && ingredient.slug === NO_CHEESE_SLUG))
+      .map((ingredient) => ({ ingredient, slug, position: 'middle' }))
   )
 
   if (isFlat) return [...fillings, ...bottomBread]
@@ -47,7 +50,7 @@ const buildLayers = (composition: SandwichComposition): Layer[] => {
 export default function SandwichVisual({ composition }: Props) {
   if (composition === null) {
     return (
-      <div className="flex h-48 items-center justify-center">
+      <div className="flex h-48 overflow-hidden items-center justify-center">
         <p className="font-display italic text-neutral-400">
           Roll the dice to build your sandwich…
         </p>
@@ -58,7 +61,7 @@ export default function SandwichVisual({ composition }: Props) {
   const layers = buildLayers(composition)
 
   return (
-    <div className="flex h-48 flex-col items-stretch justify-center gap-0.5 px-4">
+    <div className="flex h-48 overflow-hidden flex-col items-stretch justify-center gap-0.5 px-4">
       {layers.map(({ ingredient, slug, position }) => (
         <div
           key={`${slug}-${position}-${ingredient.slug}`}

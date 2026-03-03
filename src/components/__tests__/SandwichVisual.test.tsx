@@ -53,6 +53,14 @@ describe('SandwichVisual', () => {
       expect(screen.getByLabelText('Hot Honey')).toBeInTheDocument()
     })
 
+    it('renders no cheese layer when no-cheese is selected', () => {
+      const composition = makeComposition({
+        cheese: [makeIngredient({ name: 'No Cheese', slug: 'no-cheese' })],
+      })
+      render(<SandwichVisual composition={composition} />)
+      expect(screen.queryByLabelText('No Cheese')).not.toBeInTheDocument()
+    })
+
     describe('bread layer logic', () => {
       it('renders two bread layers for non-flat bread', () => {
         const composition = makeComposition({

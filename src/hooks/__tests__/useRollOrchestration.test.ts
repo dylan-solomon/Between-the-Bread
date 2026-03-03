@@ -103,6 +103,32 @@ describe('useRollOrchestration', () => {
       expect(result.current.rollingCategory).not.toBe('protein')
     })
 
+    it('clears unlocked category layers the moment a re-roll begins', () => {
+      const session = {
+        ...makeSession(),
+        composition: makeComposition(),
+      }
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      // setComposition called synchronously to wipe old layers before animation starts
+      expect(session.setComposition).toHaveBeenCalledOnce()
+      const cleared = session.setComposition.mock.calls[0]?.[0] as SandwichComposition | undefined
+      expect(cleared?.bread).toHaveLength(0)
+    })
+
+    it('preserves locked category layers when re-roll begins', () => {
+      const session = {
+        ...makeSession(),
+        composition: makeComposition(), // has 1 protein (Turkey)
+        lockedCategories: new Set(['protein'] as const),
+      }
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      const cleared = session.setComposition.mock.calls[0]?.[0] as SandwichComposition | undefined
+      expect(cleared?.protein).toHaveLength(1) // locked — preserved
+      expect(cleared?.bread).toHaveLength(0)   // unlocked — cleared
+    })
+
     it('resets chefsSpecial to null the moment a new rollAll begins', () => {
       const session = makeSession()
       const { result } = renderHook(() => useRollOrchestration(session))
@@ -145,6 +171,19 @@ describe('useRollOrchestration', () => {
       act(() => { result.current.rollOne('cheese') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(session.setComposition).toHaveBeenCalledOnce()
+    })
+
+    it('clears the rolled category the moment rollOne begins on re-roll', () => {
+      const session = {
+        ...makeSession(),
+        composition: makeComposition(), // has Swiss cheese
+      }
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollOne('cheese') })
+      // setComposition called synchronously so old cheese layer disappears immediately
+      expect(session.setComposition).toHaveBeenCalledOnce()
+      const cleared = session.setComposition.mock.calls[0]?.[0] as SandwichComposition | undefined
+      expect(cleared?.cheese).toHaveLength(0)
     })
 
     it('does not roll when the category is locked', () => {
