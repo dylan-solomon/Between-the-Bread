@@ -10,7 +10,7 @@ const NAV_LINKS = [
 export default function Footer() {
   return (
     <footer className="border-t border-neutral-200 bg-neutral-50 py-8">
-      <div className="mx-auto max-w-[480px] px-4">
+      <div className="px-6">
         <p className="font-display text-sm font-bold text-neutral-900">Between the Bread</p>
         <nav className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
           {NAV_LINKS.map(({ label, to }) => (
@@ -19,7 +19,7 @@ export default function Footer() {
             </Link>
           ))}
         </nav>
-        <p className="mt-6 text-xs text-neutral-400">
+        <p className="mt-6 text-center text-xs text-neutral-400">
           © 2026 Between the Bread. All rights reserved.
         </p>
       </div>
