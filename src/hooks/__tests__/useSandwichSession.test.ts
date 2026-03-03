@@ -82,6 +82,26 @@ describe('useSandwichSession', () => {
     })
   })
 
+  describe('loadComposition', () => {
+    it('sets the composition to the provided value', () => {
+      const { result } = renderHook(() => useSandwichSession())
+      const composition = makeComposition()
+      act(() => { result.current.loadComposition(composition) })
+      expect(result.current.composition).toEqual(composition)
+    })
+
+    it('clears all locked categories', () => {
+      const { result } = renderHook(() => useSandwichSession())
+      act(() => { result.current.setComposition(makeComposition()) })
+      act(() => { result.current.toggleLock('bread') })
+      act(() => { result.current.toggleLock('protein') })
+      expect(result.current.lockedCategories.size).toBe(2)
+
+      act(() => { result.current.loadComposition(makeComposition()) })
+      expect(result.current.lockedCategories.size).toBe(0)
+    })
+  })
+
   describe('double mode', () => {
     it('toggleDouble enables double mode for a category', () => {
       const { result } = renderHook(() => useSandwichSession())

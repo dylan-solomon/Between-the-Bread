@@ -14,6 +14,7 @@ const makeSession = () => ({
   lockedCategories: new Set<'bread' | 'protein' | 'cheese' | 'toppings' | 'condiments'>(),
   doubleCategories: new Set<'protein' | 'cheese'>(),
   setComposition: vi.fn(),
+  addHistoryEntry: vi.fn(),
 })
 
 beforeEach(() => { vi.useFakeTimers() })
@@ -207,6 +208,34 @@ describe('useRollOrchestration', () => {
       const { result } = renderHook(() => useRollOrchestration(session))
       act(() => { result.current.rollOne('cheese') })
       expect(result.current.isRolling).toBe(false)
+    })
+  })
+
+  describe('history recording', () => {
+    it('calls addHistoryEntry once after rollAll completes', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      expect(session.addHistoryEntry).toHaveBeenCalledOnce()
+    })
+
+    it('calls addHistoryEntry once after rollOne completes', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollOne('cheese') })
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      expect(session.addHistoryEntry).toHaveBeenCalledOnce()
+    })
+
+    it('calls addHistoryEntry with a string name', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session))
+      act(() => { result.current.rollOne('cheese') })
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      const [, name] = session.addHistoryEntry.mock.calls[0] as [unknown, string]
+      expect(typeof name).toBe('string')
+      expect(name.length).toBeGreaterThan(0)
     })
   })
 

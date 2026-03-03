@@ -3,14 +3,17 @@ import CategoryList from '@/components/CategoryList'
 import ChefSpecialRow from '@/components/ChefSpecialRow'
 import RollAllButton from '@/components/RollAllButton'
 import SandwichVisual from '@/components/SandwichVisual'
+import SessionHistory from '@/components/SessionHistory'
 import SummaryCard from '@/components/SummaryCard'
 import { useSandwichSession } from '@/hooks/useSandwichSession'
+import { useSessionHistory } from '@/hooks/useSessionHistory'
 import { useRollOrchestration } from '@/hooks/useRollOrchestration'
 
 export default function HomePage() {
   const session = useSandwichSession()
+  const history = useSessionHistory()
   const { isRolling, rollingCategory, chefsSpecial, rollAll, rollOne } =
-    useRollOrchestration(session)
+    useRollOrchestration({ ...session, addHistoryEntry: history.addEntry })
 
   return (
     <AppShell>
@@ -41,6 +44,11 @@ export default function HomePage() {
         />
 
         <ChefSpecialRow chefsSpecial={chefsSpecial} />
+
+        <SessionHistory
+          entries={history.entries}
+          onLoad={(entry) => { session.loadComposition(entry.composition) }}
+        />
       </div>
     </AppShell>
   )

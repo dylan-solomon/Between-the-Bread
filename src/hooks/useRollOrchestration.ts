@@ -3,6 +3,7 @@ import type { DoubleCategory, Ingredient, SandwichComposition } from '@/types'
 import type { BaseCategory } from '@/engine/randomizer'
 import { BASE_CATEGORIES, rollCategory } from '@/engine/randomizer'
 import { getEnabledIngredients } from '@/data/ingredients'
+import { generateSandwichName } from '@/engine/naming'
 
 const CYCLE_MS = 80
 const CYCLES = 8
@@ -14,6 +15,7 @@ type Session = {
   lockedCategories: ReadonlySet<BaseCategory>
   doubleCategories: ReadonlySet<DoubleCategory>
   setComposition: (c: SandwichComposition) => void
+  addHistoryEntry: (composition: SandwichComposition, name: string) => void
 }
 
 type RollOrchestration = {
@@ -70,13 +72,15 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
         ...cleaned,
         ...(specialRoll !== null ? { 'chefs-special': specialRoll } : {}),
       }
+      const name = generateSandwichName(cleaned)
+      session.addHistoryEntry(cleaned, name)
       session.setComposition(composition)
       setIsRolling(false)
       setRollingCategory(null)
       rollingRef.current = false
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [session.setComposition],
+    [session.setComposition, session.addHistoryEntry],
   )
 
   const rollOne = useCallback(
