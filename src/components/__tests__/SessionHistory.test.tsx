@@ -76,12 +76,12 @@ describe('SessionHistory', () => {
       expect(onLoad).toHaveBeenCalledWith(entry)
     })
 
-    it('clicking Load closes the panel', async () => {
+    it('keeps the panel open after clicking Load', async () => {
       const entry = makeEntry({ name: 'The Classic Club' })
       render(<SessionHistory entries={[entry]} onLoad={vi.fn()} />)
       await userEvent.click(screen.getByRole('button', { name: /history/i }))
       await userEvent.click(screen.getByRole('button', { name: /load/i }))
-      expect(screen.queryByText('The Classic Club')).not.toBeInTheDocument()
+      expect(screen.getByText('The Classic Club')).toBeInTheDocument()
     })
   })
 })

@@ -75,7 +75,7 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
         ...(specialRoll !== null ? { 'chefs-special': specialRoll } : {}),
       }
       const name = generateSandwichName(cleaned)
-      session.addHistoryEntry(cleaned, name)
+      session.addHistoryEntry(composition, name)
       session.setComposition(composition)
       setIsRolling(false)
       setRollingCategory(null)
@@ -174,7 +174,7 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
 
   const loadFromHistory = useCallback(
     (composition: SandwichComposition) => {
-      setChefsSpecial(null)
+      setChefsSpecial(composition['chefs-special'] ?? null)
       session.loadComposition(composition)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
