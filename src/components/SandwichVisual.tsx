@@ -1,9 +1,8 @@
 import type { CategorySlug, Ingredient, SandwichComposition } from '@/types'
 
-// Category display order for stacking (bottom to top: bread → condiments → toppings → cheese → protein → bread top)
-// We show bottom-bread first, then fillings, then top
-const LAYER_ORDER: CategorySlug[] = [
-  'bread',
+const FLAT_BREAD_SLUGS = new Set(['naan', 'tortilla', 'pita'])
+
+const FILLING_ORDER: CategorySlug[] = [
   'condiments',
   'chefs-special',
   'toppings',
@@ -24,13 +23,26 @@ type Props = {
   composition: SandwichComposition | null
 }
 
-type Layer = { ingredient: Ingredient; slug: CategorySlug }
+type Layer = { ingredient: Ingredient; slug: CategorySlug; position: 'top' | 'middle' | 'bottom' }
 
-const buildLayers = (composition: SandwichComposition): Layer[] =>
-  LAYER_ORDER.flatMap((slug) => {
-    const ingredients = composition[slug] ?? []
-    return ingredients.map((ingredient) => ({ ingredient, slug }))
-  })
+const buildLayers = (composition: SandwichComposition): Layer[] => {
+  const breadIngredients = composition.bread
+  const isFlat = breadIngredients.some((b) => FLAT_BREAD_SLUGS.has(b.slug))
+
+  const bottomBread: Layer[] = breadIngredients.map((ingredient) => ({
+    ingredient, slug: 'bread', position: 'bottom',
+  }))
+  const fillings: Layer[] = FILLING_ORDER.flatMap((slug) =>
+    (composition[slug] ?? []).map((ingredient) => ({ ingredient, slug, position: 'middle' }))
+  )
+
+  if (isFlat) return [...fillings, ...bottomBread]
+
+  const topBread: Layer[] = breadIngredients.map((ingredient) => ({
+    ingredient, slug: 'bread', position: 'top',
+  }))
+  return [...topBread, ...fillings, ...bottomBread]
+}
 
 export default function SandwichVisual({ composition }: Props) {
   if (composition === null) {
@@ -47,9 +59,9 @@ export default function SandwichVisual({ composition }: Props) {
 
   return (
     <div className="flex h-48 flex-col items-stretch justify-center gap-0.5 px-4">
-      {layers.map(({ ingredient, slug }) => (
+      {layers.map(({ ingredient, slug, position }) => (
         <div
-          key={`${slug}-${ingredient.slug}`}
+          key={`${slug}-${position}-${ingredient.slug}`}
           aria-label={ingredient.name}
           className={`w-full rounded border ${LAYER_STYLES[slug]} transition-all`}
         />

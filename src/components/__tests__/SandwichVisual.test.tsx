@@ -25,8 +25,8 @@ describe('SandwichVisual', () => {
     it('renders a layer for each selected ingredient', () => {
       const composition = makeComposition()
       render(<SandwichVisual composition={composition} />)
-      // 5 ingredients in makeComposition — each gets an aria-label layer
-      expect(screen.getByLabelText('Sourdough')).toBeInTheDocument()
+      // Sourdough (non-flat bread) renders as two layers: top and bottom
+      expect(screen.getAllByLabelText('Sourdough')).toHaveLength(2)
       expect(screen.getByLabelText('Turkey')).toBeInTheDocument()
       expect(screen.getByLabelText('Swiss')).toBeInTheDocument()
       expect(screen.getByLabelText('Lettuce')).toBeInTheDocument()
@@ -51,6 +51,40 @@ describe('SandwichVisual', () => {
       })
       render(<SandwichVisual composition={composition} />)
       expect(screen.getByLabelText('Hot Honey')).toBeInTheDocument()
+    })
+
+    describe('bread layer logic', () => {
+      it('renders two bread layers for non-flat bread', () => {
+        const composition = makeComposition({
+          bread: [makeIngredient({ name: 'Sourdough', slug: 'sourdough' })],
+        })
+        render(<SandwichVisual composition={composition} />)
+        expect(screen.getAllByLabelText('Sourdough')).toHaveLength(2)
+      })
+
+      it('renders one bread layer for pita', () => {
+        const composition = makeComposition({
+          bread: [makeIngredient({ name: 'Pita', slug: 'pita' })],
+        })
+        render(<SandwichVisual composition={composition} />)
+        expect(screen.getAllByLabelText('Pita')).toHaveLength(1)
+      })
+
+      it('renders one bread layer for naan', () => {
+        const composition = makeComposition({
+          bread: [makeIngredient({ name: 'Naan', slug: 'naan' })],
+        })
+        render(<SandwichVisual composition={composition} />)
+        expect(screen.getAllByLabelText('Naan')).toHaveLength(1)
+      })
+
+      it('renders one bread layer for tortilla', () => {
+        const composition = makeComposition({
+          bread: [makeIngredient({ name: 'Tortilla', slug: 'tortilla' })],
+        })
+        render(<SandwichVisual composition={composition} />)
+        expect(screen.getAllByLabelText('Tortilla')).toHaveLength(1)
+      })
     })
   })
 })
