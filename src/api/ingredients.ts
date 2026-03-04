@@ -41,9 +41,9 @@ export const fetchIngredients = async (diet?: string[]): Promise<FetchIngredient
   const body = (await response.json()) as unknown
   const { data } = body as ApiResponse
 
-  const empty: Record<CategorySlug, Ingredient[]> = Object.fromEntries(
+  const empty = Object.fromEntries(
     ALL_SLUGS.map((s) => [s, []]),
-  ) as Record<CategorySlug, Ingredient[]>
+  ) as unknown as Record<CategorySlug, Ingredient[]>
 
   const pools = data.categories.reduce(
     (acc, cat) => ({ ...acc, [cat.slug]: cat.ingredients }),
