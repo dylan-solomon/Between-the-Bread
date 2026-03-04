@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const { mockFrom } = vi.hoisted(() => ({ mockFrom: vi.fn() }))
 
-vi.mock('../_lib/supabase', () => ({
+vi.mock('../_lib/supabase.js', () => ({
   supabase: { from: mockFrom },
 }))
 
