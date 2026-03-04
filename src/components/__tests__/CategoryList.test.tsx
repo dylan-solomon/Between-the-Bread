@@ -1,7 +1,15 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import CategoryList from '@/components/CategoryList'
-import { makeComposition } from '@/test/factories'
+import { makeCategories, makeComposition, makePool } from '@/test/factories'
+
+const makePools = () => ({
+  bread: makePool(5),
+  protein: makePool(5),
+  cheese: makePool(5),
+  toppings: makePool(10),
+  condiments: makePool(5),
+})
 
 const renderList = (composition: Parameters<typeof CategoryList>[0]['composition'] = null) =>
   render(
@@ -14,6 +22,8 @@ const renderList = (composition: Parameters<typeof CategoryList>[0]['composition
       onToggleLock={vi.fn()}
       onToggleDouble={vi.fn()}
       onRoll={vi.fn()}
+      categories={makeCategories()}
+      pools={makePools()}
     />,
   )
 

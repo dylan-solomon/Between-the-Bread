@@ -1,7 +1,6 @@
-import { getCategories, getEnabledIngredients } from '@/data/ingredients'
 import { BASE_CATEGORIES } from '@/engine/randomizer'
 import type { BaseCategory } from '@/engine/randomizer'
-import type { DoubleCategory, SandwichComposition } from '@/types'
+import type { Category, CategorySlug, DoubleCategory, Ingredient, SandwichComposition } from '@/types'
 import CategoryRow from '@/components/CategoryRow'
 
 const DOUBLE_CATEGORIES = new Set<BaseCategory>(['protein', 'cheese'])
@@ -15,15 +14,9 @@ type Props = {
   onToggleLock: (slug: BaseCategory) => void
   onToggleDouble: (slug: DoubleCategory) => void
   onRoll: (slug: BaseCategory) => void
+  categories: Category[]
+  pools: Partial<Record<CategorySlug, Ingredient[]>>
 }
-
-const baseCategories = getCategories()
-  .filter((c) => BASE_CATEGORIES.includes(c.slug as (typeof BASE_CATEGORIES)[number]))
-  .sort((a, b) => a.display_order - b.display_order)
-
-const categoryPools = Object.fromEntries(
-  BASE_CATEGORIES.map((slug) => [slug, getEnabledIngredients(slug)]),
-) as Record<BaseCategory, ReturnType<typeof getEnabledIngredients>>
 
 export default function CategoryList({
   composition,
@@ -34,7 +27,13 @@ export default function CategoryList({
   onToggleLock,
   onToggleDouble,
   onRoll,
+  categories,
+  pools,
 }: Props) {
+  const baseCategories = categories
+    .filter((c) => BASE_CATEGORIES.includes(c.slug as (typeof BASE_CATEGORIES)[number]))
+    .sort((a, b) => a.display_order - b.display_order)
+
   return (
     <div className="flex flex-col gap-2">
       {baseCategories.map((category) => {
@@ -45,7 +44,7 @@ export default function CategoryList({
             key={slug}
             category={category}
             selection={composition?.[slug] ?? []}
-            cyclingPool={categoryPools[slug]}
+            cyclingPool={pools[slug] ?? []}
             isLocked={lockedCategories.has(slug)}
             canLock={composition !== null}
             onToggleLock={() => { onToggleLock(slug) }}

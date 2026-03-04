@@ -14,6 +14,15 @@ export const makeCategory = (overrides: Partial<Category> = {}): Category => ({
   ...overrides,
 })
 
+export const makeCategories = (): Category[] => [
+  makeCategory({ name: 'Bread',          slug: 'bread',         selection_type: 'single', min_picks: 1, max_picks: 1, display_order: 1, emoji: '🍞',    color: '#D4A056' }),
+  makeCategory({ name: 'Protein',        slug: 'protein',       selection_type: 'single', min_picks: 1, max_picks: 1, display_order: 2, emoji: '🥩',    color: '#C0392B', has_double_toggle: true }),
+  makeCategory({ name: 'Cheese',         slug: 'cheese',        selection_type: 'single', min_picks: 1, max_picks: 1, display_order: 3, emoji: '🧀',    color: '#F0C040', has_double_toggle: true }),
+  makeCategory({ name: 'Toppings',       slug: 'toppings',      selection_type: 'multi',  min_picks: 1, max_picks: 4, display_order: 4, emoji: '🥬',    color: '#27AE60' }),
+  makeCategory({ name: 'Condiments',     slug: 'condiments',    selection_type: 'multi',  min_picks: 1, max_picks: 2, display_order: 5, emoji: '🫙',    color: '#E67E22' }),
+  makeCategory({ name: "Chef's Special", slug: 'chefs-special', selection_type: 'single', min_picks: 1, max_picks: 1, display_order: 6, emoji: '👨‍🍳', color: '#8E44AD', is_bonus: true }),
+]
+
 export const makeIngredient = (overrides: Partial<Ingredient> = {}): Ingredient => ({
   name: 'Test Ingredient',
   slug: 'test-ingredient',

@@ -1,5 +1,4 @@
-import type { CategorySlug, DoubleCategory, Ingredient } from '@/types'
-import { getCategories } from '@/data/ingredients'
+import type { Category, CategorySlug, DoubleCategory, Ingredient } from '@/types'
 
 // ─── Internal utilities ───────────────────────────────────────────────────────
 
@@ -30,20 +29,25 @@ export const BASE_CATEGORIES: BaseCategory[] = [
 ]
 
 export type RollAllOptions = {
+  categories: Category[]
   pools: Record<BaseCategory, Ingredient[]>
   lockedSlugs: ReadonlySet<BaseCategory>
   currentSelections: Partial<Record<BaseCategory, Ingredient[]>>
   doubleCategories: ReadonlySet<DoubleCategory>
 }
 
-export const rollCategory = (slug: CategorySlug, pool: Ingredient[], count?: number): Ingredient[] => {
+export const rollCategory = (
+  slug: CategorySlug,
+  pool: Ingredient[],
+  options: { categories: Category[]; count?: number },
+): Ingredient[] => {
   if (pool.length === 0) return []
 
-  const category = getCategories().find((c) => c.slug === slug)
+  const category = options.categories.find((c) => c.slug === slug)
   if (!category) return []
 
-  if (count !== undefined) {
-    return shuffle(pool).slice(0, Math.min(count, pool.length))
+  if (options.count !== undefined) {
+    return shuffle(pool).slice(0, Math.min(options.count, pool.length))
   }
 
   if (category.selection_type === 'single') {
@@ -58,6 +62,7 @@ export const rollCategory = (slug: CategorySlug, pool: Ingredient[], count?: num
 }
 
 export const rollAll = ({
+  categories,
   pools,
   lockedSlugs,
   currentSelections,
@@ -66,11 +71,11 @@ export const rollAll = ({
   BASE_CATEGORIES.reduce(
     (acc, slug) => {
       if (lockedSlugs.has(slug)) {
-        return { ...acc, [slug]: currentSelections[slug] ?? rollCategory(slug, pools[slug]) }
+        return { ...acc, [slug]: currentSelections[slug] ?? rollCategory(slug, pools[slug], { categories }) }
       }
       const count =
         (slug === 'protein' || slug === 'cheese') && doubleCategories.has(slug) ? 2 : undefined
-      return { ...acc, [slug]: rollCategory(slug, pools[slug], count) }
+      return { ...acc, [slug]: rollCategory(slug, pools[slug], { categories, count }) }
     },
     {} as Record<BaseCategory, Ingredient[]>,
   )
