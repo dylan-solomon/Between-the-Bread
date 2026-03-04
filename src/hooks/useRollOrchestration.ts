@@ -63,23 +63,35 @@ export const useRollOrchestration = (
   const [isRolling, setIsRolling] = useState(false)
   const [rollingCategory, setRollingCategory] = useState<BaseCategory | null>(null)
   const [chefsSpecial, setChefsSpecial] = useState<Ingredient[] | null>(null)
+  // Ref mirrors chefsSpecial state so resolveAndCommit (a stale callback) can read the latest value
+  const chefsSpecialRef = useRef<Ingredient[] | null>(null)
   const rollingRef = useRef(false)
   const rollAllCountRef = useRef(0)
   const rollOneCounts = useRef<Partial<Record<BaseCategory, number>>>({})
 
+  // resolveAndCommit accepts rolledToppings so it knows whether to re-roll the chef's special
+  // or preserve the existing one (when toppings wasn't part of this roll).
   const resolveAndCommit = useCallback(
-    (selections: Record<BaseCategory, Ingredient[]>) => {
+    (selections: Record<BaseCategory, Ingredient[]>, rolledToppings: boolean) => {
       const { cleaned, chefsSpecialPool: specialPool, triggerSlug } = applyTriggerLogic(
         selections,
         pools['chefs-special'] ?? [],
       )
-      const specialRoll =
-        specialPool !== null && specialPool.length > 0
-          ? rollCategory('chefs-special', specialPool, { categories })
-          : null
-      setChefsSpecial(specialRoll)
 
-      if (specialRoll !== null && triggerSlug !== null) {
+      // Only re-roll the chef's special when toppings was part of this roll.
+      // When rolling a non-toppings category, the trigger topping is still active and
+      // the same chef's special ingredient should be preserved.
+      const specialRoll = (() => {
+        if (specialPool === null || specialPool.length === 0) return null
+        if (rolledToppings) return rollCategory('chefs-special', specialPool, { categories })
+        return chefsSpecialRef.current
+      })()
+
+      setChefsSpecial(specialRoll)
+      chefsSpecialRef.current = specialRoll
+
+      // Only fire the analytics event when the trigger was freshly encountered (toppings was rolled)
+      if (specialRoll !== null && triggerSlug !== null && rolledToppings) {
         captureChefSpecialTriggered({
           chefsSpecialIngredient: specialRoll[0]?.slug ?? '',
           triggerTopping: triggerSlug,
@@ -125,7 +137,12 @@ export const useRollOrchestration = (
       if (rollingRef.current || session.lockedCategories.has(slug)) return
       rollingRef.current = true
       setIsRolling(true)
-      setChefsSpecial(null)
+      // Only clear chefsSpecial when re-rolling toppings — rolling any other category
+      // should leave the chef's special visible during animation.
+      if (slug === 'toppings') {
+        setChefsSpecial(null)
+        chefsSpecialRef.current = null
+      }
       setRollingCategory(slug)
 
       const prior = session.composition
@@ -151,7 +168,7 @@ export const useRollOrchestration = (
           condiments: prior?.condiments ?? [],
           [slug]:     result,
         }
-        resolveAndCommit(selections)
+        resolveAndCommit(selections, slug === 'toppings')
       }, CATEGORY_DURATION + STAGGER_MS)
     },
     [session, pools, categories, resolveAndCommit],
@@ -162,6 +179,7 @@ export const useRollOrchestration = (
     rollingRef.current = true
     setIsRolling(true)
     setChefsSpecial(null)
+    chefsSpecialRef.current = null
 
     rollAllCountRef.current++
     captureRolledAll({
@@ -215,7 +233,8 @@ export const useRollOrchestration = (
 
         if (results.size === BASE_CATEGORIES.length) {
           const full = Object.fromEntries(results) as Record<BaseCategory, Ingredient[]>
-          resolveAndCommit(full)
+          // rollAll always re-rolls the chef's special (it's a full re-randomization)
+          resolveAndCommit(full, true)
         }
       }, delay + (isLocked ? 0 : CATEGORY_DURATION))
     })
@@ -223,7 +242,9 @@ export const useRollOrchestration = (
 
   const loadFromHistory = useCallback(
     (composition: SandwichComposition) => {
-      setChefsSpecial(composition['chefs-special'] ?? null)
+      const val = composition['chefs-special'] ?? null
+      setChefsSpecial(val)
+      chefsSpecialRef.current = val
       session.loadComposition(composition)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
