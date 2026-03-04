@@ -1,8 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
-import type { DoubleCategory, Ingredient, SandwichComposition } from '@/types'
+import type { Category, CategorySlug, DoubleCategory, Ingredient, SandwichComposition } from '@/types'
 import type { BaseCategory } from '@/engine/randomizer'
 import { BASE_CATEGORIES, rollCategory } from '@/engine/randomizer'
-import { getEnabledIngredients } from '@/data/ingredients'
 import { generateSandwichName } from '@/engine/naming'
 import {
   captureRolledAll,
@@ -34,16 +33,12 @@ type RollOrchestration = {
   loadFromHistory: (composition: SandwichComposition) => void
 }
 
-const buildPools = (): Record<BaseCategory, Ingredient[]> =>
-  Object.fromEntries(
-    BASE_CATEGORIES.map((slug) => [slug, getEnabledIngredients(slug)]),
-  ) as Record<BaseCategory, Ingredient[]>
-
 const filterTriggers = (ingredients: Ingredient[]): Ingredient[] =>
   ingredients.filter((i) => !i.is_trigger)
 
 const applyTriggerLogic = (
   selections: Record<BaseCategory, Ingredient[]>,
+  chefsSpecialPool: Ingredient[],
 ): { cleaned: Record<BaseCategory, Ingredient[]>; chefsSpecialPool: Ingredient[] | null; triggerSlug: string | null } => {
   const toppings = selections.toppings
   const trigger = toppings.find((i) => i.is_trigger)
@@ -51,7 +46,7 @@ const applyTriggerLogic = (
     return { cleaned: selections, chefsSpecialPool: null, triggerSlug: null }
   }
   const cleaned = { ...selections, toppings: filterTriggers(toppings) }
-  return { cleaned, chefsSpecialPool: getEnabledIngredients('chefs-special'), triggerSlug: trigger.slug }
+  return { cleaned, chefsSpecialPool, triggerSlug: trigger.slug }
 }
 
 const pickCount = (
@@ -60,7 +55,11 @@ const pickCount = (
 ): number | undefined =>
   (slug === 'protein' || slug === 'cheese') && doubleCategories.has(slug) ? 2 : undefined
 
-export const useRollOrchestration = (session: Session): RollOrchestration => {
+export const useRollOrchestration = (
+  session: Session,
+  pools: Partial<Record<CategorySlug, Ingredient[]>>,
+  categories: Category[],
+): RollOrchestration => {
   const [isRolling, setIsRolling] = useState(false)
   const [rollingCategory, setRollingCategory] = useState<BaseCategory | null>(null)
   const [chefsSpecial, setChefsSpecial] = useState<Ingredient[] | null>(null)
@@ -70,10 +69,13 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
 
   const resolveAndCommit = useCallback(
     (selections: Record<BaseCategory, Ingredient[]>) => {
-      const { cleaned, chefsSpecialPool, triggerSlug } = applyTriggerLogic(selections)
+      const { cleaned, chefsSpecialPool: specialPool, triggerSlug } = applyTriggerLogic(
+        selections,
+        pools['chefs-special'] ?? [],
+      )
       const specialRoll =
-        chefsSpecialPool !== null && chefsSpecialPool.length > 0
-          ? rollCategory('chefs-special', chefsSpecialPool)
+        specialPool !== null && specialPool.length > 0
+          ? rollCategory('chefs-special', specialPool, { categories })
           : null
       setChefsSpecial(specialRoll)
 
@@ -115,7 +117,7 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
       rollingRef.current = false
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [session.setComposition, session.addHistoryEntry],
+    [session.setComposition, session.addHistoryEntry, pools, categories],
   )
 
   const rollOne = useCallback(
@@ -131,8 +133,8 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
       if (prior !== null) { session.setComposition({ ...prior, [slug]: [] }) }
 
       setTimeout(() => {
-        const pool = getEnabledIngredients(slug)
-        const result = rollCategory(slug, pool, pickCount(slug, session.doubleCategories))
+        const pool = pools[slug] ?? []
+        const result = rollCategory(slug, pool, { categories, count: pickCount(slug, session.doubleCategories) })
         const newCount = (rollOneCounts.current[slug] ?? 0) + 1
         rollOneCounts.current[slug] = newCount
         captureRolledCategory({
@@ -152,7 +154,7 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
         resolveAndCommit(selections)
       }, CATEGORY_DURATION + STAGGER_MS)
     },
-    [session, resolveAndCommit],
+    [session, pools, categories, resolveAndCommit],
   )
 
   const rollAllCategories = useCallback(() => {
@@ -167,7 +169,6 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
       lockedCategories: [...session.lockedCategories],
     })
 
-    const pools = buildPools()
     const prior = session.composition
     const results = new Map<BaseCategory, Ingredient[]>()
 
@@ -202,9 +203,10 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
       }
 
       setTimeout(() => {
+        const pool = pools[slug] ?? []
         const result = isLocked
-          ? (prior?.[slug] ?? rollCategory(slug, pools[slug]))
-          : rollCategory(slug, pools[slug], pickCount(slug, session.doubleCategories))
+          ? (prior?.[slug] ?? rollCategory(slug, pool, { categories }))
+          : rollCategory(slug, pool, { categories, count: pickCount(slug, session.doubleCategories) })
         results.set(slug, result)
         running[slug] = result
 
@@ -217,7 +219,7 @@ export const useRollOrchestration = (session: Session): RollOrchestration => {
         }
       }, delay + (isLocked ? 0 : CATEGORY_DURATION))
     })
-  }, [session, resolveAndCommit])
+  }, [session, pools, categories, resolveAndCommit])
 
   const loadFromHistory = useCallback(
     (composition: SandwichComposition) => {

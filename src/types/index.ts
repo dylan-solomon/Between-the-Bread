@@ -57,6 +57,7 @@ export type Category = {
 }
 
 export type Ingredient = {
+  id?: string
   name: string
   slug: string
   dietary_tags: DietaryTag[]

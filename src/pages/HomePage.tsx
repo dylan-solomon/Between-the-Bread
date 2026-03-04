@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import AppShell from '@/components/AppShell'
 import CategoryList from '@/components/CategoryList'
 import ChefSpecialRow from '@/components/ChefSpecialRow'
@@ -8,12 +9,20 @@ import SummaryCard from '@/components/SummaryCard'
 import { useSandwichSession } from '@/hooks/useSandwichSession'
 import { useSessionHistory } from '@/hooks/useSessionHistory'
 import { useRollOrchestration } from '@/hooks/useRollOrchestration'
+import { useIngredients } from '@/hooks/useIngredients'
+import type { CategorySlug, Ingredient } from '@/types'
+
+const EMPTY_POOLS: Partial<Record<CategorySlug, Ingredient[]>> = {}
 
 export default function HomePage() {
+  const { pools, categories, loading } = useIngredients()
   const session = useSandwichSession()
   const history = useSessionHistory()
+
+  const activePools = useMemo(() => (loading ? EMPTY_POOLS : pools), [loading, pools])
+
   const { isRolling, rollingCategory, chefsSpecial, rollAll, rollOne, loadFromHistory } =
-    useRollOrchestration({ ...session, addHistoryEntry: history.addEntry })
+    useRollOrchestration({ ...session, addHistoryEntry: history.addEntry }, activePools, categories)
 
   return (
     <AppShell>
@@ -29,6 +38,7 @@ export default function HomePage() {
         <RollAllButton
           hasRolled={session.hasRolled}
           isRolling={isRolling}
+          disabled={loading}
           onClick={rollAll}
         />
 
@@ -41,6 +51,8 @@ export default function HomePage() {
           onToggleLock={session.toggleLock}
           onToggleDouble={session.toggleDouble}
           onRoll={rollOne}
+          categories={categories}
+          pools={activePools}
         />
 
         <ChefSpecialRow chefsSpecial={chefsSpecial} />

@@ -2,6 +2,23 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import HomePage from '@/pages/HomePage'
+import { makeCategories, makePool } from '@/test/factories'
+
+vi.mock('@/hooks/useIngredients', () => ({
+  useIngredients: () => ({
+    pools: {
+      bread: makePool(5),
+      protein: makePool(5),
+      cheese: makePool(5),
+      toppings: makePool(10),
+      condiments: makePool(5),
+      'chefs-special': makePool(3),
+    },
+    categories: makeCategories(),
+    loading: false,
+    error: null,
+  }),
+}))
 
 // Total duration for all 5 categories to settle:
 // Each category takes CATEGORY_DURATION (640ms), staggered by STAGGER_MS (200ms).
