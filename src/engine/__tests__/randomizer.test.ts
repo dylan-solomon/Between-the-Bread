@@ -94,6 +94,20 @@ describe('rollCategory — explicit count override (double mode)', () => {
     const pool = makePool(1)
     expect(rollCategory('protein', pool, { categories, count: 2 })).toHaveLength(1)
   })
+
+  it('excludes no-X ingredients (e.g. no-cheese) when count > 1', () => {
+    const noCheese = makeIngredient({ slug: 'no-cheese' })
+    const pool = [noCheese, ...makePool(5)]
+    const results = Array.from({ length: 200 }, () => rollCategory('cheese', pool, { categories, count: 2 }))
+    const containsNoCheese = results.some((roll) => roll.some((i) => i.slug === 'no-cheese'))
+    expect(containsNoCheese).toBe(false)
+  })
+
+  it('still allows no-X ingredients in single (count=1) mode', () => {
+    const noCheese = makeIngredient({ slug: 'no-cheese' })
+    const [result] = rollCategory('cheese', [noCheese], { categories })
+    expect(result?.slug).toBe('no-cheese')
+  })
 })
 
 // ─── rollAll ─────────────────────────────────────────────────────────────────
