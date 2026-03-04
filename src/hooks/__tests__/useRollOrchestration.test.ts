@@ -328,6 +328,39 @@ describe('useRollOrchestration', () => {
       expect(result.current.chefsSpecial).toBeNull()
     })
 
+    it('does not clear chefsSpecial synchronously when rolling a non-toppings category', () => {
+      const chefsSpecialIngredient = makeIngredient({ name: 'Secret Sauce', slug: 'secret-sauce' })
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      act(() => { result.current.loadFromHistory(makeComposition({ 'chefs-special': [chefsSpecialIngredient] })) })
+      // Rolling bread must NOT clear chefsSpecial synchronously
+      act(() => { result.current.rollOne('bread') })
+      expect(result.current.chefsSpecial).toEqual([chefsSpecialIngredient])
+    })
+
+    it('preserves chefsSpecial after a non-toppings roll when the trigger topping is still active', () => {
+      const triggerTopping = makeIngredient({ slug: 'trigger-a', is_trigger: true })
+      const chefsSpecialIngredient = makeIngredient({ slug: 'secret-a' })
+      // Pool contains a *different* item — without the fix, rollCategory would return it
+      const differentIngredient = makeIngredient({ slug: 'secret-b' })
+      const pools = { ...makePools(), 'chefs-special': [differentIngredient] }
+      const session = {
+        ...makeSession(),
+        composition: makeComposition({ toppings: [triggerTopping] }),
+      }
+      const { result } = renderHook(() => useRollOrchestration(session, pools, makeCategories()))
+      act(() => {
+        result.current.loadFromHistory(makeComposition({
+          toppings: [triggerTopping],
+          'chefs-special': [chefsSpecialIngredient],
+        }))
+      })
+      act(() => { result.current.rollOne('bread') })
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      // Must be the original chefsSpecialIngredient, not differentIngredient from the pool
+      expect(result.current.chefsSpecial).toEqual([chefsSpecialIngredient])
+    })
+
     it('removes trigger from displayed toppings when activated', () => {
       const triggerTopping = makeIngredient({ slug: 'trigger-a', is_trigger: true })
       const normalTopping = makeIngredient({ slug: 'lettuce', is_trigger: false })
