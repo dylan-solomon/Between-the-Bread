@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import type { Category, CategorySlug, DoubleCategory, Ingredient, SandwichComposition } from '@/types'
+import type { Category, CategorySlug, DoubleCategory, DietaryTag, Ingredient, SandwichComposition } from '@/types'
 import type { BaseCategory } from '@/engine/randomizer'
 import { BASE_CATEGORIES, rollCategory } from '@/engine/randomizer'
 import { generateSandwichName } from '@/engine/naming'
@@ -59,6 +59,7 @@ export const useRollOrchestration = (
   session: Session,
   pools: Partial<Record<CategorySlug, Ingredient[]>>,
   categories: Category[],
+  activeDietaryFilters: DietaryTag[] = [],
 ): RollOrchestration => {
   const [isRolling, setIsRolling] = useState(false)
   const [rollingCategory, setRollingCategory] = useState<BaseCategory | null>(null)
@@ -114,6 +115,7 @@ export const useRollOrchestration = (
           condiments: cleaned.condiments.map((i) => i.slug),
           chefsSpecial: specialRoll?.[0]?.slug ?? null,
           totalRolls,
+          activeDietaryFilters,
         })
       }
 
@@ -129,7 +131,7 @@ export const useRollOrchestration = (
       rollingRef.current = false
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [session.setComposition, session.addHistoryEntry, pools, categories],
+    [session.setComposition, session.addHistoryEntry, pools, categories, activeDietaryFilters],
   )
 
   const rollOne = useCallback(
@@ -185,6 +187,7 @@ export const useRollOrchestration = (
     captureRolledAll({
       rollNumber: rollAllCountRef.current,
       lockedCategories: [...session.lockedCategories],
+      activeDietaryFilters,
     })
 
     const prior = session.composition
@@ -238,7 +241,7 @@ export const useRollOrchestration = (
         }
       }, delay + (isLocked ? 0 : CATEGORY_DURATION))
     })
-  }, [session, pools, categories, resolveAndCommit])
+  }, [session, pools, categories, activeDietaryFilters, resolveAndCommit])
 
   const loadFromHistory = useCallback(
     (composition: SandwichComposition) => {

@@ -1,14 +1,16 @@
 import posthog from 'posthog-js'
+import type { DietaryTag } from '@/types'
 
 export const captureRolledAll = (props: {
   rollNumber: number
   lockedCategories: string[]
+  activeDietaryFilters: DietaryTag[]
 }): void => {
   posthog.capture('generator_rolled_all', {
     roll_number: props.rollNumber,
     locked_categories: props.lockedCategories,
     smart_mode: false,
-    active_dietary_filters: [],
+    active_dietary_filters: props.activeDietaryFilters,
   })
 }
 
@@ -49,6 +51,7 @@ export const captureSandwichCompleted = (props: {
   condiments: string[]
   chefsSpecial: string | null
   totalRolls: number
+  activeDietaryFilters: DietaryTag[]
 }): void => {
   posthog.capture('generator_sandwich_completed', {
     sandwich_name: props.sandwichName,
@@ -60,7 +63,7 @@ export const captureSandwichCompleted = (props: {
     chefs_special: props.chefsSpecial,
     total_rolls: props.totalRolls,
     smart_mode: false,
-    active_dietary_filters: [],
+    active_dietary_filters: props.activeDietaryFilters,
   })
 }
 
@@ -78,6 +81,28 @@ export const captureChefSpecialTriggered = (props: {
 
 export const capturePageView = (pagePath: string): void => {
   posthog.capture('$pageview', { current_url: pagePath })
+}
+
+export const captureDietaryFilterToggled = (props: {
+  tag: DietaryTag
+  isActive: boolean
+  activeFilters: DietaryTag[]
+}): void => {
+  posthog.capture('filter_dietary_toggled', {
+    tag: props.tag,
+    is_active: props.isActive,
+    active_filters: props.activeFilters,
+  })
+}
+
+export const captureDietaryFilterWarning = (props: {
+  tag: DietaryTag
+  affectedCategories: string[]
+}): void => {
+  posthog.capture('filter_dietary_warning', {
+    tag: props.tag,
+    affected_categories: props.affectedCategories,
+  })
 }
 
 export const capturePerformance = (props: {

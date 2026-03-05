@@ -8,6 +8,8 @@ import {
   captureChefSpecialTriggered,
   capturePageView,
   capturePerformance,
+  captureDietaryFilterToggled,
+  captureDietaryFilterWarning,
 } from '@/analytics/events'
 
 const { mockCapture } = vi.hoisted(() => ({ mockCapture: vi.fn() }))
@@ -20,18 +22,23 @@ beforeEach(() => { mockCapture.mockClear() })
 
 describe('captureRolledAll', () => {
   it('calls posthog.capture with generator_rolled_all', () => {
-    captureRolledAll({ rollNumber: 1, lockedCategories: [] })
+    captureRolledAll({ rollNumber: 1, lockedCategories: [], activeDietaryFilters: [] })
     expect(mockCapture).toHaveBeenCalledWith('generator_rolled_all', expect.anything())
   })
 
   it('includes roll_number in properties', () => {
-    captureRolledAll({ rollNumber: 3, lockedCategories: [] })
+    captureRolledAll({ rollNumber: 3, lockedCategories: [], activeDietaryFilters: [] })
     expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ roll_number: 3 }))
   })
 
   it('includes locked_categories as array', () => {
-    captureRolledAll({ rollNumber: 1, lockedCategories: ['bread', 'protein'] })
+    captureRolledAll({ rollNumber: 1, lockedCategories: ['bread', 'protein'], activeDietaryFilters: [] })
     expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ locked_categories: ['bread', 'protein'] }))
+  })
+
+  it('includes active_dietary_filters', () => {
+    captureRolledAll({ rollNumber: 1, lockedCategories: [], activeDietaryFilters: ['vegan', 'gluten_free'] })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ active_dietary_filters: ['vegan', 'gluten_free'] }))
   })
 })
 
@@ -94,6 +101,7 @@ describe('captureSandwichCompleted', () => {
     condiments: ['mustard'],
     chefsSpecial: null,
     totalRolls: 1,
+    activeDietaryFilters: [] as string[],
   }
 
   it('calls posthog.capture with generator_sandwich_completed', () => {
@@ -125,6 +133,11 @@ describe('captureSandwichCompleted', () => {
       toppings: ['lettuce', 'tomato'],
       condiments: ['mustard'],
     }))
+  })
+
+  it('includes active_dietary_filters', () => {
+    captureSandwichCompleted({ ...baseProps, activeDietaryFilters: ['vegetarian'] })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ active_dietary_filters: ['vegetarian'] }))
   })
 })
 
@@ -171,6 +184,42 @@ describe('capturePerformance', () => {
       ttfb_ms: 300,
       page: '/about',
       connection_type: null,
+    }))
+  })
+})
+
+describe('captureDietaryFilterToggled', () => {
+  it('calls posthog.capture with filter_dietary_toggled', () => {
+    captureDietaryFilterToggled({ tag: 'vegan', isActive: true, activeFilters: ['vegan'] })
+    expect(mockCapture).toHaveBeenCalledWith('filter_dietary_toggled', expect.anything())
+  })
+
+  it('includes tag, is_active, and active_filters', () => {
+    captureDietaryFilterToggled({ tag: 'gluten_free', isActive: true, activeFilters: ['vegan', 'gluten_free'] })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      tag: 'gluten_free',
+      is_active: true,
+      active_filters: ['vegan', 'gluten_free'],
+    }))
+  })
+
+  it('reflects is_active false when deactivating a filter', () => {
+    captureDietaryFilterToggled({ tag: 'vegan', isActive: false, activeFilters: [] })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ is_active: false }))
+  })
+})
+
+describe('captureDietaryFilterWarning', () => {
+  it('calls posthog.capture with filter_dietary_warning', () => {
+    captureDietaryFilterWarning({ tag: 'vegan', affectedCategories: ['protein'] })
+    expect(mockCapture).toHaveBeenCalledWith('filter_dietary_warning', expect.anything())
+  })
+
+  it('includes tag and affected_categories', () => {
+    captureDietaryFilterWarning({ tag: 'gluten_free', affectedCategories: ['bread', 'protein'] })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      tag: 'gluten_free',
+      affected_categories: ['bread', 'protein'],
     }))
   })
 })

@@ -146,13 +146,13 @@ describe('CategoryRow', () => {
     })
 
     it('is enabled when not locked and not rolling', () => {
-      renderRow({ isLocked: false, isRolling: false })
+      renderRow({ isLocked: false, isRolling: false, cyclingPool: [makeIngredient()] })
       expect(screen.getByRole('button', { name: /roll/i })).not.toBeDisabled()
     })
 
     it('calls onRoll when clicked', async () => {
       const onRoll = vi.fn()
-      renderRow({ onRoll })
+      renderRow({ onRoll, cyclingPool: [makeIngredient()] })
       await userEvent.click(screen.getByRole('button', { name: /roll/i }))
       expect(onRoll).toHaveBeenCalledOnce()
     })
@@ -169,6 +169,38 @@ describe('CategoryRow', () => {
       renderRow({ isRolling: true, onRoll })
       await userEvent.click(screen.getByRole('button', { name: /roll/i }))
       expect(onRoll).not.toHaveBeenCalled()
+    })
+
+    it('is disabled when cyclingPool is empty and not rolling and not locked', () => {
+      renderRow({ cyclingPool: [], isRolling: false, isLocked: false })
+      expect(screen.getByRole('button', { name: /roll/i })).toBeDisabled()
+    })
+
+    it('is enabled when cyclingPool is non-empty even if selection is empty', () => {
+      renderRow({ cyclingPool: [makeIngredient()], isRolling: false, isLocked: false })
+      expect(screen.getByRole('button', { name: /roll/i })).not.toBeDisabled()
+    })
+  })
+
+  describe('empty pool warning', () => {
+    it('shows "No options available" when pool is empty and not rolling and not locked', () => {
+      renderRow({ cyclingPool: [], isRolling: false, isLocked: false })
+      expect(screen.getByText('No options available')).toBeInTheDocument()
+    })
+
+    it('does not show "No options available" when pool has ingredients', () => {
+      renderRow({ cyclingPool: [makeIngredient()], isRolling: false, isLocked: false })
+      expect(screen.queryByText('No options available')).not.toBeInTheDocument()
+    })
+
+    it('does not show "No options available" when pool is empty but category is locked', () => {
+      renderRow({ cyclingPool: [], isLocked: true, canLock: true, isRolling: false })
+      expect(screen.queryByText('No options available')).not.toBeInTheDocument()
+    })
+
+    it('does not show "No options available" while rolling', () => {
+      renderRow({ cyclingPool: [], isRolling: true })
+      expect(screen.queryByText('No options available')).not.toBeInTheDocument()
     })
   })
 })

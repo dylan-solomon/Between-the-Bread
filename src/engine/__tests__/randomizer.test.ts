@@ -105,8 +105,8 @@ describe('rollCategory — explicit count override (double mode)', () => {
 
   it('still allows no-X ingredients in single (count=1) mode', () => {
     const noCheese = makeIngredient({ slug: 'no-cheese' })
-    const [result] = rollCategory('cheese', [noCheese], { categories })
-    expect(result?.slug).toBe('no-cheese')
+    const results = rollCategory('cheese', [noCheese], { categories })
+    expect(results[0]?.slug).toBe('no-cheese')
   })
 })
 

@@ -37,19 +37,19 @@ describe('useRollOrchestration', () => {
   describe('initial state', () => {
     it('is not rolling initially', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       expect(result.current.isRolling).toBe(false)
     })
 
     it('has no rolling category initially', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       expect(result.current.rollingCategory).toBeNull()
     })
 
     it('has no chefs special initially', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       expect(result.current.chefsSpecial).toBeNull()
     })
   })
@@ -57,21 +57,21 @@ describe('useRollOrchestration', () => {
   describe('rollAll', () => {
     it('sets isRolling to true when roll starts', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       expect(result.current.isRolling).toBe(true)
     })
 
     it('starts rolling bread first', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       expect(result.current.rollingCategory).toBe('bread')
     })
 
     it('moves to protein after bread settles', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(result.current.rollingCategory).toBe('protein')
@@ -79,7 +79,7 @@ describe('useRollOrchestration', () => {
 
     it('finishes rolling after all 5 categories settle', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       // 5 categories × (640ms + 200ms stagger) — last category has no stagger after it
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
@@ -88,7 +88,7 @@ describe('useRollOrchestration', () => {
 
     it('calls setComposition after all categories settle', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
       expect(session.setComposition).toHaveBeenCalled()
@@ -96,7 +96,7 @@ describe('useRollOrchestration', () => {
 
     it('updates composition incrementally as each category settles', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       // Only bread has settled (640ms) — protein hasn't started yet
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION) })
@@ -110,7 +110,7 @@ describe('useRollOrchestration', () => {
         ...makeSession(),
         lockedCategories: new Set(['protein'] as const),
       }
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       // Protein (index 1) is locked. Cheese should roll at slot 1 (CATEGORY_DURATION + STAGGER),
       // not at index 2 (2 × (CATEGORY_DURATION + STAGGER)) as if protein had animated.
@@ -123,7 +123,7 @@ describe('useRollOrchestration', () => {
         ...makeSession(),
         lockedCategories: new Set(['protein'] as const),
       }
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       // Advance to the point where protein would normally start animating
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
@@ -135,7 +135,7 @@ describe('useRollOrchestration', () => {
         ...makeSession(),
         composition: makeComposition(),
       }
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       // setComposition called synchronously to wipe old layers before animation starts
       expect(session.setComposition).toHaveBeenCalledOnce()
@@ -149,7 +149,7 @@ describe('useRollOrchestration', () => {
         composition: makeComposition(), // has 1 protein (Turkey)
         lockedCategories: new Set(['protein'] as const),
       }
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       const cleared = session.setComposition.mock.calls[0]?.[0] as SandwichComposition | undefined
       expect(cleared?.protein).toHaveLength(1) // locked — preserved
@@ -158,7 +158,7 @@ describe('useRollOrchestration', () => {
 
     it('resets chefsSpecial to null the moment a new rollAll begins', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       // Complete a first roll so any chefsSpecial state is settled
       act(() => { result.current.rollAll() })
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
@@ -169,7 +169,7 @@ describe('useRollOrchestration', () => {
 
     it('cannot start a new rollAll while already rolling', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       act(() => { result.current.rollAll() }) // second call should be ignored
       expect(result.current.rollingCategory).toBe('bread') // still on bread, not restarted
@@ -179,14 +179,14 @@ describe('useRollOrchestration', () => {
   describe('rollOne', () => {
     it('rolls only the specified category', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       expect(result.current.rollingCategory).toBe('cheese')
     })
 
     it('finishes after one category duration', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(result.current.isRolling).toBe(false)
@@ -194,7 +194,7 @@ describe('useRollOrchestration', () => {
 
     it('calls setComposition after the category settles', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(session.setComposition).toHaveBeenCalledOnce()
@@ -205,7 +205,7 @@ describe('useRollOrchestration', () => {
         ...makeSession(),
         composition: makeComposition(), // has Swiss cheese
       }
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       // setComposition called synchronously so old cheese layer disappears immediately
       expect(session.setComposition).toHaveBeenCalledOnce()
@@ -218,7 +218,7 @@ describe('useRollOrchestration', () => {
         ...makeSession(),
         lockedCategories: new Set(['cheese'] as const),
       }
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       expect(result.current.isRolling).toBe(false)
     })
@@ -227,7 +227,7 @@ describe('useRollOrchestration', () => {
   describe('history recording', () => {
     it('calls addHistoryEntry once after rollAll completes', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
       expect(session.addHistoryEntry).toHaveBeenCalledOnce()
@@ -235,7 +235,7 @@ describe('useRollOrchestration', () => {
 
     it('calls addHistoryEntry once after rollOne completes', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(session.addHistoryEntry).toHaveBeenCalledOnce()
@@ -243,7 +243,7 @@ describe('useRollOrchestration', () => {
 
     it('calls addHistoryEntry with a string name', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       const [, name] = session.addHistoryEntry.mock.calls[0] as [unknown, string]
@@ -255,7 +255,7 @@ describe('useRollOrchestration', () => {
   describe('loadFromHistory', () => {
     it('calls session.loadComposition with the provided composition', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       const composition = makeComposition()
       act(() => { result.current.loadFromHistory(composition) })
       expect(session.loadComposition).toHaveBeenCalledOnce()
@@ -264,7 +264,7 @@ describe('useRollOrchestration', () => {
 
     it('clears chefsSpecial immediately when loading from history', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       // Complete a full roll so chefsSpecial state could be set
       act(() => { result.current.rollAll() })
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
@@ -275,7 +275,7 @@ describe('useRollOrchestration', () => {
 
     it('does not trigger a roll when loading from history', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.loadFromHistory(makeComposition()) })
       expect(result.current.isRolling).toBe(false)
     })
@@ -284,14 +284,14 @@ describe('useRollOrchestration', () => {
       const chefsSpecialIngredient = makeIngredient({ name: 'Secret Sauce', slug: 'secret-sauce' })
       const composition = makeComposition({ 'chefs-special': [chefsSpecialIngredient] })
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.loadFromHistory(composition) })
       expect(result.current.chefsSpecial).toEqual([chefsSpecialIngredient])
     })
 
     it('clears chefsSpecial when loading a history entry that had no chef\'s special', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
       act(() => { result.current.loadFromHistory(makeComposition()) })
@@ -306,7 +306,7 @@ describe('useRollOrchestration', () => {
         ...makeSession(),
         composition: makeComposition({ toppings: [triggerTopping] }),
       }
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       // Advance past all 5 categories
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
@@ -319,7 +319,7 @@ describe('useRollOrchestration', () => {
 
     it('resets chefsSpecial to null the moment rollOne starts', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       // Complete a full roll first so any chefsSpecial state is settled
       act(() => { result.current.rollAll() })
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
@@ -331,7 +331,7 @@ describe('useRollOrchestration', () => {
     it('does not clear chefsSpecial synchronously when rolling a non-toppings category', () => {
       const chefsSpecialIngredient = makeIngredient({ name: 'Secret Sauce', slug: 'secret-sauce' })
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.loadFromHistory(makeComposition({ 'chefs-special': [chefsSpecialIngredient] })) })
       // Rolling bread must NOT clear chefsSpecial synchronously
       act(() => { result.current.rollOne('bread') })
@@ -348,7 +348,7 @@ describe('useRollOrchestration', () => {
         ...makeSession(),
         composition: makeComposition({ toppings: [triggerTopping] }),
       }
-      const { result } = renderHook(() => useRollOrchestration(session, pools, makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, pools, makeCategories(), []))
       act(() => {
         result.current.loadFromHistory(makeComposition({
           toppings: [triggerTopping],
@@ -367,7 +367,7 @@ describe('useRollOrchestration', () => {
       // After rolling, toppings with a trigger should have the trigger removed
       // This is tested via setComposition — the composition passed should not include the trigger
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('toppings') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       // Check that setComposition was called with toppings that don't include trigger items
@@ -384,21 +384,21 @@ describe('useRollOrchestration', () => {
   describe('analytics events', () => {
     it('fires captureRolledAll once when rollAll starts', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       expect(events.captureRolledAll).toHaveBeenCalledOnce()
     })
 
     it('fires captureRolledAll with rollNumber 1 on first roll', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       expect(events.captureRolledAll).toHaveBeenCalledWith(expect.objectContaining({ rollNumber: 1 }))
     })
 
     it('increments rollNumber on each subsequent rollAll', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
       act(() => { result.current.rollAll() })
@@ -412,14 +412,37 @@ describe('useRollOrchestration', () => {
         ...makeSession(),
         lockedCategories: new Set(['protein'] as const),
       }
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       expect(events.captureRolledAll).toHaveBeenCalledWith(expect.objectContaining({ lockedCategories: ['protein'] }))
     })
 
+    it('fires captureRolledAll with the active dietary filters', () => {
+      const session = makeSession()
+      const { result } = renderHook(() =>
+        useRollOrchestration(session, makePools(), makeCategories(), ['vegan']),
+      )
+      act(() => { result.current.rollAll() })
+      expect(events.captureRolledAll).toHaveBeenCalledWith(
+        expect.objectContaining({ activeDietaryFilters: ['vegan'] }),
+      )
+    })
+
+    it('fires captureSandwichCompleted with the active dietary filters', () => {
+      const session = makeSession()
+      const { result } = renderHook(() =>
+        useRollOrchestration(session, makePools(), makeCategories(), ['vegetarian']),
+      )
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      expect(events.captureSandwichCompleted).toHaveBeenCalledWith(
+        expect.objectContaining({ activeDietaryFilters: ['vegetarian'] }),
+      )
+    })
+
     it('fires captureRolledCategory once after rollOne settles', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(events.captureRolledCategory).toHaveBeenCalledOnce()
@@ -427,7 +450,7 @@ describe('useRollOrchestration', () => {
 
     it('fires captureRolledCategory with correct category and rollNumber', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(events.captureRolledCategory).toHaveBeenCalledWith(expect.objectContaining({ category: 'cheese', rollNumber: 1 }))
@@ -435,7 +458,7 @@ describe('useRollOrchestration', () => {
 
     it('fires captureRolledCategory with previousIngredient null on first roll', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(events.captureRolledCategory).toHaveBeenCalledWith(expect.objectContaining({ previousIngredient: null }))
@@ -443,7 +466,7 @@ describe('useRollOrchestration', () => {
 
     it('fires captureSandwichCompleted after rollAll when all categories settle', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollAll() })
       act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
       expect(events.captureSandwichCompleted).toHaveBeenCalledOnce()
@@ -451,7 +474,7 @@ describe('useRollOrchestration', () => {
 
     it('does not fire captureSandwichCompleted after rollOne on a fresh session', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(events.captureSandwichCompleted).not.toHaveBeenCalled()
@@ -459,7 +482,7 @@ describe('useRollOrchestration', () => {
 
     it('does not fire captureChefSpecialTriggered when rolling only bread', () => {
       const session = makeSession()
-      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories()))
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       // Rolling bread only — toppings selection stays empty, so no trigger is possible
       act(() => { result.current.rollOne('bread') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
