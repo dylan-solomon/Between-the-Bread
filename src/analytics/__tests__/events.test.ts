@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { DietaryTag } from '@/types'
 import {
   captureRolledAll,
   captureRolledCategory,
@@ -101,7 +102,7 @@ describe('captureSandwichCompleted', () => {
     condiments: ['mustard'],
     chefsSpecial: null,
     totalRolls: 1,
-    activeDietaryFilters: [] as string[],
+    activeDietaryFilters: [] as DietaryTag[],
   }
 
   it('calls posthog.capture with generator_sandwich_completed', () => {
