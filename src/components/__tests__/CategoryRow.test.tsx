@@ -37,22 +37,22 @@ describe('CategoryRow', () => {
 
   describe('selection display', () => {
     it('shows a placeholder when selection is empty', () => {
-      renderRow()
+      renderRow({ cyclingPool: [makeIngredient()] })
       expect(screen.getByText('—')).toBeInTheDocument()
     })
 
     it('shows the ingredient name for a single selection', () => {
-      renderRow({ selection: [makeIngredient({ name: 'Sourdough' })] })
+      renderRow({ selection: [makeIngredient({ name: 'Sourdough' })], cyclingPool: [makeIngredient()] })
       expect(screen.getByText('Sourdough')).toBeInTheDocument()
     })
 
     it('joins multiple selections with " & "', () => {
-      renderRow({ selection: [makeIngredient({ name: 'Cheddar' }), makeIngredient({ name: 'Swiss' })] })
+      renderRow({ selection: [makeIngredient({ name: 'Cheddar' }), makeIngredient({ name: 'Swiss' })], cyclingPool: [makeIngredient()] })
       expect(screen.getByText('Cheddar & Swiss')).toBeInTheDocument()
     })
 
     it('does not show a placeholder when a selection is present', () => {
-      renderRow({ selection: [makeIngredient({ name: 'Sourdough' })] })
+      renderRow({ selection: [makeIngredient({ name: 'Sourdough' })], cyclingPool: [makeIngredient()] })
       expect(screen.queryByText('—')).not.toBeInTheDocument()
     })
   })
@@ -216,6 +216,11 @@ describe('CategoryRow', () => {
     it('disables dice when pool only contains no-X ingredients', () => {
       renderRow({ cyclingPool: [makeIngredient({ slug: 'no-cheese' })], isRolling: false, isLocked: false })
       expect(screen.getByRole('button', { name: /roll/i })).toBeDisabled()
+    })
+
+    it('hides the current selection text when pool is empty', () => {
+      renderRow({ cyclingPool: [], selection: [makeIngredient({ name: 'No Cheese' })], isRolling: false, isLocked: false })
+      expect(screen.queryByText('No Cheese')).not.toBeInTheDocument()
     })
   })
 })

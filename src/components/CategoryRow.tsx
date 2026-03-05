@@ -65,7 +65,7 @@ export default function CategoryRow({
               : 'font-medium text-neutral-800'
         }`}
       >
-        {displayText}
+        {!poolEmpty && displayText}
       </span>
       {poolEmpty && (
         <span className="text-xs font-medium text-amber-600">No options available</span>
