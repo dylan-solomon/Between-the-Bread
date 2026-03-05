@@ -107,25 +107,30 @@ describe('CategoryRow', () => {
     })
 
     it('renders a button labelled with the category name when onToggleDouble is provided', () => {
-      renderRow({ category: proteinCategory, onToggleDouble: vi.fn(), isDouble: false })
+      renderRow({ category: proteinCategory, onToggleDouble: vi.fn(), isDouble: false, cyclingPool: [makeIngredient()] })
       expect(screen.getByRole('button', { name: 'Two Proteins' })).toBeInTheDocument()
     })
 
     it('has aria-pressed="false" when not doubled', () => {
-      renderRow({ category: proteinCategory, onToggleDouble: vi.fn(), isDouble: false })
+      renderRow({ category: proteinCategory, onToggleDouble: vi.fn(), isDouble: false, cyclingPool: [makeIngredient()] })
       expect(screen.getByRole('button', { name: 'Two Proteins' })).toHaveAttribute('aria-pressed', 'false')
     })
 
     it('has aria-pressed="true" when doubled', () => {
-      renderRow({ category: proteinCategory, onToggleDouble: vi.fn(), isDouble: true })
+      renderRow({ category: proteinCategory, onToggleDouble: vi.fn(), isDouble: true, cyclingPool: [makeIngredient()] })
       expect(screen.getByRole('button', { name: 'Two Proteins' })).toHaveAttribute('aria-pressed', 'true')
     })
 
     it('calls onToggleDouble when clicked', async () => {
       const onToggleDouble = vi.fn()
-      renderRow({ category: proteinCategory, onToggleDouble, isDouble: false })
+      renderRow({ category: proteinCategory, onToggleDouble, isDouble: false, cyclingPool: [makeIngredient()] })
       await userEvent.click(screen.getByRole('button', { name: 'Two Proteins' }))
       expect(onToggleDouble).toHaveBeenCalledOnce()
+    })
+
+    it('hides the double button when pool is empty', () => {
+      renderRow({ category: proteinCategory, onToggleDouble: vi.fn(), isDouble: false, cyclingPool: [] })
+      expect(screen.queryByRole('button', { name: 'Two Proteins' })).not.toBeInTheDocument()
     })
   })
 

@@ -70,7 +70,7 @@ export default function CategoryRow({
       {poolEmpty && (
         <span className="text-xs font-medium text-amber-600">No options available</span>
       )}
-      {onToggleDouble !== undefined && (
+      {onToggleDouble !== undefined && !poolEmpty && (
         <button
           type="button"
           aria-label={`Two ${category.name}s`}
