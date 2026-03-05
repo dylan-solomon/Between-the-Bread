@@ -39,6 +39,8 @@ export default function CategoryRow({
   const accentClasses = CATEGORY_STYLES[category.slug]
   const displayText = useCyclingText({ isRolling, selection, pool: cyclingPool })
   const isEmpty = !isRolling && selection.length === 0
+  const effectivePool = cyclingPool.filter((i) => !i.slug.startsWith('no-'))
+  const poolEmpty = effectivePool.length === 0 && !isLocked
 
   return (
     <div className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${accentClasses}`}>
@@ -63,9 +65,12 @@ export default function CategoryRow({
               : 'font-medium text-neutral-800'
         }`}
       >
-        {displayText}
+        {!poolEmpty && displayText}
       </span>
-      {onToggleDouble !== undefined && (
+      {poolEmpty && (
+        <span className="text-xs font-medium text-amber-600">No options available</span>
+      )}
+      {onToggleDouble !== undefined && !poolEmpty && (
         <button
           type="button"
           aria-label={`Two ${category.name}s`}
@@ -80,7 +85,7 @@ export default function CategoryRow({
         type="button"
         aria-label="Roll this category"
         onClick={onRoll}
-        disabled={isLocked || isRolling}
+        disabled={isLocked || isRolling || poolEmpty}
         className="flex-shrink-0 rounded p-1 disabled:opacity-40"
       >
         <Dice5 size={18} />

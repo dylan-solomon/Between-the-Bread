@@ -12,12 +12,12 @@ export const generateSandwichName = (composition: SandwichComposition): string =
   const protein = composition.protein.at(0)
   const cheese = composition.cheese.at(0)
 
-  const breadName = bread?.name ?? 'Unknown Bread'
   const proteinName = protein?.name ?? 'Unknown Protein'
+  const onBread = bread !== undefined ? ` on ${bread.name}` : ''
 
   if (!hasCheeseSelection(composition) || cheese === undefined) {
-    return `${proteinName} on ${breadName}`
+    return `${proteinName}${onBread}`
   }
 
-  return `${proteinName} & ${cheese.name} on ${breadName}`
+  return `${proteinName} & ${cheese.name}${onBread}`
 }

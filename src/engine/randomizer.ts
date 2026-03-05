@@ -47,7 +47,8 @@ export const rollCategory = (
   if (!category) return []
 
   if (options.count !== undefined) {
-    return shuffle(pool).slice(0, Math.min(options.count, pool.length))
+    const eligiblePool = options.count > 1 ? pool.filter((i) => !i.slug.startsWith('no-')) : pool
+    return shuffle(eligiblePool).slice(0, Math.min(options.count, eligiblePool.length))
   }
 
   if (category.selection_type === 'single') {
