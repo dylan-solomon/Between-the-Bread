@@ -28,4 +28,14 @@ describe('generateSandwichName', () => {
     const composition = makeComposition({ cheese: [] })
     expect(generateSandwichName(composition)).toBe('Turkey on Sourdough')
   })
+
+  it('omits "on Bread" when bread selection is empty', () => {
+    const composition = makeComposition({ bread: [] })
+    expect(generateSandwichName(composition)).toBe('Turkey & Swiss')
+  })
+
+  it('omits both cheese and bread portions when both are empty', () => {
+    const composition = makeComposition({ bread: [], cheese: [] })
+    expect(generateSandwichName(composition)).toBe('Turkey')
+  })
 })
