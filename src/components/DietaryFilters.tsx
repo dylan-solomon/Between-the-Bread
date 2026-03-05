@@ -19,7 +19,7 @@ type Props = {
 
 export default function DietaryFilters({ activeTags, onToggle }: Props) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap justify-center gap-2">
       {FILTERS.map(({ tag, label }) => {
         const isActive = activeTags.includes(tag)
         return (

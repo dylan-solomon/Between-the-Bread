@@ -198,9 +198,19 @@ describe('CategoryRow', () => {
       expect(screen.queryByText('No options available')).not.toBeInTheDocument()
     })
 
-    it('does not show "No options available" while rolling', () => {
+    it('still shows "No options available" while rolling', () => {
       renderRow({ cyclingPool: [], isRolling: true })
-      expect(screen.queryByText('No options available')).not.toBeInTheDocument()
+      expect(screen.getByText('No options available')).toBeInTheDocument()
+    })
+
+    it('shows "No options available" when pool only contains no-X ingredients', () => {
+      renderRow({ cyclingPool: [makeIngredient({ slug: 'no-cheese' })], isRolling: false, isLocked: false })
+      expect(screen.getByText('No options available')).toBeInTheDocument()
+    })
+
+    it('disables dice when pool only contains no-X ingredients', () => {
+      renderRow({ cyclingPool: [makeIngredient({ slug: 'no-cheese' })], isRolling: false, isLocked: false })
+      expect(screen.getByRole('button', { name: /roll/i })).toBeDisabled()
     })
   })
 })

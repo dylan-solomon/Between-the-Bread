@@ -39,7 +39,8 @@ export default function CategoryRow({
   const accentClasses = CATEGORY_STYLES[category.slug]
   const displayText = useCyclingText({ isRolling, selection, pool: cyclingPool })
   const isEmpty = !isRolling && selection.length === 0
-  const poolEmpty = cyclingPool.length === 0 && !isRolling && !isLocked
+  const effectivePool = cyclingPool.filter((i) => !i.slug.startsWith('no-'))
+  const poolEmpty = effectivePool.length === 0 && !isLocked
 
   return (
     <div className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${accentClasses}`}>
