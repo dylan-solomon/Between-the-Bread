@@ -134,27 +134,27 @@ describe('HomePage', () => {
   })
 
   describe('smart mode toggle', () => {
-    it('renders the Smart Mode toggle button', () => {
+    it('renders the Smart Mode toggle switch', () => {
       renderPage()
-      expect(screen.getByRole('button', { name: /smart mode/i })).toBeInTheDocument()
+      expect(screen.getByRole('switch', { name: /smart mode/i })).toBeInTheDocument()
     })
 
-    it('Smart Mode toggle starts inactive (aria-pressed=false)', () => {
+    it('Smart Mode toggle starts inactive (aria-checked=false)', () => {
       renderPage()
-      expect(screen.getByRole('button', { name: /smart mode/i })).toHaveAttribute('aria-pressed', 'false')
+      expect(screen.getByRole('switch', { name: /smart mode/i })).toHaveAttribute('aria-checked', 'false')
     })
 
     it('Smart Mode toggle becomes active after clicking', async () => {
       renderPage()
-      await userEvent.click(screen.getByRole('button', { name: /smart mode/i }))
-      expect(screen.getByRole('button', { name: /smart mode/i })).toHaveAttribute('aria-pressed', 'true')
+      await userEvent.click(screen.getByRole('switch', { name: /smart mode/i }))
+      expect(screen.getByRole('switch', { name: /smart mode/i })).toHaveAttribute('aria-checked', 'true')
     })
 
     it('Smart Mode toggle deactivates on second click', async () => {
       renderPage()
-      await userEvent.click(screen.getByRole('button', { name: /smart mode/i }))
-      await userEvent.click(screen.getByRole('button', { name: /smart mode/i }))
-      expect(screen.getByRole('button', { name: /smart mode/i })).toHaveAttribute('aria-pressed', 'false')
+      await userEvent.click(screen.getByRole('switch', { name: /smart mode/i }))
+      await userEvent.click(screen.getByRole('switch', { name: /smart mode/i }))
+      expect(screen.getByRole('switch', { name: /smart mode/i })).toHaveAttribute('aria-checked', 'false')
     })
   })
 })

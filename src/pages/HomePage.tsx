@@ -85,7 +85,6 @@ export default function HomePage() {
 
         <div className="flex flex-wrap justify-center gap-2">
           <DietaryFilters activeTags={activeDietFilters} onToggle={toggleDietFilter} />
-          <SmartModeToggle isActive={smartMode} onToggle={toggleSmartMode} />
         </div>
 
         <RollAllButton
@@ -94,6 +93,10 @@ export default function HomePage() {
           disabled={loading}
           onClick={rollAll}
         />
+
+        <div className="flex justify-center">
+          <SmartModeToggle isActive={smartMode} onToggle={toggleSmartMode} />
+        </div>
 
         <CategoryList
           composition={session.composition}
