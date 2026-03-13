@@ -1,4 +1,5 @@
-import type { Category, CategorySlug, DoubleCategory, Ingredient } from '@/types'
+import type { Category, CategorySlug, CompatGroup, CompatMatrixRow, DoubleCategory, Ingredient } from '@/types'
+import { buildCompatWeights, weightedSample } from '@/engine/smartRoll'
 
 // ─── Internal utilities ───────────────────────────────────────────────────────
 
@@ -36,22 +37,53 @@ export type RollAllOptions = {
   doubleCategories: ReadonlySet<DoubleCategory>
 }
 
+export type SmartOptions = {
+  priorGroups: readonly CompatGroup[]
+  matrix: CompatMatrixRow[]
+}
+
+const weightedPickSequential = (
+  pool: Ingredient[],
+  count: number,
+  smartOptions: SmartOptions,
+): Ingredient[] => {
+  const { priorGroups, matrix } = smartOptions
+  const remaining = [...pool]
+  const picks: Ingredient[] = []
+  for (let i = 0; i < count && remaining.length > 0; i++) {
+    const weights = buildCompatWeights(remaining, priorGroups as CompatGroup[], matrix)
+    const pick = weightedSample(remaining, weights)
+    picks.push(pick)
+    remaining.splice(remaining.indexOf(pick), 1)
+  }
+  return picks
+}
+
 export const rollCategory = (
   slug: CategorySlug,
   pool: Ingredient[],
-  options: { categories: Category[]; count?: number },
+  options: { categories: Category[]; count?: number; smartOptions?: SmartOptions },
 ): Ingredient[] => {
   if (pool.length === 0) return []
 
   const category = options.categories.find((c) => c.slug === slug)
   if (!category) return []
 
+  const { smartOptions } = options
+
   if (options.count !== undefined) {
     const eligiblePool = options.count > 1 ? pool.filter((i) => !i.slug.startsWith('no-')) : pool
+    if (smartOptions && smartOptions.priorGroups.length > 0) {
+      return weightedPickSequential(eligiblePool, Math.min(options.count, eligiblePool.length), smartOptions)
+    }
     return shuffle(eligiblePool).slice(0, Math.min(options.count, eligiblePool.length))
   }
 
   if (category.selection_type === 'single') {
+    if (smartOptions && smartOptions.priorGroups.length > 0) {
+      const weights = buildCompatWeights(pool, smartOptions.priorGroups as CompatGroup[], smartOptions.matrix)
+      return [weightedSample(pool, weights)]
+    }
     return shuffle(pool).slice(0, 1)
   }
 
@@ -59,6 +91,9 @@ export const rollCategory = (
     category.min_picks,
     Math.min(category.max_picks, pool.length),
   )
+  if (smartOptions && smartOptions.priorGroups.length > 0) {
+    return weightedPickSequential(pool, finalCount, smartOptions)
+  }
   return shuffle(pool).slice(0, finalCount)
 }
 

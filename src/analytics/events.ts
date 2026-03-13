@@ -5,11 +5,12 @@ export const captureRolledAll = (props: {
   rollNumber: number
   lockedCategories: string[]
   activeDietaryFilters: DietaryTag[]
+  smartMode: boolean
 }): void => {
   posthog.capture('generator_rolled_all', {
     roll_number: props.rollNumber,
     locked_categories: props.lockedCategories,
-    smart_mode: false,
+    smart_mode: props.smartMode,
     active_dietary_filters: props.activeDietaryFilters,
   })
 }
@@ -52,6 +53,7 @@ export const captureSandwichCompleted = (props: {
   chefsSpecial: string | null
   totalRolls: number
   activeDietaryFilters: DietaryTag[]
+  smartMode: boolean
 }): void => {
   posthog.capture('generator_sandwich_completed', {
     sandwich_name: props.sandwichName,
@@ -62,7 +64,7 @@ export const captureSandwichCompleted = (props: {
     condiments: props.condiments,
     chefs_special: props.chefsSpecial,
     total_rolls: props.totalRolls,
-    smart_mode: false,
+    smart_mode: props.smartMode,
     active_dietary_filters: props.activeDietaryFilters,
   })
 }
@@ -81,6 +83,10 @@ export const captureChefSpecialTriggered = (props: {
 
 export const capturePageView = (pagePath: string): void => {
   posthog.capture('$pageview', { current_url: pagePath })
+}
+
+export const captureSmartModeToggled = (props: { isActive: boolean }): void => {
+  posthog.capture('generator_smart_mode_toggled', { is_active: props.isActive })
 }
 
 export const captureDietaryFilterToggled = (props: {
