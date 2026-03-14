@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useRollOrchestration } from '@/hooks/useRollOrchestration'
 import { makeCategories, makeComposition, makeIngredient, makePool } from '@/test/factories'
-import type { SandwichComposition } from '@/types'
+import type { CompatMatrixRow, SandwichComposition } from '@/types'
 import * as events from '@/analytics/events'
 
 vi.mock('@/analytics/events')
@@ -472,12 +472,50 @@ describe('useRollOrchestration', () => {
       expect(events.captureSandwichCompleted).toHaveBeenCalledOnce()
     })
 
+    it('fires captureRolledAll with smartMode: true when smartMode is enabled', () => {
+      const session = makeSession()
+      const { result } = renderHook(() =>
+        useRollOrchestration(session, makePools(), makeCategories(), [], true, []),
+      )
+      act(() => { result.current.rollAll() })
+      expect(events.captureRolledAll).toHaveBeenCalledWith(expect.objectContaining({ smartMode: true }))
+    })
+
+    it('fires captureRolledAll with smartMode: false when smartMode is not enabled', () => {
+      const session = makeSession()
+      const { result } = renderHook(() =>
+        useRollOrchestration(session, makePools(), makeCategories(), []),
+      )
+      act(() => { result.current.rollAll() })
+      expect(events.captureRolledAll).toHaveBeenCalledWith(expect.objectContaining({ smartMode: false }))
+    })
+
+    it('fires captureSandwichCompleted with smartMode: true when smartMode is enabled', () => {
+      const session = makeSession()
+      const { result } = renderHook(() =>
+        useRollOrchestration(session, makePools(), makeCategories(), [], true, []),
+      )
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      expect(events.captureSandwichCompleted).toHaveBeenCalledWith(expect.objectContaining({ smartMode: true }))
+    })
+
     it('does not fire captureSandwichCompleted after rollOne on a fresh session', () => {
       const session = makeSession()
       const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
       act(() => { result.current.rollOne('cheese') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(events.captureSandwichCompleted).not.toHaveBeenCalled()
+    })
+
+    it('fires captureSandwichCompleted with smartMode: false when smartMode is not enabled', () => {
+      const session = makeSession()
+      const { result } = renderHook(() =>
+        useRollOrchestration(session, makePools(), makeCategories(), []),
+      )
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      expect(events.captureSandwichCompleted).toHaveBeenCalledWith(expect.objectContaining({ smartMode: false }))
     })
 
     it('does not fire captureChefSpecialTriggered when rolling only bread', () => {
@@ -487,6 +525,66 @@ describe('useRollOrchestration', () => {
       act(() => { result.current.rollOne('bread') })
       act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
       expect(events.captureChefSpecialTriggered).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('smart mode context', () => {
+    // Matrix: italian↔american = 0.01; self-affinity = 1.0 (handled without matrix row)
+    const skewedMatrix: CompatMatrixRow[] = [
+      { group_a: 'american', group_b: 'italian', affinity: 0.01 },
+    ]
+
+    it('with smartMode + locked italian bread, protein rolls lean italian over 30 trials', () => {
+      const italianBread = makeIngredient({ slug: 'ciabatta', compat_group: 'italian' })
+      const italianProtein = makeIngredient({ slug: 'prosciutto', compat_group: 'italian' })
+      const americanProtein = makeIngredient({ slug: 'ham', compat_group: 'american' })
+      const pools = { ...makePools(), bread: [italianBread], protein: [italianProtein, americanProtein] }
+      const session = {
+        ...makeSession(),
+        composition: makeComposition({ bread: [italianBread] }),
+        lockedCategories: new Set(['bread'] as const),
+      }
+
+      let italianCount = 0
+      for (let i = 0; i < 30; i++) {
+        session.setComposition.mockReset()
+        const { result, unmount } = renderHook(() =>
+          useRollOrchestration(session, pools, makeCategories(), [], true, skewedMatrix),
+        )
+        act(() => { result.current.rollAll() })
+        act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+        const lastComp = (session.setComposition.mock.calls.at(-1) as [SandwichComposition] | undefined)?.[0]
+        if (lastComp?.protein[0]?.slug === 'prosciutto') italianCount++
+        unmount()
+      }
+      expect(italianCount).toBeGreaterThan(20)
+    })
+
+    it('with smartMode, rollOne uses all other settled ingredients as priorGroups', () => {
+      const italianIngredient = makeIngredient({ slug: 'mozzarella', compat_group: 'italian' })
+      const americanIngredient = makeIngredient({ slug: 'american-ch', compat_group: 'american' })
+      const session = {
+        ...makeSession(),
+        composition: makeComposition({
+          bread: [makeIngredient({ compat_group: 'italian' })],
+          protein: [makeIngredient({ compat_group: 'italian' })],
+        }),
+      }
+      const pools = { ...makePools(), cheese: [italianIngredient, americanIngredient] }
+
+      let italianCount = 0
+      for (let i = 0; i < 30; i++) {
+        session.setComposition.mockReset()
+        const { result, unmount } = renderHook(() =>
+          useRollOrchestration(session, pools, makeCategories(), [], true, skewedMatrix),
+        )
+        act(() => { result.current.rollOne('cheese') })
+        act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+        const lastComp = (session.setComposition.mock.calls.at(-1) as [SandwichComposition] | undefined)?.[0]
+        if (lastComp?.cheese[0]?.slug === 'mozzarella') italianCount++
+        unmount()
+      }
+      expect(italianCount).toBeGreaterThan(20)
     })
   })
 })

@@ -11,6 +11,7 @@ import {
   capturePerformance,
   captureDietaryFilterToggled,
   captureDietaryFilterWarning,
+  captureSmartModeToggled,
 } from '@/analytics/events'
 
 const { mockCapture } = vi.hoisted(() => ({ mockCapture: vi.fn() }))
@@ -23,23 +24,28 @@ beforeEach(() => { mockCapture.mockClear() })
 
 describe('captureRolledAll', () => {
   it('calls posthog.capture with generator_rolled_all', () => {
-    captureRolledAll({ rollNumber: 1, lockedCategories: [], activeDietaryFilters: [] })
+    captureRolledAll({ rollNumber: 1, lockedCategories: [], activeDietaryFilters: [], smartMode: false })
     expect(mockCapture).toHaveBeenCalledWith('generator_rolled_all', expect.anything())
   })
 
   it('includes roll_number in properties', () => {
-    captureRolledAll({ rollNumber: 3, lockedCategories: [], activeDietaryFilters: [] })
+    captureRolledAll({ rollNumber: 3, lockedCategories: [], activeDietaryFilters: [], smartMode: false })
     expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ roll_number: 3 }))
   })
 
   it('includes locked_categories as array', () => {
-    captureRolledAll({ rollNumber: 1, lockedCategories: ['bread', 'protein'], activeDietaryFilters: [] })
+    captureRolledAll({ rollNumber: 1, lockedCategories: ['bread', 'protein'], activeDietaryFilters: [], smartMode: false })
     expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ locked_categories: ['bread', 'protein'] }))
   })
 
   it('includes active_dietary_filters', () => {
-    captureRolledAll({ rollNumber: 1, lockedCategories: [], activeDietaryFilters: ['vegan', 'gluten_free'] })
+    captureRolledAll({ rollNumber: 1, lockedCategories: [], activeDietaryFilters: ['vegan', 'gluten_free'], smartMode: false })
     expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ active_dietary_filters: ['vegan', 'gluten_free'] }))
+  })
+
+  it('includes smart_mode: true when smartMode is true', () => {
+    captureRolledAll({ rollNumber: 1, lockedCategories: [], activeDietaryFilters: [], smartMode: true })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ smart_mode: true }))
   })
 })
 
@@ -103,6 +109,7 @@ describe('captureSandwichCompleted', () => {
     chefsSpecial: null,
     totalRolls: 1,
     activeDietaryFilters: [] as DietaryTag[],
+    smartMode: false,
   }
 
   it('calls posthog.capture with generator_sandwich_completed', () => {
@@ -139,6 +146,11 @@ describe('captureSandwichCompleted', () => {
   it('includes active_dietary_filters', () => {
     captureSandwichCompleted({ ...baseProps, activeDietaryFilters: ['vegetarian'] })
     expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ active_dietary_filters: ['vegetarian'] }))
+  })
+
+  it('includes smart_mode: true when smartMode is true', () => {
+    captureSandwichCompleted({ ...baseProps, smartMode: true })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ smart_mode: true }))
   })
 })
 
@@ -222,5 +234,22 @@ describe('captureDietaryFilterWarning', () => {
       tag: 'gluten_free',
       affected_categories: ['bread', 'protein'],
     }))
+  })
+})
+
+describe('captureSmartModeToggled', () => {
+  it('calls posthog.capture with generator_smart_mode_toggled', () => {
+    captureSmartModeToggled({ isActive: true })
+    expect(mockCapture).toHaveBeenCalledWith('generator_smart_mode_toggled', expect.anything())
+  })
+
+  it('includes is_active: true when activating', () => {
+    captureSmartModeToggled({ isActive: true })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ is_active: true }))
+  })
+
+  it('includes is_active: false when deactivating', () => {
+    captureSmartModeToggled({ isActive: false })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ is_active: false }))
   })
 })

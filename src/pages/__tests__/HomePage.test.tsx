@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import HomePage from '@/pages/HomePage'
 import { makeCategories, makePool } from '@/test/factories'
+import type { CompatMatrixRow } from '@/types'
 
 vi.mock('@/hooks/useIngredients', () => ({
   useIngredients: () => ({
@@ -18,6 +20,14 @@ vi.mock('@/hooks/useIngredients', () => ({
     loading: false,
     error: null,
   }),
+}))
+
+const stubMatrix: CompatMatrixRow[] = [
+  { group_a: 'italian', group_b: 'mediterranean', affinity: 0.85 },
+]
+
+vi.mock('@/hooks/useCompatMatrix', () => ({
+  useCompatMatrix: () => ({ matrix: stubMatrix, loading: false }),
 }))
 
 // Total duration for all 5 categories to settle:
@@ -120,6 +130,31 @@ describe('HomePage', () => {
         vi.advanceTimersByTime(FULL_ROLL_MS)
       })
       expect(screen.queryByText(/roll the dice to build your sandwich/i)).not.toBeInTheDocument()
+    })
+  })
+
+  describe('smart mode toggle', () => {
+    it('renders the Smart Mode toggle switch', () => {
+      renderPage()
+      expect(screen.getByRole('switch', { name: /smart mode/i })).toBeInTheDocument()
+    })
+
+    it('Smart Mode toggle starts inactive (aria-checked=false)', () => {
+      renderPage()
+      expect(screen.getByRole('switch', { name: /smart mode/i })).toHaveAttribute('aria-checked', 'false')
+    })
+
+    it('Smart Mode toggle becomes active after clicking', async () => {
+      renderPage()
+      await userEvent.click(screen.getByRole('switch', { name: /smart mode/i }))
+      expect(screen.getByRole('switch', { name: /smart mode/i })).toHaveAttribute('aria-checked', 'true')
+    })
+
+    it('Smart Mode toggle deactivates on second click', async () => {
+      renderPage()
+      await userEvent.click(screen.getByRole('switch', { name: /smart mode/i }))
+      await userEvent.click(screen.getByRole('switch', { name: /smart mode/i }))
+      expect(screen.getByRole('switch', { name: /smart mode/i })).toHaveAttribute('aria-checked', 'false')
     })
   })
 })

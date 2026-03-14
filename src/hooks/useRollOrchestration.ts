@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import type { Category, CategorySlug, DoubleCategory, DietaryTag, Ingredient, SandwichComposition } from '@/types'
+import type { Category, CategorySlug, CompatGroup, CompatMatrixRow, DoubleCategory, DietaryTag, Ingredient, SandwichComposition } from '@/types'
 import type { BaseCategory } from '@/engine/randomizer'
 import { BASE_CATEGORIES, rollCategory } from '@/engine/randomizer'
 import { generateSandwichName } from '@/engine/naming'
@@ -60,6 +60,8 @@ export const useRollOrchestration = (
   pools: Partial<Record<CategorySlug, Ingredient[]>>,
   categories: Category[],
   activeDietaryFilters: DietaryTag[] = [],
+  smartMode: boolean = false,
+  compatMatrix: CompatMatrixRow[] = [],
 ): RollOrchestration => {
   const [isRolling, setIsRolling] = useState(false)
   const [rollingCategory, setRollingCategory] = useState<BaseCategory | null>(null)
@@ -84,7 +86,15 @@ export const useRollOrchestration = (
       // the same chef's special ingredient should be preserved.
       const specialRoll = (() => {
         if (specialPool === null || specialPool.length === 0) return null
-        if (rolledToppings) return rollCategory('chefs-special', specialPool, { categories })
+        if (rolledToppings) {
+          const priorGroups: CompatGroup[] = smartMode && compatMatrix.length > 0
+            ? BASE_CATEGORIES.flatMap((s) => selections[s]).map((i) => i.compat_group)
+            : []
+          return rollCategory('chefs-special', specialPool, {
+            categories,
+            smartOptions: priorGroups.length > 0 ? { priorGroups, matrix: compatMatrix } : undefined,
+          })
+        }
         return chefsSpecialRef.current
       })()
 
@@ -116,6 +126,7 @@ export const useRollOrchestration = (
           chefsSpecial: specialRoll?.[0]?.slug ?? null,
           totalRolls,
           activeDietaryFilters,
+          smartMode,
         })
       }
 
@@ -131,7 +142,7 @@ export const useRollOrchestration = (
       rollingRef.current = false
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [session.setComposition, session.addHistoryEntry, pools, categories, activeDietaryFilters],
+    [session.setComposition, session.addHistoryEntry, pools, categories, activeDietaryFilters, smartMode, compatMatrix],
   )
 
   const rollOne = useCallback(
@@ -153,7 +164,16 @@ export const useRollOrchestration = (
 
       setTimeout(() => {
         const pool = pools[slug] ?? []
-        const result = rollCategory(slug, pool, { categories, count: pickCount(slug, session.doubleCategories) })
+        const priorGroups: CompatGroup[] = smartMode && compatMatrix.length > 0 && prior !== null
+          ? BASE_CATEGORIES.filter((s) => s !== slug)
+              .flatMap((s) => prior[s])
+              .map((i) => i.compat_group)
+          : []
+        const result = rollCategory(slug, pool, {
+          categories,
+          count: pickCount(slug, session.doubleCategories),
+          smartOptions: priorGroups.length > 0 ? { priorGroups, matrix: compatMatrix } : undefined,
+        })
         const newCount = (rollOneCounts.current[slug] ?? 0) + 1
         rollOneCounts.current[slug] = newCount
         captureRolledCategory({
@@ -173,7 +193,7 @@ export const useRollOrchestration = (
         resolveAndCommit(selections, slug === 'toppings')
       }, CATEGORY_DURATION + STAGGER_MS)
     },
-    [session, pools, categories, resolveAndCommit],
+    [session, pools, categories, smartMode, compatMatrix, resolveAndCommit],
   )
 
   const rollAllCategories = useCallback(() => {
@@ -188,6 +208,7 @@ export const useRollOrchestration = (
       rollNumber: rollAllCountRef.current,
       lockedCategories: [...session.lockedCategories],
       activeDietaryFilters,
+      smartMode,
     })
 
     const prior = session.composition
@@ -225,9 +246,18 @@ export const useRollOrchestration = (
 
       setTimeout(() => {
         const pool = pools[slug] ?? []
+        const priorGroups: CompatGroup[] = !isLocked && smartMode && compatMatrix.length > 0
+          ? BASE_CATEGORIES.slice(0, BASE_CATEGORIES.indexOf(slug))
+              .flatMap((s) => running[s])
+              .map((i) => i.compat_group)
+          : []
         const result = isLocked
           ? (prior?.[slug] ?? rollCategory(slug, pool, { categories }))
-          : rollCategory(slug, pool, { categories, count: pickCount(slug, session.doubleCategories) })
+          : rollCategory(slug, pool, {
+              categories,
+              count: pickCount(slug, session.doubleCategories),
+              smartOptions: priorGroups.length > 0 ? { priorGroups, matrix: compatMatrix } : undefined,
+            })
         results.set(slug, result)
         running[slug] = result
 
@@ -241,7 +271,7 @@ export const useRollOrchestration = (
         }
       }, delay + (isLocked ? 0 : CATEGORY_DURATION))
     })
-  }, [session, pools, categories, activeDietaryFilters, resolveAndCommit])
+  }, [session, pools, categories, activeDietaryFilters, smartMode, compatMatrix, resolveAndCommit])
 
   const loadFromHistory = useCallback(
     (composition: SandwichComposition) => {

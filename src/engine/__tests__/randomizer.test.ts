@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { rollCategory, rollAll } from '@/engine/randomizer'
 import { makeCategories, makeIngredient, makePool } from '@/test/factories'
+import type { CompatMatrixRow } from '@/types'
 
 const categories = makeCategories()
 
@@ -107,6 +108,59 @@ describe('rollCategory — explicit count override (double mode)', () => {
     const noCheese = makeIngredient({ slug: 'no-cheese' })
     const results = rollCategory('cheese', [noCheese], { categories })
     expect(results[0]?.slug).toBe('no-cheese')
+  })
+})
+
+// ─── rollCategory — smartOptions ─────────────────────────────────────────────
+
+describe('rollCategory — smartOptions', () => {
+  const matrix: CompatMatrixRow[] = [
+    { group_a: 'italian', group_b: 'mediterranean', affinity: 0.99 },
+    { group_a: 'american', group_b: 'italian', affinity: 0.01 },
+  ]
+
+  it('without smartOptions, behavior is unchanged (pure random)', () => {
+    const pool = makePool(10)
+    const result = rollCategory('bread', pool, { categories })
+    expect(result).toHaveLength(1)
+    expect(pool).toContainEqual(result[0])
+  })
+
+  it('with smartOptions and priorGroups, high-affinity ingredient is picked more often over 200 trials', () => {
+    const highAffinity = makeIngredient({ slug: 'high', compat_group: 'mediterranean' })
+    const lowAffinity = makeIngredient({ slug: 'low', compat_group: 'american' })
+    // italian prior → mediterranean affinity 0.99, american affinity 0.01
+    const smartOptions = { priorGroups: ['italian'] as const, matrix }
+    const counts = { high: 0, low: 0 }
+    for (let i = 0; i < 200; i++) {
+      const result = rollCategory('bread', [highAffinity, lowAffinity], { categories, smartOptions })
+      if (result[0]?.slug === 'high') counts.high++
+      else counts.low++
+    }
+    expect(counts.high).toBeGreaterThan(counts.low)
+  })
+
+  it('with smartOptions and count=2 (double mode), both picks are weighted', () => {
+    const italian1 = makeIngredient({ slug: 'i1', compat_group: 'italian' })
+    const italian2 = makeIngredient({ slug: 'i2', compat_group: 'italian' })
+    const american = makeIngredient({ slug: 'a1', compat_group: 'american' })
+    // italian prior → italian affinity 1.0 (self), american 0.01
+    const smartOptions = { priorGroups: ['italian'] as const, matrix }
+    const americanPickCount = Array.from({ length: 100 }, () =>
+      rollCategory('protein', [italian1, italian2, american], { categories, count: 2, smartOptions }),
+    ).filter((roll) => roll.some((i) => i.slug === 'a1')).length
+    // american should rarely be picked vs two high-affinity italians
+    expect(americanPickCount).toBeLessThan(40)
+  })
+
+  it('with smartOptions but empty priorGroups, returns uniform (same as no smartOptions)', () => {
+    const pool = makePool(5)
+    const result = rollCategory('bread', pool, {
+      categories,
+      smartOptions: { priorGroups: [], matrix },
+    })
+    expect(result).toHaveLength(1)
+    expect(pool).toContainEqual(result[0])
   })
 })
 

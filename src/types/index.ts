@@ -24,6 +24,12 @@ export type CompatGroup =
   | 'southern'
   | 'tex_mex'
 
+export type CompatMatrixRow = {
+  group_a: CompatGroup
+  group_b: CompatGroup
+  affinity: number
+}
+
 // ─── Core data types ─────────────────────────────────────────────────────────
 
 export type Nutrition = {
