@@ -1,7 +1,30 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import SummaryCard from '@/components/SummaryCard'
 import { makeComposition, makeIngredient } from '@/test/factories'
+
+const { mockCreateShare, mockToastSuccess, mockToastError } = vi.hoisted(() => ({
+  mockCreateShare: vi.fn(),
+  mockToastSuccess: vi.fn(),
+  mockToastError: vi.fn(),
+}))
+
+vi.mock('@/api/shareApi', () => ({ createShare: mockCreateShare }))
+vi.mock('sonner', () => ({ toast: { success: mockToastSuccess, error: mockToastError }, Toaster: () => null }))
+vi.mock('@/analytics/events', () => ({
+  captureShareLinkCreated: vi.fn(),
+  captureShareLinkCopied: vi.fn(),
+}))
+
+let mockWriteText: ReturnType<typeof vi.fn>
+
+beforeEach(() => {
+  mockCreateShare.mockReset()
+  mockToastSuccess.mockReset()
+  mockToastError.mockReset()
+  mockWriteText = vi.fn().mockResolvedValue(undefined)
+  vi.stubGlobal('navigator', { clipboard: { writeText: mockWriteText } })
+})
 
 describe('SummaryCard', () => {
   describe('empty state (no composition)', () => {
@@ -61,6 +84,66 @@ describe('SummaryCard', () => {
       render(<SummaryCard composition={makeComposition()} />)
       const description = screen.getByTestId('sandwich-description')
       expect(description).not.toHaveTextContent('Hot Honey')
+    })
+  })
+
+  describe('Share button', () => {
+    it('renders a Share button when composition is non-null', () => {
+      render(<SummaryCard composition={makeComposition()} />)
+      expect(screen.getByRole('button', { name: /share/i })).toBeInTheDocument()
+    })
+
+    it('does not render a Share button when composition is null', () => {
+      const { container } = render(<SummaryCard composition={null} />)
+      expect(container).toBeEmptyDOMElement()
+    })
+
+    it('is disabled while rolling', () => {
+      render(<SummaryCard composition={makeComposition()} isRolling />)
+      expect(screen.getByRole('button', { name: /share/i })).toBeDisabled()
+    })
+
+    it('calls createShare with composition and name on click', async () => {
+      mockCreateShare.mockResolvedValue({ hash: 'abc12345', url: 'https://betweenbread.co/s/abc12345' })
+      render(<SummaryCard composition={makeComposition()} />)
+      fireEvent.click(screen.getByRole('button', { name: /share/i }))
+      await waitFor(() => {
+        expect(mockCreateShare).toHaveBeenCalledWith(
+          expect.objectContaining({ name: expect.any(String) as string }),
+        )
+      })
+    })
+
+    it('copies the returned URL to clipboard on success', async () => {
+      mockCreateShare.mockResolvedValue({ hash: 'abc12345', url: 'https://betweenbread.co/s/abc12345' })
+      render(<SummaryCard composition={makeComposition()} />)
+      fireEvent.click(screen.getByRole('button', { name: /share/i }))
+      await waitFor(() => {
+        expect(mockWriteText).toHaveBeenCalledWith('https://betweenbread.co/s/abc12345')
+      })
+    })
+
+    it('shows a success toast on copy', async () => {
+      mockCreateShare.mockResolvedValue({ hash: 'abc12345', url: 'https://betweenbread.co/s/abc12345' })
+      render(<SummaryCard composition={makeComposition()} />)
+      fireEvent.click(screen.getByRole('button', { name: /share/i }))
+      await waitFor(() => { expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('copied') as string) })
+    })
+
+    it('shows an error toast when createShare throws', async () => {
+      mockCreateShare.mockRejectedValue(new Error('network'))
+      render(<SummaryCard composition={makeComposition()} />)
+      fireEvent.click(screen.getByRole('button', { name: /share/i }))
+      await waitFor(() => { expect(mockToastError).toHaveBeenCalled() })
+    })
+
+    it('is disabled while the share request is in-flight', () => {
+      let resolve: (v: { hash: string; url: string }) => void = () => undefined
+      mockCreateShare.mockReturnValue(new Promise<{ hash: string; url: string }>((r) => { resolve = r }))
+      render(<SummaryCard composition={makeComposition()} />)
+      fireEvent.click(screen.getByRole('button', { name: /share/i }))
+      expect(screen.getByRole('button', { name: /share/i })).toBeDisabled()
+      resolve({ hash: 'abc12345', url: 'https://betweenbread.co/s/abc12345' })
     })
   })
 })

@@ -40,4 +40,9 @@ describe('Router', () => {
     renderRoute('/this-does-not-exist')
     expect(screen.getByRole('link', { name: /roll/i })).toHaveAttribute('href', '/')
   })
+
+  it('renders the SharedSandwich page at /s/:hash', () => {
+    renderRoute('/s/abc12345')
+    expect(screen.getByRole('status')).toBeInTheDocument()
+  })
 })

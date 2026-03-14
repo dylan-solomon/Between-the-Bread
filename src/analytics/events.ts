@@ -111,6 +111,22 @@ export const captureDietaryFilterWarning = (props: {
   })
 }
 
+export const captureShareLinkCreated = (props: { hash: string; url: string }): void => {
+  posthog.capture('share_link_created', { hash: props.hash, url: props.url })
+}
+
+export const captureShareLinkCopied = (props: { hash: string }): void => {
+  posthog.capture('share_link_copied', { hash: props.hash })
+}
+
+export const captureShareLinkVisited = (props: { hash: string; sandwichName: string }): void => {
+  posthog.capture('share_link_visited', { hash: props.hash, sandwich_name: props.sandwichName })
+}
+
+export const captureShareMakeYourOwnClicked = (props: { sourceHash: string }): void => {
+  posthog.capture('share_make_your_own_clicked', { source_hash: props.sourceHash })
+}
+
 export const capturePerformance = (props: {
   lcpMs: number | null
   fidMs: number | null

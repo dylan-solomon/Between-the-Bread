@@ -12,6 +12,10 @@ import {
   captureDietaryFilterToggled,
   captureDietaryFilterWarning,
   captureSmartModeToggled,
+  captureShareLinkCreated,
+  captureShareLinkCopied,
+  captureShareLinkVisited,
+  captureShareMakeYourOwnClicked,
 } from '@/analytics/events'
 
 const { mockCapture } = vi.hoisted(() => ({ mockCapture: vi.fn() }))
@@ -251,5 +255,59 @@ describe('captureSmartModeToggled', () => {
   it('includes is_active: false when deactivating', () => {
     captureSmartModeToggled({ isActive: false })
     expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ is_active: false }))
+  })
+})
+
+describe('captureShareLinkCreated', () => {
+  it('calls posthog.capture with share_link_created', () => {
+    captureShareLinkCreated({ hash: 'abc12345', url: 'https://betweenbread.co/s/abc12345' })
+    expect(mockCapture).toHaveBeenCalledWith('share_link_created', expect.anything())
+  })
+
+  it('includes hash and url', () => {
+    captureShareLinkCreated({ hash: 'abc12345', url: 'https://betweenbread.co/s/abc12345' })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      hash: 'abc12345',
+      url: 'https://betweenbread.co/s/abc12345',
+    }))
+  })
+})
+
+describe('captureShareLinkCopied', () => {
+  it('calls posthog.capture with share_link_copied', () => {
+    captureShareLinkCopied({ hash: 'abc12345' })
+    expect(mockCapture).toHaveBeenCalledWith('share_link_copied', expect.anything())
+  })
+
+  it('includes hash', () => {
+    captureShareLinkCopied({ hash: 'abc12345' })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ hash: 'abc12345' }))
+  })
+})
+
+describe('captureShareLinkVisited', () => {
+  it('calls posthog.capture with share_link_visited', () => {
+    captureShareLinkVisited({ hash: 'abc12345', sandwichName: 'The Club' })
+    expect(mockCapture).toHaveBeenCalledWith('share_link_visited', expect.anything())
+  })
+
+  it('includes hash and sandwich_name', () => {
+    captureShareLinkVisited({ hash: 'abc12345', sandwichName: 'The Club' })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      hash: 'abc12345',
+      sandwich_name: 'The Club',
+    }))
+  })
+})
+
+describe('captureShareMakeYourOwnClicked', () => {
+  it('calls posthog.capture with share_make_your_own_clicked', () => {
+    captureShareMakeYourOwnClicked({ sourceHash: 'abc12345' })
+    expect(mockCapture).toHaveBeenCalledWith('share_make_your_own_clicked', expect.anything())
+  })
+
+  it('includes source_hash', () => {
+    captureShareMakeYourOwnClicked({ sourceHash: 'abc12345' })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ source_hash: 'abc12345' }))
   })
 })

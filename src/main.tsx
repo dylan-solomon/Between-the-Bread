@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import '@/styles/globals.css'
 import { routes } from '@/router'
 import { initPostHog } from '@/analytics/posthog'
@@ -16,6 +17,8 @@ if (!rootElement) throw new Error('Root element not found')
 
 createRoot(rootElement).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <HelmetProvider>
+      <RouterProvider router={router} />
+    </HelmetProvider>
   </StrictMode>,
 )
