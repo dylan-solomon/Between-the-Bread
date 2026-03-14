@@ -34,7 +34,7 @@ export const weightedSample = <T>(items: T[], weights: number[]): T => {
   let cursor = Math.random() * total
   for (let i = 0; i < items.length; i++) {
     cursor -= weights[i] ?? 0
-    if (cursor <= 0) return items[i] as T
+    if (cursor <= 0) return items[i]
   }
-  return items[items.length - 1] as T
+  return items[items.length - 1]
 }

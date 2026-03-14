@@ -554,7 +554,7 @@ describe('useRollOrchestration', () => {
         act(() => { result.current.rollAll() })
         act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
         const lastComp = (session.setComposition.mock.calls.at(-1) as [SandwichComposition] | undefined)?.[0]
-        if (lastComp?.protein?.[0]?.slug === 'prosciutto') italianCount++
+        if (lastComp?.protein[0]?.slug === 'prosciutto') italianCount++
         unmount()
       }
       expect(italianCount).toBeGreaterThan(20)
@@ -581,7 +581,7 @@ describe('useRollOrchestration', () => {
         act(() => { result.current.rollOne('cheese') })
         act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
         const lastComp = (session.setComposition.mock.calls.at(-1) as [SandwichComposition] | undefined)?.[0]
-        if (lastComp?.cheese?.[0]?.slug === 'mozzarella') italianCount++
+        if (lastComp?.cheese[0]?.slug === 'mozzarella') italianCount++
         unmount()
       }
       expect(italianCount).toBeGreaterThan(20)
