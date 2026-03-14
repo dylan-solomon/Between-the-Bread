@@ -23,9 +23,9 @@ describe('SmartModeToggle', () => {
       expect(screen.getByRole('switch', { name: /smart mode/i })).toHaveAttribute('aria-checked', 'true')
     })
 
-    it('has a title attribute describing the feature', () => {
+    it('has a tooltip describing the feature', () => {
       renderToggle()
-      expect(screen.getByRole('switch', { name: /smart mode/i })).toHaveAttribute('title')
+      expect(screen.getByRole('tooltip')).toBeInTheDocument()
     })
   })
 
