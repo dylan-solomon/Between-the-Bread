@@ -16,7 +16,7 @@ describe('Router', () => {
 
   it('renders the About page at /about', () => {
     renderRoute('/about')
-    expect(screen.getByRole('heading', { name: 'About' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'About Between the Bread' })).toBeInTheDocument()
   })
 
   it('renders the Privacy Policy page at /privacy', () => {

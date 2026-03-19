@@ -534,7 +534,7 @@ describe('useRollOrchestration', () => {
       { group_a: 'american', group_b: 'italian', affinity: 0.01 },
     ]
 
-    it('with smartMode + locked italian bread, protein rolls lean italian over 30 trials', () => {
+    it('with smartMode + locked italian bread, protein rolls lean italian over 50 trials', () => {
       const italianBread = makeIngredient({ slug: 'ciabatta', compat_group: 'italian' })
       const italianProtein = makeIngredient({ slug: 'prosciutto', compat_group: 'italian' })
       const americanProtein = makeIngredient({ slug: 'ham', compat_group: 'american' })
@@ -546,7 +546,7 @@ describe('useRollOrchestration', () => {
       }
 
       let italianCount = 0
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 50; i++) {
         session.setComposition.mockReset()
         const { result, unmount } = renderHook(() =>
           useRollOrchestration(session, pools, makeCategories(), [], true, skewedMatrix),
@@ -557,7 +557,7 @@ describe('useRollOrchestration', () => {
         if (lastComp?.protein[0]?.slug === 'prosciutto') italianCount++
         unmount()
       }
-      expect(italianCount).toBeGreaterThan(20)
+      expect(italianCount).toBeGreaterThan(30)
     })
 
     it('with smartMode, rollOne uses all other settled ingredients as priorGroups', () => {
@@ -573,7 +573,7 @@ describe('useRollOrchestration', () => {
       const pools = { ...makePools(), cheese: [italianIngredient, americanIngredient] }
 
       let italianCount = 0
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 50; i++) {
         session.setComposition.mockReset()
         const { result, unmount } = renderHook(() =>
           useRollOrchestration(session, pools, makeCategories(), [], true, skewedMatrix),
@@ -584,7 +584,7 @@ describe('useRollOrchestration', () => {
         if (lastComp?.cheese[0]?.slug === 'mozzarella') italianCount++
         unmount()
       }
-      expect(italianCount).toBeGreaterThan(20)
+      expect(italianCount).toBeGreaterThan(30)
     })
   })
 })
