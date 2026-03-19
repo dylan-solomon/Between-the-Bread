@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import PageViewTracker from '@/components/PageViewTracker'
 
 export default function RootLayout() {
@@ -6,6 +7,7 @@ export default function RootLayout() {
     <>
       <PageViewTracker />
       <Outlet />
+      <Toaster richColors position="bottom-center" />
     </>
   )
 }

@@ -16,7 +16,7 @@ describe('Router', () => {
 
   it('renders the About page at /about', () => {
     renderRoute('/about')
-    expect(screen.getByRole('heading', { name: 'About' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'About Between the Bread' })).toBeInTheDocument()
   })
 
   it('renders the Privacy Policy page at /privacy', () => {
@@ -39,5 +39,10 @@ describe('Router', () => {
   it('the 404 page has a link back to the generator', () => {
     renderRoute('/this-does-not-exist')
     expect(screen.getByRole('link', { name: /roll/i })).toHaveAttribute('href', '/')
+  })
+
+  it('renders the SharedSandwich page at /s/:hash', () => {
+    renderRoute('/s/abc12345')
+    expect(screen.getByRole('status')).toBeInTheDocument()
   })
 })

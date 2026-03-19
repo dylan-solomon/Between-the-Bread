@@ -38,4 +38,16 @@ export default tseslint.config([
       },
     },
   },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked],
+    files: ['middleware.ts', 'middleware.test.ts'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.browser,
+      parserOptions: {
+        project: ['./tsconfig.middleware.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
 ])
