@@ -1,3 +1,5 @@
-import { nanoid } from 'nanoid'
+import { customAlphabet } from 'nanoid'
 
-export const generateHash = (): string => nanoid(8)
+const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 8)
+
+export const generateHash = (): string => nanoid()

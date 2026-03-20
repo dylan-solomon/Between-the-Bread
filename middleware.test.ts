@@ -40,6 +40,8 @@ describe('OG middleware', () => {
     expect(html).toContain('og:title')
     expect(html).toContain('The Club')
     expect(html).toContain('/s/abc12345')
+    expect(html).toContain('og:image')
+    expect(html).toContain('/api/og/sandwich/abc12345')
   })
 
   it('passes through when the share API returns non-200', async () => {

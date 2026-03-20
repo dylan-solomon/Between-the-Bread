@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
+    "@vercel/og": "^0.11.1",
     "lucide-react": "^0.576.0",
     "nanoid": "^5.1.6",
     "posthog-js": "^1.357.2",

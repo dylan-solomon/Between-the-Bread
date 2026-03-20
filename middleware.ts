@@ -31,6 +31,9 @@ export default async function middleware(req: Request): Promise<Response> {
       `<meta property="og:title" content="${data.name}" />`,
       `<meta property="og:url" content="${url.origin}/s/${hash}" />`,
       `<meta property="og:type" content="website" />`,
+      `<meta property="og:image" content="${url.origin}/api/og/sandwich/${hash}" />`,
+      `<meta property="og:image:width" content="1200" />`,
+      `<meta property="og:image:height" content="630" />`,
     ].join('\n    ')
 
     const injected = html.replace('<head>', `<head>\n    ${ogTags}`)
