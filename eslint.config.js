@@ -29,11 +29,24 @@ export default tseslint.config([
   {
     extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked],
     files: ['api/**/*.ts'],
+    ignores: ['api/og/**', 'api/__tests__/og.*.test.ts'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.node,
       parserOptions: {
         project: ['./tsconfig.api.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked],
+    files: ['api/og/**/*.ts', 'api/__tests__/og.*.test.ts'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.browser,
+      parserOptions: {
+        project: ['./tsconfig.og.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
