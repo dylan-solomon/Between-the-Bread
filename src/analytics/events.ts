@@ -131,6 +131,14 @@ export const captureShareMakeYourOwnClicked = (props: { sourceHash: string }): v
   posthog.capture('share_make_your_own_clicked', { source_hash: props.sourceHash })
 }
 
+export const captureNutritionPanelExpanded = (): void => {
+  posthog.capture('nutrition_panel_expanded')
+}
+
+export const captureNutritionPanelCollapsed = (): void => {
+  posthog.capture('nutrition_panel_collapsed')
+}
+
 export const capturePerformance = (props: {
   lcpMs: number | null
   fidMs: number | null

@@ -16,6 +16,8 @@ vi.mock('@/analytics/events', () => ({
   captureShareLinkCreated: vi.fn(),
   captureShareLinkCopied: vi.fn(),
   captureCostContextToggled: mockCaptureCostContextToggled,
+  captureNutritionPanelExpanded: vi.fn(),
+  captureNutritionPanelCollapsed: vi.fn(),
 }))
 
 let mockWriteText: ReturnType<typeof vi.fn>
@@ -226,6 +228,18 @@ describe('SummaryCard', () => {
       expect(screen.getByText(/\$2\.50/)).toBeInTheDocument()
       rerender(<SummaryCard composition={zeroCostComposition} costDataLastUpdated={LAST_UPDATED} />)
       expect(screen.getByText(/\$0\.00/)).toBeInTheDocument()
+    })
+  })
+
+  describe('Nutrition panel', () => {
+    it('renders the "Show nutrition" toggle when composition is present', () => {
+      render(<SummaryCard composition={makeComposition()} />)
+      expect(screen.getByRole('button', { name: /show nutrition/i })).toBeInTheDocument()
+    })
+
+    it('does not render the nutrition toggle when composition is null', () => {
+      const { container } = render(<SummaryCard composition={null} />)
+      expect(container).toBeEmptyDOMElement()
     })
   })
 })

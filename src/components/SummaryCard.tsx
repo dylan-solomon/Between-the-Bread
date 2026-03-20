@@ -6,6 +6,7 @@ import { generateSandwichName } from '@/engine/naming'
 import { createShare } from '@/api/shareApi'
 import { captureShareLinkCreated, captureShareLinkCopied, captureCostContextToggled } from '@/analytics/events'
 import { calculateTotalEstimatedCost } from '@/utils/cost'
+import NutritionPanel from '@/components/NutritionPanel'
 import type { CostContext } from '@/utils/cost'
 
 const NO_CHEESE_SLUG = 'no-cheese'
@@ -113,6 +114,8 @@ export default function SummaryCard({ composition, isRolling = false, costDataLa
           </p>
         </div>
       )}
+
+      <NutritionPanel composition={composition} />
 
       <button
         type="button"
