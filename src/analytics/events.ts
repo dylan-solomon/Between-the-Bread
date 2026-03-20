@@ -111,6 +111,10 @@ export const captureDietaryFilterWarning = (props: {
   })
 }
 
+export const captureCostContextToggled = (props: { context: 'retail' | 'restaurant' }): void => {
+  posthog.capture('generator_cost_context_toggled', { context: props.context })
+}
+
 export const captureShareLinkCreated = (props: { hash: string; url: string }): void => {
   posthog.capture('share_link_created', { hash: props.hash, url: props.url })
 }

@@ -23,6 +23,7 @@ type ApiResponse = {
 type FetchIngredientsResult = {
   pools: Record<CategorySlug, Ingredient[]>
   categories: Category[]
+  costDataLastUpdated: string
 }
 
 const ALL_SLUGS: CategorySlug[] = ['bread', 'protein', 'cheese', 'toppings', 'condiments', 'chefs-special']
@@ -39,7 +40,7 @@ export const fetchIngredients = async (diet?: string[]): Promise<FetchIngredient
   }
 
   const body = (await response.json()) as unknown
-  const { data } = body as ApiResponse
+  const { data, meta } = body as ApiResponse
 
   const empty = Object.fromEntries(
     ALL_SLUGS.map((s) => [s, []]),
@@ -63,5 +64,5 @@ export const fetchIngredients = async (diet?: string[]): Promise<FetchIngredient
     is_bonus: cat.is_bonus,
   }))
 
-  return { pools, categories }
+  return { pools, categories, costDataLastUpdated: meta.cost_data_last_updated }
 }
