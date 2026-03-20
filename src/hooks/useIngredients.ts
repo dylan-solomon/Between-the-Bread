@@ -5,6 +5,7 @@ import { fetchIngredients } from '@/api/ingredients'
 type UseIngredientsResult = {
   pools: Partial<Record<CategorySlug, Ingredient[]>>
   categories: Category[]
+  costDataLastUpdated: string
   loading: boolean
   error: string | null
 }
@@ -12,6 +13,7 @@ type UseIngredientsResult = {
 export const useIngredients = (): UseIngredientsResult => {
   const [pools, setPools] = useState<Partial<Record<CategorySlug, Ingredient[]>>>({})
   const [categories, setCategories] = useState<Category[]>([])
+  const [costDataLastUpdated, setCostDataLastUpdated] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,6 +25,7 @@ export const useIngredients = (): UseIngredientsResult => {
         if (!cancelled) {
           setPools(result.pools)
           setCategories(result.categories)
+          setCostDataLastUpdated(result.costDataLastUpdated)
         }
       })
       .catch((e: unknown) => {
@@ -37,5 +40,5 @@ export const useIngredients = (): UseIngredientsResult => {
     return () => { cancelled = true }
   }, [])
 
-  return { pools, categories, loading, error }
+  return { pools, categories, costDataLastUpdated, loading, error }
 }

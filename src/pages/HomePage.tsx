@@ -25,7 +25,7 @@ import type { CategorySlug, DietaryTag, Ingredient } from '@/types'
 const EMPTY_POOLS: Partial<Record<CategorySlug, Ingredient[]>> = {}
 
 export default function HomePage() {
-  const { pools, categories, loading } = useIngredients()
+  const { pools, categories, costDataLastUpdated, loading } = useIngredients()
   const { matrix } = useCompatMatrix()
   const session = useSandwichSession()
   const history = useSessionHistory()
@@ -80,7 +80,7 @@ export default function HomePage() {
         </div>
 
         <div className="min-h-20">
-          {!isRolling && <SummaryCard composition={session.composition} />}
+          {!isRolling && <SummaryCard composition={session.composition} costDataLastUpdated={costDataLastUpdated} />}
         </div>
 
         <div className="flex flex-wrap justify-center gap-2">

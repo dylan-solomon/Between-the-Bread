@@ -3,10 +3,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import SummaryCard from '@/components/SummaryCard'
 import { makeComposition, makeIngredient } from '@/test/factories'
 
-const { mockCreateShare, mockToastSuccess, mockToastError } = vi.hoisted(() => ({
+const { mockCreateShare, mockToastSuccess, mockToastError, mockCaptureCostContextToggled } = vi.hoisted(() => ({
   mockCreateShare: vi.fn(),
   mockToastSuccess: vi.fn(),
   mockToastError: vi.fn(),
+  mockCaptureCostContextToggled: vi.fn(),
 }))
 
 vi.mock('@/api/shareApi', () => ({ createShare: mockCreateShare }))
@@ -14,6 +15,7 @@ vi.mock('sonner', () => ({ toast: { success: mockToastSuccess, error: mockToastE
 vi.mock('@/analytics/events', () => ({
   captureShareLinkCreated: vi.fn(),
   captureShareLinkCopied: vi.fn(),
+  captureCostContextToggled: mockCaptureCostContextToggled,
 }))
 
 let mockWriteText: ReturnType<typeof vi.fn>
@@ -144,6 +146,86 @@ describe('SummaryCard', () => {
       fireEvent.click(screen.getByRole('button', { name: /share/i }))
       expect(screen.getByRole('button', { name: /share/i })).toBeDisabled()
       resolve({ hash: 'abc12345', url: 'https://betweenbread.co/s/abc12345' })
+    })
+  })
+
+  describe('Cost display', () => {
+    // Default makeComposition: 5 ingredients × { retail_low: 0.5, retail_high: 1.0, restaurant_low: 1.0, restaurant_high: 2.0 }
+    const LAST_UPDATED = '2026-03-01'
+
+    it('shows the retail cost range by default', () => {
+      render(<SummaryCard composition={makeComposition()} costDataLastUpdated={LAST_UPDATED} />)
+      // 5 × retail_low 0.5 = $2.50, 5 × retail_high 1.0 = $5.00
+      expect(screen.getByText(/\$2\.50/)).toBeInTheDocument()
+      expect(screen.getByText(/\$5\.00/)).toBeInTheDocument()
+    })
+
+    it('shows a Retail toggle button', () => {
+      render(<SummaryCard composition={makeComposition()} costDataLastUpdated={LAST_UPDATED} />)
+      expect(screen.getByRole('button', { name: /^retail$/i })).toBeInTheDocument()
+    })
+
+    it('shows a Restaurant toggle button', () => {
+      render(<SummaryCard composition={makeComposition()} costDataLastUpdated={LAST_UPDATED} />)
+      expect(screen.getByRole('button', { name: /^restaurant$/i })).toBeInTheDocument()
+    })
+
+    it('switches to restaurant prices when Restaurant is selected', () => {
+      render(<SummaryCard composition={makeComposition()} costDataLastUpdated={LAST_UPDATED} />)
+      fireEvent.click(screen.getByRole('button', { name: /^restaurant$/i }))
+      // 5 × restaurant_high 2.0 = $10.00 — only appears in restaurant context
+      expect(screen.getByText(/\$10\.00/)).toBeInTheDocument()
+    })
+
+    it('shows the pricing last updated date in the disclaimer', () => {
+      render(<SummaryCard composition={makeComposition()} costDataLastUpdated={LAST_UPDATED} />)
+      expect(screen.getByText(/2026-03-01/)).toBeInTheDocument()
+    })
+
+    it('disclaimer mentions retail pricing by default', () => {
+      render(<SummaryCard composition={makeComposition()} costDataLastUpdated={LAST_UPDATED} />)
+      expect(screen.getByTestId('cost-disclaimer')).toHaveTextContent(/retail/i)
+    })
+
+    it('disclaimer updates to mention restaurant pricing when switched', () => {
+      render(<SummaryCard composition={makeComposition()} costDataLastUpdated={LAST_UPDATED} />)
+      fireEvent.click(screen.getByRole('button', { name: /^restaurant$/i }))
+      expect(screen.getByTestId('cost-disclaimer')).toHaveTextContent(/restaurant/i)
+    })
+
+    it('fires the cost context toggle event when switching to restaurant', () => {
+      render(<SummaryCard composition={makeComposition()} costDataLastUpdated={LAST_UPDATED} />)
+      fireEvent.click(screen.getByRole('button', { name: /^restaurant$/i }))
+      expect(mockCaptureCostContextToggled).toHaveBeenCalledWith({ context: 'restaurant' })
+    })
+
+    it('fires the cost context toggle event when switching back to retail', () => {
+      render(<SummaryCard composition={makeComposition()} costDataLastUpdated={LAST_UPDATED} />)
+      fireEvent.click(screen.getByRole('button', { name: /^restaurant$/i }))
+      fireEvent.click(screen.getByRole('button', { name: /^retail$/i }))
+      expect(mockCaptureCostContextToggled).toHaveBeenLastCalledWith({ context: 'retail' })
+    })
+
+    it('does not show cost section when costDataLastUpdated is not provided', () => {
+      render(<SummaryCard composition={makeComposition()} />)
+      expect(screen.queryByTestId('cost-disclaimer')).not.toBeInTheDocument()
+    })
+
+    it('updates the cost range when a new composition is passed', () => {
+      const zeroCostIngredient = makeIngredient({
+        estimated_cost: { retail_low: 0, retail_high: 0, restaurant_low: 0, restaurant_high: 0 },
+      })
+      const zeroCostComposition = makeComposition({
+        bread: [zeroCostIngredient],
+        protein: [zeroCostIngredient],
+        cheese: [zeroCostIngredient],
+        toppings: [zeroCostIngredient],
+        condiments: [zeroCostIngredient],
+      })
+      const { rerender } = render(<SummaryCard composition={makeComposition()} costDataLastUpdated={LAST_UPDATED} />)
+      expect(screen.getByText(/\$2\.50/)).toBeInTheDocument()
+      rerender(<SummaryCard composition={zeroCostComposition} costDataLastUpdated={LAST_UPDATED} />)
+      expect(screen.getByText(/\$0\.00/)).toBeInTheDocument()
     })
   })
 })
