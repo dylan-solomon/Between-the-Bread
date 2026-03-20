@@ -16,6 +16,8 @@ import {
   captureShareLinkCopied,
   captureShareLinkVisited,
   captureShareMakeYourOwnClicked,
+  captureNutritionPanelExpanded,
+  captureNutritionPanelCollapsed,
 } from '@/analytics/events'
 
 const { mockCapture } = vi.hoisted(() => ({ mockCapture: vi.fn() }))
@@ -309,5 +311,19 @@ describe('captureShareMakeYourOwnClicked', () => {
   it('includes source_hash', () => {
     captureShareMakeYourOwnClicked({ sourceHash: 'abc12345' })
     expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ source_hash: 'abc12345' }))
+  })
+})
+
+describe('captureNutritionPanelExpanded', () => {
+  it('calls posthog.capture with nutrition_panel_expanded', () => {
+    captureNutritionPanelExpanded()
+    expect(mockCapture).toHaveBeenCalledWith('nutrition_panel_expanded')
+  })
+})
+
+describe('captureNutritionPanelCollapsed', () => {
+  it('calls posthog.capture with nutrition_panel_collapsed', () => {
+    captureNutritionPanelCollapsed()
+    expect(mockCapture).toHaveBeenCalledWith('nutrition_panel_collapsed')
   })
 })
