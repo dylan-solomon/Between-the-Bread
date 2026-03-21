@@ -69,7 +69,7 @@ export default function HomePage() {
     captureSmartModeToggled({ isActive: next })
   }
 
-  const { isRolling, rollingCategory, chefsSpecial, rollAll, rollOne, loadFromHistory } =
+  const { isRolling, rollingCategory, chefsSpecial, chefsSpecialLocked, toggleChefsSpecialLock, rollAll, rollOne, loadFromHistory } =
     useRollOrchestration(
       { ...session, addHistoryEntry: history.addEntry },
       activePools,
@@ -118,7 +118,11 @@ export default function HomePage() {
           pools={activePools}
         />
 
-        <ChefSpecialRow chefsSpecial={chefsSpecial} />
+        <ChefSpecialRow
+          chefsSpecial={chefsSpecial}
+          isLocked={chefsSpecialLocked}
+          onToggleLock={toggleChefsSpecialLock}
+        />
 
         <SessionHistory
           entries={history.entries}
