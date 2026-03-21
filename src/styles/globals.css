@@ -1,2 +1,5 @@
+@import '@fontsource/libre-baskerville/400.css';
+@import '@fontsource/libre-baskerville/700.css';
+@import '@fontsource-variable/dm-sans';
 @import 'tailwindcss';
 @import './tokens.css';

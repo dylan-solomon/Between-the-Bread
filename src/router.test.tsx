@@ -14,35 +14,35 @@ describe('Router', () => {
     expect(screen.getByRole('main')).toBeInTheDocument()
   })
 
-  it('renders the About page at /about', () => {
+  it('renders the About page at /about', async () => {
     renderRoute('/about')
-    expect(screen.getByRole('heading', { name: 'About Between the Bread' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'About Between the Bread' })).toBeInTheDocument()
   })
 
-  it('renders the Privacy Policy page at /privacy', () => {
+  it('renders the Privacy Policy page at /privacy', async () => {
     renderRoute('/privacy')
-    expect(screen.getByRole('heading', { name: 'Privacy Policy' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Privacy Policy' })).toBeInTheDocument()
   })
 
-  it('renders the Terms of Service page at /terms', () => {
+  it('renders the Terms of Service page at /terms', async () => {
     renderRoute('/terms')
-    expect(screen.getByRole('heading', { name: 'Terms of Service' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Terms of Service' })).toBeInTheDocument()
   })
 
-  it('renders the 404 page for unknown routes', () => {
+  it('renders the 404 page for unknown routes', async () => {
     renderRoute('/this-does-not-exist')
     expect(
-      screen.getByText("This Sandwich Doesn't Exist (Yet)"),
+      await screen.findByText("This Sandwich Doesn't Exist (Yet)"),
     ).toBeInTheDocument()
   })
 
-  it('the 404 page has a link back to the generator', () => {
+  it('the 404 page has a link back to the generator', async () => {
     renderRoute('/this-does-not-exist')
-    expect(screen.getByRole('link', { name: /roll/i })).toHaveAttribute('href', '/')
+    expect(await screen.findByRole('link', { name: /roll/i })).toHaveAttribute('href', '/')
   })
 
-  it('renders the SharedSandwich page at /s/:hash', () => {
+  it('renders the SharedSandwich page at /s/:hash', async () => {
     renderRoute('/s/abc12345')
-    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(await screen.findByRole('status')).toBeInTheDocument()
   })
 })

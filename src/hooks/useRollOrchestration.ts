@@ -28,6 +28,8 @@ type RollOrchestration = {
   isRolling: boolean
   rollingCategory: BaseCategory | null
   chefsSpecial: Ingredient[] | null
+  chefsSpecialLocked: boolean
+  toggleChefsSpecialLock: () => void
   rollAll: () => void
   rollOne: (slug: BaseCategory) => void
   loadFromHistory: (composition: SandwichComposition) => void
@@ -66,8 +68,10 @@ export const useRollOrchestration = (
   const [isRolling, setIsRolling] = useState(false)
   const [rollingCategory, setRollingCategory] = useState<BaseCategory | null>(null)
   const [chefsSpecial, setChefsSpecial] = useState<Ingredient[] | null>(null)
-  // Ref mirrors chefsSpecial state so resolveAndCommit (a stale callback) can read the latest value
+  const [chefsSpecialLocked, setChefsSpecialLocked] = useState(false)
+  // Refs mirror state so resolveAndCommit (a stale callback) can read the latest values
   const chefsSpecialRef = useRef<Ingredient[] | null>(null)
+  const chefsSpecialLockedRef = useRef(false)
   const rollingRef = useRef(false)
   const rollAllCountRef = useRef(0)
   const rollOneCounts = useRef<Partial<Record<BaseCategory, number>>>({})
@@ -81,10 +85,10 @@ export const useRollOrchestration = (
         pools['chefs-special'] ?? [],
       )
 
-      // Only re-roll the chef's special when toppings was part of this roll.
-      // When rolling a non-toppings category, the trigger topping is still active and
-      // the same chef's special ingredient should be preserved.
+      // If chef's special is locked, always preserve the existing one.
+      // Otherwise, re-roll when toppings was part of this roll; preserve when it wasn't.
       const specialRoll = (() => {
+        if (chefsSpecialLockedRef.current) return chefsSpecialRef.current
         if (specialPool === null || specialPool.length === 0) return null
         if (rolledToppings) {
           const priorGroups: CompatGroup[] = smartMode && compatMatrix.length > 0
@@ -150,9 +154,9 @@ export const useRollOrchestration = (
       if (rollingRef.current || session.lockedCategories.has(slug)) return
       rollingRef.current = true
       setIsRolling(true)
-      // Only clear chefsSpecial when re-rolling toppings — rolling any other category
-      // should leave the chef's special visible during animation.
-      if (slug === 'toppings') {
+      // Only clear chefsSpecial when re-rolling toppings and not locked.
+      // Rolling any other category leaves the chef's special visible during animation.
+      if (slug === 'toppings' && !chefsSpecialLockedRef.current) {
         setChefsSpecial(null)
         chefsSpecialRef.current = null
       }
@@ -200,8 +204,10 @@ export const useRollOrchestration = (
     if (rollingRef.current) return
     rollingRef.current = true
     setIsRolling(true)
-    setChefsSpecial(null)
-    chefsSpecialRef.current = null
+    if (!chefsSpecialLockedRef.current) {
+      setChefsSpecial(null)
+      chefsSpecialRef.current = null
+    }
 
     rollAllCountRef.current++
     captureRolledAll({
@@ -278,16 +284,27 @@ export const useRollOrchestration = (
       const val = composition['chefs-special'] ?? null
       setChefsSpecial(val)
       chefsSpecialRef.current = val
+      setChefsSpecialLocked(false)
+      chefsSpecialLockedRef.current = false
       session.loadComposition(composition)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [session.loadComposition],
   )
 
+  const toggleChefsSpecialLock = useCallback(() => {
+    setChefsSpecialLocked((prev) => {
+      chefsSpecialLockedRef.current = !prev
+      return !prev
+    })
+  }, [])
+
   return {
     isRolling,
     rollingCategory,
     chefsSpecial,
+    chefsSpecialLocked,
+    toggleChefsSpecialLock,
     rollAll: rollAllCategories,
     rollOne,
     loadFromHistory,

@@ -19,8 +19,9 @@ import {
   captureDietaryFilterToggled,
   captureDietaryFilterWarning,
   captureSmartModeToggled,
+  captureDoubleToggled,
 } from '@/analytics/events'
-import type { CategorySlug, DietaryTag, Ingredient } from '@/types'
+import type { CategorySlug, DoubleCategory, DietaryTag, Ingredient } from '@/types'
 
 const EMPTY_POOLS: Partial<Record<CategorySlug, Ingredient[]>> = {}
 
@@ -57,12 +58,18 @@ export default function HomePage() {
     ) as Partial<Record<CategorySlug, Ingredient[]>>
   }, [loading, pools, activeDietFilters])
 
+  const handleToggleDouble = (category: DoubleCategory) => {
+    const enabled = !session.doubleCategories.has(category)
+    session.toggleDouble(category)
+    captureDoubleToggled({ category, enabled })
+  }
+
   const toggleSmartMode = (next: boolean) => {
     setSmartMode(next)
     captureSmartModeToggled({ isActive: next })
   }
 
-  const { isRolling, rollingCategory, chefsSpecial, rollAll, rollOne, loadFromHistory } =
+  const { isRolling, rollingCategory, chefsSpecial, chefsSpecialLocked, toggleChefsSpecialLock, rollAll, rollOne, loadFromHistory } =
     useRollOrchestration(
       { ...session, addHistoryEntry: history.addEntry },
       activePools,
@@ -105,13 +112,17 @@ export default function HomePage() {
           isRolling={isRolling}
           rollingCategory={rollingCategory}
           onToggleLock={session.toggleLock}
-          onToggleDouble={session.toggleDouble}
+          onToggleDouble={handleToggleDouble}
           onRoll={rollOne}
           categories={categories}
           pools={activePools}
         />
 
-        <ChefSpecialRow chefsSpecial={chefsSpecial} />
+        <ChefSpecialRow
+          chefsSpecial={chefsSpecial}
+          isLocked={chefsSpecialLocked}
+          onToggleLock={toggleChefsSpecialLock}
+        />
 
         <SessionHistory
           entries={history.entries}

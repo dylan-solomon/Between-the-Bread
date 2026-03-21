@@ -528,6 +528,79 @@ describe('useRollOrchestration', () => {
     })
   })
 
+  describe('chefsSpecialLocked', () => {
+    it('is false initially', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
+      expect(result.current.chefsSpecialLocked).toBe(false)
+    })
+
+    it('toggleChefsSpecialLock sets it to true', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
+      act(() => { result.current.toggleChefsSpecialLock() })
+      expect(result.current.chefsSpecialLocked).toBe(true)
+    })
+
+    it('toggleChefsSpecialLock toggles back to false', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
+      act(() => { result.current.toggleChefsSpecialLock() })
+      act(() => { result.current.toggleChefsSpecialLock() })
+      expect(result.current.chefsSpecialLocked).toBe(false)
+    })
+
+    it('rollAll does not clear chefsSpecial synchronously when locked', () => {
+      const chefsSpecialIngredient = makeIngredient({ name: 'Secret Sauce', slug: 'secret-sauce' })
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
+      act(() => { result.current.loadFromHistory(makeComposition({ 'chefs-special': [chefsSpecialIngredient] })) })
+      act(() => { result.current.toggleChefsSpecialLock() })
+      act(() => { result.current.rollAll() })
+      expect(result.current.chefsSpecial).toEqual([chefsSpecialIngredient])
+    })
+
+    it('preserves chefsSpecial after rollAll completes when locked', () => {
+      const chefsSpecialIngredient = makeIngredient({ name: 'Secret Sauce', slug: 'secret-sauce' })
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
+      act(() => { result.current.loadFromHistory(makeComposition({ 'chefs-special': [chefsSpecialIngredient] })) })
+      act(() => { result.current.toggleChefsSpecialLock() })
+      act(() => { result.current.rollAll() })
+      act(() => { vi.advanceTimersByTime(5 * (CATEGORY_DURATION + STAGGER)) })
+      expect(result.current.chefsSpecial).toEqual([chefsSpecialIngredient])
+    })
+
+    it('does not clear chefsSpecial when rolling toppings and locked', () => {
+      const chefsSpecialIngredient = makeIngredient({ name: 'Secret Sauce', slug: 'secret-sauce' })
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
+      act(() => { result.current.loadFromHistory(makeComposition({ 'chefs-special': [chefsSpecialIngredient] })) })
+      act(() => { result.current.toggleChefsSpecialLock() })
+      act(() => { result.current.rollOne('toppings') })
+      expect(result.current.chefsSpecial).toEqual([chefsSpecialIngredient])
+    })
+
+    it('preserves chefsSpecial after toppings roll completes when locked', () => {
+      const chefsSpecialIngredient = makeIngredient({ name: 'Secret Sauce', slug: 'secret-sauce' })
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
+      act(() => { result.current.loadFromHistory(makeComposition({ 'chefs-special': [chefsSpecialIngredient] })) })
+      act(() => { result.current.toggleChefsSpecialLock() })
+      act(() => { result.current.rollOne('toppings') })
+      act(() => { vi.advanceTimersByTime(CATEGORY_DURATION + STAGGER) })
+      expect(result.current.chefsSpecial).toEqual([chefsSpecialIngredient])
+    })
+
+    it('loadFromHistory clears chefsSpecialLocked', () => {
+      const session = makeSession()
+      const { result } = renderHook(() => useRollOrchestration(session, makePools(), makeCategories(), []))
+      act(() => { result.current.toggleChefsSpecialLock() })
+      act(() => { result.current.loadFromHistory(makeComposition()) })
+      expect(result.current.chefsSpecialLocked).toBe(false)
+    })
+  })
+
   describe('smart mode context', () => {
     // Matrix: italian↔american = 0.01; self-affinity = 1.0 (handled without matrix row)
     const skewedMatrix: CompatMatrixRow[] = [

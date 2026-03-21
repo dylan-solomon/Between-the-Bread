@@ -1,6 +1,6 @@
 import posthog from 'posthog-js'
 
-export const initPostHog = (): void => {
+const doInit = (): void => {
   const key = import.meta.env.VITE_POSTHOG_KEY as string | undefined
   const host = import.meta.env.VITE_POSTHOG_HOST as string | undefined
   if (!key) return
@@ -13,4 +13,12 @@ export const initPostHog = (): void => {
     persistence: 'localStorage',
     session_recording: { sampleRate: 0.01 },
   })
+}
+
+export const initPostHog = (): void => {
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(doInit)
+  } else {
+    setTimeout(doInit, 1)
+  }
 }
