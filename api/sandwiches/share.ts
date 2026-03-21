@@ -58,17 +58,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   const hash = generateHash()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('shared_sandwiches')
     .insert({ hash, composition, name: name.trim(), expires_at: ninetyDaysFromNow(), created_by_ip: clientIp })
-    .select('hash')
-    .single()
 
   if (error !== null) {
     res.status(500).json(err('INTERNAL_ERROR', 'Failed to save sandwich.', 500))
     return
   }
 
-  const url = buildShareUrl((data as { hash: string }).hash)
-  res.status(201).json(ok({ hash: (data as { hash: string }).hash, url }))
+  const url = buildShareUrl(hash)
+  res.status(201).json(ok({ hash, url }))
 }

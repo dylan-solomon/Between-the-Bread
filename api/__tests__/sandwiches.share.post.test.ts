@@ -43,14 +43,7 @@ const stubBody = {
 
 const setupInsertMock = (error: unknown = null) => {
   mockFrom.mockReturnValue({
-    insert: vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: { hash: 'abc12345' },
-          error,
-        }),
-      }),
-    }),
+    insert: vi.fn().mockResolvedValue({ error }),
   })
 }
 
