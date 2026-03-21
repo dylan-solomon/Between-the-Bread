@@ -58,7 +58,8 @@ beforeEach(() => {
   mockFrom.mockReset()
   mockGenerateHash.mockReturnValue('abc12345')
   mockCheckShareRateLimit.mockResolvedValue({ allowed: true })
-  process.env.VERCEL_URL = 'betweenbread.co'
+  delete process.env.VERCEL_URL
+  delete process.env.VERCEL_PROJECT_PRODUCTION_URL
 })
 
 describe('POST /api/sandwiches/share', () => {
@@ -73,7 +74,20 @@ describe('POST /api/sandwiches/share', () => {
       data: { hash: string; url: string }
     }
     expect(body.data.hash).toBe('abc12345')
-    expect(body.data.url).toContain('/s/abc12345')
+    expect(body.data.url).toBe('https://betweenbread.co/s/abc12345')
+  })
+
+  it('uses VERCEL_PROJECT_PRODUCTION_URL when set', async () => {
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = 'betweenbread.co'
+    setupInsertMock()
+    const { default: handler } = await import('../sandwiches/share')
+    const res = makeRes()
+    await handler(makeReq('POST', stubBody), res)
+
+    const body = (res.json as ReturnType<typeof vi.fn>).mock.calls[0][0] as {
+      data: { url: string }
+    }
+    expect(body.data.url).toBe('https://betweenbread.co/s/abc12345')
   })
 
   it('inserts a record with hash, composition, name, and expires_at', async () => {

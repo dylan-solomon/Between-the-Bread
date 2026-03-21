@@ -18,7 +18,7 @@ const isValidComposition = (composition: unknown): composition is Composition =>
 }
 
 const buildShareUrl = (hash: string): string => {
-  const host = process.env.VERCEL_URL ?? 'betweenbread.co'
+  const host = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? 'betweenbread.co'
   const base = host.startsWith('http') ? host : `https://${host}`
   return `${base}/s/${hash}`
 }
