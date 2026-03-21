@@ -38,7 +38,9 @@ describe('checkShareRateLimit', () => {
     setupCountMock(10)
     const result = await checkShareRateLimit('192.168.1.1')
     expect(result.allowed).toBe(false)
-    expect(result.retryAfterSeconds).toBeGreaterThan(0)
+    if (!result.allowed) {
+      expect(result.retryAfterSeconds).toBeGreaterThan(0)
+    }
   })
 
   it('queries the shared_sandwiches table', async () => {

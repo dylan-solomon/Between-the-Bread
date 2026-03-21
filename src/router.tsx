@@ -1,11 +1,19 @@
+import { lazy, Suspense } from 'react'
 import type { RouteObject } from 'react-router-dom'
 import RootLayout from '@/components/RootLayout'
 import HomePage from '@/pages/HomePage'
-import AboutPage from '@/pages/AboutPage'
-import PrivacyPage from '@/pages/PrivacyPage'
-import TermsPage from '@/pages/TermsPage'
-import NotFoundPage from '@/pages/NotFoundPage'
-import SharedSandwich from '@/pages/SharedSandwich'
+
+const AboutPage = lazy(() => import('@/pages/AboutPage'))
+const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'))
+const TermsPage = lazy(() => import('@/pages/TermsPage'))
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
+const SharedSandwich = lazy(() => import('@/pages/SharedSandwich'))
+
+const withSuspense = (Component: React.ComponentType) => (
+  <Suspense>
+    <Component />
+  </Suspense>
+)
 
 export const routes: RouteObject[] = [
   {
@@ -13,11 +21,11 @@ export const routes: RouteObject[] = [
     element: <RootLayout />,
     children: [
       { path: '/', element: <HomePage /> },
-      { path: '/about', element: <AboutPage /> },
-      { path: '/privacy', element: <PrivacyPage /> },
-      { path: '/terms', element: <TermsPage /> },
-      { path: '/s/:hash', element: <SharedSandwich /> },
-      { path: '*', element: <NotFoundPage /> },
+      { path: '/about', element: withSuspense(AboutPage) },
+      { path: '/privacy', element: withSuspense(PrivacyPage) },
+      { path: '/terms', element: withSuspense(TermsPage) },
+      { path: '/s/:hash', element: withSuspense(SharedSandwich) },
+      { path: '*', element: withSuspense(NotFoundPage) },
     ],
   },
 ]
