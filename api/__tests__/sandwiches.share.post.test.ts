@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-const { mockFrom, mockGenerateHash } = vi.hoisted(() => ({
+const { mockFrom, mockGenerateHash, mockCheckShareRateLimit } = vi.hoisted(() => ({
   mockFrom: vi.fn(),
   mockGenerateHash: vi.fn(),
+  mockCheckShareRateLimit: vi.fn(),
 }))
 
 vi.mock('../_lib/supabase.js', () => ({
@@ -14,8 +15,12 @@ vi.mock('../_lib/hash.js', () => ({
   generateHash: mockGenerateHash,
 }))
 
-const makeReq = (method = 'POST', body: unknown = {}): VercelRequest =>
-  ({ method, body }) as unknown as VercelRequest
+vi.mock('../_lib/rateLimit.js', () => ({
+  checkShareRateLimit: mockCheckShareRateLimit,
+}))
+
+const makeReq = (method = 'POST', body: unknown = {}, headers: Record<string, string> = {}): VercelRequest =>
+  ({ method, body, headers }) as unknown as VercelRequest
 
 const makeRes = () => {
   const res = { status: vi.fn(), json: vi.fn() } as unknown as VercelResponse
@@ -52,6 +57,7 @@ const setupInsertMock = (error: unknown = null) => {
 beforeEach(() => {
   mockFrom.mockReset()
   mockGenerateHash.mockReturnValue('abc12345')
+  mockCheckShareRateLimit.mockResolvedValue({ allowed: true })
   process.env.VERCEL_URL = 'betweenbread.co'
 })
 
@@ -131,5 +137,27 @@ describe('POST /api/sandwiches/share', () => {
       error: { code: string }
     }
     expect(body.error.code).toBe('INTERNAL_ERROR')
+  })
+
+  it('returns 429 when rate limit is exceeded', async () => {
+    mockCheckShareRateLimit.mockResolvedValue({ allowed: false, retryAfterSeconds: 900 })
+    const { default: handler } = await import('../sandwiches/share')
+    const res = makeRes()
+    await handler(makeReq('POST', stubBody), res)
+
+    expect((res.status as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith(429)
+    const body = (res.json as ReturnType<typeof vi.fn>).mock.calls[0][0] as {
+      error: { code: string }
+    }
+    expect(body.error.code).toBe('RATE_LIMITED')
+  })
+
+  it('passes client IP from x-forwarded-for header to rate limiter', async () => {
+    setupInsertMock()
+    const { default: handler } = await import('../sandwiches/share')
+    const res = makeRes()
+    await handler(makeReq('POST', stubBody, { 'x-forwarded-for': '1.2.3.4, 5.6.7.8' }), res)
+
+    expect(mockCheckShareRateLimit).toHaveBeenCalledWith('1.2.3.4')
   })
 })

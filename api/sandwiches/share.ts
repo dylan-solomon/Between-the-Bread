@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { supabase } from '../_lib/supabase.js'
 import { ok, err } from '../_lib/response.js'
 import { generateHash } from '../_lib/hash.js'
+import { checkShareRateLimit } from '../_lib/rateLimit.js'
 
 const REQUIRED_CATEGORIES = ['bread', 'protein', 'cheese', 'toppings', 'condiments'] as const
 
@@ -34,6 +35,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return
   }
 
+  const forwarded = req.headers['x-forwarded-for']
+  const clientIp = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : null
+
+  const rateCheck = await checkShareRateLimit(clientIp)
+  if (!rateCheck.allowed) {
+    res.status(429).json(err('RATE_LIMITED', 'Too many share requests. Please try again later.', 429))
+    return
+  }
+
   const { composition, name } = req.body as { composition?: unknown; name?: unknown }
 
   if (!isValidComposition(composition)) {
@@ -50,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   const { data, error } = await supabase
     .from('shared_sandwiches')
-    .insert({ hash, composition, name: name.trim(), expires_at: ninetyDaysFromNow() })
+    .insert({ hash, composition, name: name.trim(), expires_at: ninetyDaysFromNow(), created_by_ip: clientIp })
     .select('hash')
     .single()
 

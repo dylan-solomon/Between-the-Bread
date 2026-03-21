@@ -18,6 +18,7 @@ import {
   captureShareMakeYourOwnClicked,
   captureNutritionPanelExpanded,
   captureNutritionPanelCollapsed,
+  captureDoubleToggled,
 } from '@/analytics/events'
 
 const { mockCapture } = vi.hoisted(() => ({ mockCapture: vi.fn() }))
@@ -325,5 +326,20 @@ describe('captureNutritionPanelCollapsed', () => {
   it('calls posthog.capture with nutrition_panel_collapsed', () => {
     captureNutritionPanelCollapsed()
     expect(mockCapture).toHaveBeenCalledWith('nutrition_panel_collapsed')
+  })
+})
+
+describe('captureDoubleToggled', () => {
+  it('calls posthog.capture with generator_double_toggled', () => {
+    captureDoubleToggled({ category: 'protein', enabled: true })
+    expect(mockCapture).toHaveBeenCalledWith('generator_double_toggled', expect.anything())
+  })
+
+  it('includes category and enabled properties', () => {
+    captureDoubleToggled({ category: 'cheese', enabled: false })
+    expect(mockCapture).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      category: 'cheese',
+      enabled: false,
+    }))
   })
 })

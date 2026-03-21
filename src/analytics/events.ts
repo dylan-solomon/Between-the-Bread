@@ -131,6 +131,10 @@ export const captureShareMakeYourOwnClicked = (props: { sourceHash: string }): v
   posthog.capture('share_make_your_own_clicked', { source_hash: props.sourceHash })
 }
 
+export const captureDoubleToggled = (props: { category: string; enabled: boolean }): void => {
+  posthog.capture('generator_double_toggled', { category: props.category, enabled: props.enabled })
+}
+
 export const captureNutritionPanelExpanded = (): void => {
   posthog.capture('nutrition_panel_expanded')
 }
