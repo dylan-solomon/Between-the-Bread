@@ -6,6 +6,12 @@ import { AuthProvider } from '@/context/AuthContext'
 import Header from '@/components/Header'
 import type { User, Session } from '@supabase/supabase-js'
 
+const mockNavigate = vi.fn()
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return { ...actual, useNavigate: () => mockNavigate }
+})
+
 const { mockGetSession, mockOnAuthStateChange, mockSignOut } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockOnAuthStateChange: vi.fn(),
@@ -49,6 +55,7 @@ beforeEach(() => {
   mockGetSession.mockReset()
   mockOnAuthStateChange.mockReset()
   mockSignOut.mockReset()
+  mockNavigate.mockReset()
 
   mockGetSession.mockResolvedValue({ data: { session: null }, error: null })
   mockOnAuthStateChange.mockImplementation(() => ({
@@ -152,6 +159,19 @@ describe('Header', () => {
       await userEvent.click(screen.getByRole('button', { name: /log out/i }))
 
       expect(mockSignOut).toHaveBeenCalled()
+    })
+
+    it('navigates to home after signing out', async () => {
+      mockSignOut.mockResolvedValue({ error: null })
+      renderHeader()
+      await waitFor(() => {
+        expect(screen.getByText('test@example.com')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByRole('button', { name: /account/i }))
+      await userEvent.click(screen.getByRole('button', { name: /log out/i }))
+
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true })
     })
 
     it('shows display name when available', async () => {

@@ -49,14 +49,20 @@ const makeSession = (overrides: Partial<Session> = {}): Session => ({
 } as Session)
 
 const AuthConsumer = () => {
-  const { user, session, loading } = useAuth()
+  const { user, session, loading, passwordRecovery } = useAuth()
   return (
     <div>
       <span data-testid="loading">{String(loading)}</span>
       <span data-testid="user">{user?.email ?? 'none'}</span>
       <span data-testid="session">{session ? 'active' : 'none'}</span>
+      <span data-testid="password-recovery">{String(passwordRecovery)}</span>
     </div>
   )
+}
+
+const ClearRecoveryButton = () => {
+  const { clearPasswordRecovery } = useAuth()
+  return <button onClick={clearPasswordRecovery}>Clear Recovery</button>
 }
 
 const SignInButton = () => {
@@ -208,6 +214,38 @@ describe('AuthProvider', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Google' }))
 
     expect(mockSignInWithOAuth).toHaveBeenCalledWith({ provider: 'google' })
+  })
+
+  it('sets passwordRecovery to true on PASSWORD_RECOVERY event', async () => {
+    render(<AuthProvider><AuthConsumer /></AuthProvider>)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('false')
+    })
+    expect(screen.getByTestId('password-recovery')).toHaveTextContent('false')
+
+    act(() => { authCallback('PASSWORD_RECOVERY', null) })
+
+    expect(screen.getByTestId('password-recovery')).toHaveTextContent('true')
+  })
+
+  it('clearPasswordRecovery resets the flag to false', async () => {
+    render(
+      <AuthProvider>
+        <AuthConsumer />
+        <ClearRecoveryButton />
+      </AuthProvider>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('false')
+    })
+
+    act(() => { authCallback('PASSWORD_RECOVERY', null) })
+    expect(screen.getByTestId('password-recovery')).toHaveTextContent('true')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Clear Recovery' }))
+    expect(screen.getByTestId('password-recovery')).toHaveTextContent('false')
   })
 
   it('unsubscribes from auth state changes on unmount', async () => {
