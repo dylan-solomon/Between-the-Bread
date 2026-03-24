@@ -19,15 +19,28 @@ import {
   captureNutritionPanelExpanded,
   captureNutritionPanelCollapsed,
   captureDoubleToggled,
+  captureAccountSignedUp,
+  captureAccountLoggedIn,
+  captureAccountLoggedOut,
+  identifyUser,
+  resetIdentity,
 } from '@/analytics/events'
 
-const { mockCapture } = vi.hoisted(() => ({ mockCapture: vi.fn() }))
-
-vi.mock('posthog-js', () => ({
-  default: { capture: mockCapture },
+const { mockCapture, mockIdentify, mockReset } = vi.hoisted(() => ({
+  mockCapture: vi.fn(),
+  mockIdentify: vi.fn(),
+  mockReset: vi.fn(),
 }))
 
-beforeEach(() => { mockCapture.mockClear() })
+vi.mock('posthog-js', () => ({
+  default: { capture: mockCapture, identify: mockIdentify, reset: mockReset },
+}))
+
+beforeEach(() => {
+  mockCapture.mockClear()
+  mockIdentify.mockClear()
+  mockReset.mockClear()
+})
 
 describe('captureRolledAll', () => {
   it('calls posthog.capture with generator_rolled_all', () => {
@@ -341,5 +354,44 @@ describe('captureDoubleToggled', () => {
       category: 'cheese',
       enabled: false,
     }))
+  })
+})
+
+describe('captureAccountSignedUp', () => {
+  it('calls posthog.capture with account_signed_up', () => {
+    captureAccountSignedUp({ method: 'email' })
+    expect(mockCapture).toHaveBeenCalledWith('account_signed_up', { method: 'email' })
+  })
+})
+
+describe('captureAccountLoggedIn', () => {
+  it('calls posthog.capture with account_logged_in', () => {
+    captureAccountLoggedIn({ method: 'email' })
+    expect(mockCapture).toHaveBeenCalledWith('account_logged_in', { method: 'email' })
+  })
+})
+
+describe('captureAccountLoggedOut', () => {
+  it('calls posthog.capture with account_logged_out', () => {
+    captureAccountLoggedOut()
+    expect(mockCapture).toHaveBeenCalledWith('account_logged_out')
+  })
+})
+
+describe('identifyUser', () => {
+  it('calls posthog.identify with userId and user properties', () => {
+    identifyUser({ userId: 'user-123', email: 'test@example.com', signupMethod: 'email', signupDate: '2026-01-01' })
+    expect(mockIdentify).toHaveBeenCalledWith('user-123', {
+      email: 'test@example.com',
+      signup_method: 'email',
+      signup_date: '2026-01-01',
+    })
+  })
+})
+
+describe('resetIdentity', () => {
+  it('calls posthog.reset', () => {
+    resetIdentity()
+    expect(mockReset).toHaveBeenCalled()
   })
 })

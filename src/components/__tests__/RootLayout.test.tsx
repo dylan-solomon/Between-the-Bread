@@ -5,6 +5,15 @@ import RootLayout from '@/components/RootLayout'
 
 vi.mock('@/components/PageViewTracker', () => ({ default: () => null }))
 
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+    },
+  },
+}))
+
 describe('RootLayout', () => {
   it('mounts a sonner Toaster in the DOM', () => {
     render(

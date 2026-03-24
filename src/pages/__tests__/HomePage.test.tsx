@@ -2,9 +2,20 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { AuthProvider } from '@/context/AuthContext'
 import HomePage from '@/pages/HomePage'
 import { makeCategories, makePool } from '@/test/factories'
 import type { CompatMatrixRow } from '@/types'
+
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      signInWithPassword: vi.fn(), signUp: vi.fn(), signInWithOAuth: vi.fn(), signOut: vi.fn(),
+    },
+  },
+}))
 
 vi.mock('@/hooks/useIngredients', () => ({
   useIngredients: () => ({
@@ -38,7 +49,9 @@ const FULL_ROLL_MS = 4500
 const renderPage = () =>
   render(
     <MemoryRouter>
-      <HomePage />
+      <AuthProvider>
+        <HomePage />
+      </AuthProvider>
     </MemoryRouter>,
   )
 
