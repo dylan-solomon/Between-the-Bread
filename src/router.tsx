@@ -10,6 +10,7 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const SignupPage = lazy(() => import('@/pages/SignupPage'))
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const SharedSandwich = lazy(() => import('@/pages/SharedSandwich'))
 
@@ -32,6 +33,7 @@ export const routes: RouteObject[] = [
       { path: '/about', element: withSuspense(AboutPage) },
       { path: '/privacy', element: withSuspense(PrivacyPage) },
       { path: '/terms', element: withSuspense(TermsPage) },
+      { path: '/account/settings', element: withSuspense(SettingsPage) },
       { path: '/s/:hash', element: withSuspense(SharedSandwich) },
       { path: '*', element: withSuspense(NotFoundPage) },
     ],

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import AppShell from '@/components/AppShell'
 import CategoryList from '@/components/CategoryList'
 import ChefSpecialRow from '@/components/ChefSpecialRow'
@@ -13,6 +13,7 @@ import { useSessionHistory } from '@/hooks/useSessionHistory'
 import { useRollOrchestration } from '@/hooks/useRollOrchestration'
 import { useIngredients } from '@/hooks/useIngredients'
 import { useCompatMatrix } from '@/hooks/useCompatMatrix'
+import { useProfile } from '@/hooks/useProfile'
 import { filterByDiet } from '@/utils/dietary'
 import { BASE_CATEGORIES } from '@/engine/randomizer'
 import {
@@ -22,16 +23,30 @@ import {
   captureDoubleToggled,
 } from '@/analytics/events'
 import type { CategorySlug, DoubleCategory, DietaryTag, Ingredient } from '@/types'
+import type { CostContext } from '@/utils/cost'
 
 const EMPTY_POOLS: Partial<Record<CategorySlug, Ingredient[]>> = {}
 
 export default function HomePage() {
   const { pools, categories, costDataLastUpdated, loading } = useIngredients()
   const { matrix } = useCompatMatrix()
+  const { profile } = useProfile()
   const session = useSandwichSession()
   const history = useSessionHistory()
   const [activeDietFilters, setActiveDietFilters] = useState<DietaryTag[]>([])
   const [smartMode, setSmartMode] = useState(false)
+  const [defaultCostContext, setDefaultCostContext] = useState<CostContext>('retail')
+  const profileApplied = useRef(false)
+
+  useEffect(() => {
+    if (profile === null || profileApplied.current) return
+    profileApplied.current = true
+    setActiveDietFilters(profile.dietary_filters)
+    setSmartMode(profile.smart_mode_default)
+    setDefaultCostContext(profile.cost_context)
+    if (profile.double_protein) { session.toggleDouble('protein') }
+    if (profile.double_cheese) { session.toggleDouble('cheese') }
+  }, [profile, session])
 
   const toggleDietFilter = (tag: DietaryTag) => {
     setActiveDietFilters((prev) => {
@@ -87,7 +102,7 @@ export default function HomePage() {
         </div>
 
         <div className="min-h-20">
-          {!isRolling && <SummaryCard composition={session.composition} costDataLastUpdated={costDataLastUpdated} />}
+          {!isRolling && <SummaryCard composition={session.composition} costDataLastUpdated={costDataLastUpdated} defaultCostContext={defaultCostContext} />}
         </div>
 
         <div className="flex flex-wrap justify-center gap-2">
