@@ -160,3 +160,32 @@ export const capturePerformance = (props: {
     connection_type: props.connectionType,
   })
 }
+
+export const captureAccountSignedUp = (props: { method: string }): void => {
+  posthog.capture('account_signed_up', { method: props.method })
+}
+
+export const captureAccountLoggedIn = (props: { method: string }): void => {
+  posthog.capture('account_logged_in', { method: props.method })
+}
+
+export const captureAccountLoggedOut = (): void => {
+  posthog.capture('account_logged_out')
+}
+
+export const identifyUser = (props: {
+  userId: string
+  email: string
+  signupMethod: string
+  signupDate: string
+}): void => {
+  posthog.identify(props.userId, {
+    email: props.email,
+    signup_method: props.signupMethod,
+    signup_date: props.signupDate,
+  })
+}
+
+export const resetIdentity = (): void => {
+  posthog.reset()
+}

@@ -1,12 +1,25 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import AppShell from '@/components/AppShell'
+import { AuthProvider } from '@/context/AuthContext'
+
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      signInWithPassword: vi.fn(), signUp: vi.fn(), signInWithOAuth: vi.fn(), signOut: vi.fn(),
+    },
+  },
+}))
 
 const renderAppShell = (children?: React.ReactNode) =>
   render(
     <MemoryRouter>
-      <AppShell>{children}</AppShell>
+      <AuthProvider>
+        <AppShell>{children}</AppShell>
+      </AuthProvider>
     </MemoryRouter>,
   )
 
