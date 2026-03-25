@@ -148,6 +148,12 @@ describe('LoginPage', () => {
     expect(screen.getByRole('button', { name: /log in/i })).toBeDisabled()
   })
 
+  it('carries redirect param through to the signup link', () => {
+    renderPage('/login?redirect=%2Faccount%2Fsettings')
+    const link = screen.getByRole('link', { name: /sign up/i })
+    expect(link).toHaveAttribute('href', '/signup?redirect=%2Faccount%2Fsettings')
+  })
+
   it('renders within the app shell', () => {
     renderPage()
     expect(screen.getByRole('banner')).toBeInTheDocument()

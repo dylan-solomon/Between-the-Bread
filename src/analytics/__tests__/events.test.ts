@@ -22,6 +22,8 @@ import {
   captureAccountSignedUp,
   captureAccountLoggedIn,
   captureAccountLoggedOut,
+  captureAuthPrompted,
+  captureAuthPromptDismissed,
   identifyUser,
   resetIdentity,
 } from '@/analytics/events'
@@ -375,6 +377,20 @@ describe('captureAccountLoggedOut', () => {
   it('calls posthog.capture with account_logged_out', () => {
     captureAccountLoggedOut()
     expect(mockCapture).toHaveBeenCalledWith('account_logged_out')
+  })
+})
+
+describe('captureAuthPrompted', () => {
+  it('calls posthog.capture with account_auth_prompted', () => {
+    captureAuthPrompted({ actionAttempted: 'save your sandwich' })
+    expect(mockCapture).toHaveBeenCalledWith('account_auth_prompted', { action_attempted: 'save your sandwich' })
+  })
+})
+
+describe('captureAuthPromptDismissed', () => {
+  it('calls posthog.capture with account_auth_prompt_dismissed', () => {
+    captureAuthPromptDismissed({ actionAttempted: 'rate this sandwich' })
+    expect(mockCapture).toHaveBeenCalledWith('account_auth_prompt_dismissed', { action_attempted: 'rate this sandwich' })
   })
 })
 

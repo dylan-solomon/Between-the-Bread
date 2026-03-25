@@ -31,9 +31,9 @@ vi.mock('react-router-dom', async () => {
 
 import SignupPage from '@/pages/SignupPage'
 
-const renderPage = () =>
+const renderPage = (initialRoute = '/signup') =>
   render(
-    <MemoryRouter initialEntries={['/signup']}>
+    <MemoryRouter initialEntries={[initialRoute]}>
       <AuthProvider>
         <SignupPage />
       </AuthProvider>
@@ -149,6 +149,20 @@ describe('SignupPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     expect(screen.getByRole('button', { name: /sign up/i })).toBeDisabled()
+  })
+
+  it('navigates to redirect param after successful signup', async () => {
+    mockSignUp.mockResolvedValue({ data: {}, error: null })
+    renderPage('/signup?redirect=%2Faccount%2Fsettings')
+
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/account/settings', { replace: true })
+    })
   })
 
   it('renders within the app shell', () => {

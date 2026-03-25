@@ -161,6 +161,14 @@ export const capturePerformance = (props: {
   })
 }
 
+export const captureAuthPrompted = (props: { actionAttempted: string }): void => {
+  posthog.capture('account_auth_prompted', { action_attempted: props.actionAttempted })
+}
+
+export const captureAuthPromptDismissed = (props: { actionAttempted: string }): void => {
+  posthog.capture('account_auth_prompt_dismissed', { action_attempted: props.actionAttempted })
+}
+
 export const captureAccountSignedUp = (props: { method: string }): void => {
   posthog.capture('account_signed_up', { method: props.method })
 }
