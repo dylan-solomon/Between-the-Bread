@@ -27,7 +27,7 @@ describe('saveSandwichState', () => {
     const stored = sessionStorage.getItem(STORAGE_KEY)
     expect(stored).not.toBeNull()
 
-    const parsed = JSON.parse(stored!) as unknown
+    const parsed = JSON.parse(stored ?? '') as unknown
     expect(parsed).toEqual({
       composition,
       name: 'Turkey & Swiss on Sourdough',
@@ -45,7 +45,7 @@ describe('saveSandwichState', () => {
       doubleCategories: [] as DoubleCategory[],
     })
 
-    const parsed = JSON.parse(sessionStorage.getItem(STORAGE_KEY)!) as { lockedCategories: string[]; doubleCategories: string[] }
+    const parsed = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? '') as { lockedCategories: string[]; doubleCategories: string[] }
     expect(parsed.lockedCategories).toEqual([])
     expect(parsed.doubleCategories).toEqual([])
   })
