@@ -92,7 +92,7 @@ export default function LoginPage() {
           </Link>
           <span className="text-neutral-500">
             No account?{' '}
-            <Link to="/signup" className="font-medium text-primary hover:underline">
+            <Link to={redirectTo === '/' ? '/signup' : `/signup?redirect=${encodeURIComponent(redirectTo)}`} className="font-medium text-primary hover:underline">
               Sign up
             </Link>
           </span>

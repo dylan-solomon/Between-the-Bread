@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AppShell from '@/components/AppShell'
 import { useAuth } from '@/context/AuthContext'
 
@@ -15,6 +15,7 @@ const getErrorMessage = (err: unknown): string => {
 export default function SignupPage() {
   const { signUp } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -34,7 +35,8 @@ export default function SignupPage() {
 
     try {
       await signUp(email, password)
-      void navigate('/', { replace: true })
+      const redirectTo = searchParams.get('redirect') ?? '/'
+      void navigate(redirectTo, { replace: true })
     } catch (err: unknown) {
       setError(getErrorMessage(err))
       setSubmitting(false)
