@@ -38,11 +38,12 @@ type Props = {
   composition: SandwichComposition | null
   isRolling?: boolean
   costDataLastUpdated?: string
+  defaultCostContext?: CostContext
 }
 
-export default function SummaryCard({ composition, isRolling = false, costDataLastUpdated }: Props) {
+export default function SummaryCard({ composition, isRolling = false, costDataLastUpdated, defaultCostContext = 'retail' }: Props) {
   const [sharing, setSharing] = useState(false)
-  const [costContext, setCostContext] = useState<CostContext>('retail')
+  const [costContext, setCostContext] = useState<CostContext>(defaultCostContext)
 
   if (composition === null) return null
 
