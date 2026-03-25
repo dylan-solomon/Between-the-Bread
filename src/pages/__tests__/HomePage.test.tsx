@@ -3,6 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
+import { AuthPromptProvider } from '@/context/AuthPromptContext'
 import HomePage from '@/pages/HomePage'
 import { makeCategories, makePool } from '@/test/factories'
 import type { CompatMatrixRow } from '@/types'
@@ -46,11 +47,17 @@ vi.mock('@/hooks/useCompatMatrix', () => ({
 // Last category (index 4) commits at 4 * 840 + 640 = 3999ms → use 4500ms to be safe.
 const FULL_ROLL_MS = 4500
 
+vi.mock('@/components/AuthPromptModal', () => ({
+  default: () => null,
+}))
+
 const renderPage = () =>
   render(
     <MemoryRouter>
       <AuthProvider>
-        <HomePage />
+        <AuthPromptProvider>
+          <HomePage />
+        </AuthPromptProvider>
       </AuthProvider>
     </MemoryRouter>,
   )

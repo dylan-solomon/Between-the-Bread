@@ -24,6 +24,14 @@ import {
   captureAccountLoggedOut,
   captureAuthPrompted,
   captureAuthPromptDismissed,
+  captureHistorySandwichSaved,
+  captureHistorySandwichRated,
+  captureHistorySandwichFavorited,
+  captureHistorySandwichUnfavorited,
+  captureHistorySandwichDeleted,
+  captureHistoryCleared,
+  captureHistoryViewed,
+  captureHistorySearched,
   identifyUser,
   resetIdentity,
 } from '@/analytics/events'
@@ -391,6 +399,62 @@ describe('captureAuthPromptDismissed', () => {
   it('calls posthog.capture with account_auth_prompt_dismissed', () => {
     captureAuthPromptDismissed({ actionAttempted: 'rate this sandwich' })
     expect(mockCapture).toHaveBeenCalledWith('account_auth_prompt_dismissed', { action_attempted: 'rate this sandwich' })
+  })
+})
+
+describe('captureHistorySandwichSaved', () => {
+  it('calls posthog.capture with history_sandwich_saved', () => {
+    captureHistorySandwichSaved({ sandwichName: 'The Club', savedCount: 5 })
+    expect(mockCapture).toHaveBeenCalledWith('history_sandwich_saved', { sandwich_name: 'The Club', saved_count: 5 })
+  })
+})
+
+describe('captureHistorySandwichRated', () => {
+  it('calls posthog.capture with history_sandwich_rated', () => {
+    captureHistorySandwichRated({ rating: 4, previousRating: null, sandwichName: 'The Club' })
+    expect(mockCapture).toHaveBeenCalledWith('history_sandwich_rated', { rating: 4, previous_rating: null, sandwich_name: 'The Club' })
+  })
+})
+
+describe('captureHistorySandwichFavorited', () => {
+  it('calls posthog.capture with history_sandwich_favorited', () => {
+    captureHistorySandwichFavorited({ sandwichName: 'The Club', totalFavorites: 3 })
+    expect(mockCapture).toHaveBeenCalledWith('history_sandwich_favorited', { sandwich_name: 'The Club', total_favorites: 3 })
+  })
+})
+
+describe('captureHistorySandwichUnfavorited', () => {
+  it('calls posthog.capture with history_sandwich_unfavorited', () => {
+    captureHistorySandwichUnfavorited({ sandwichName: 'The Club' })
+    expect(mockCapture).toHaveBeenCalledWith('history_sandwich_unfavorited', { sandwich_name: 'The Club' })
+  })
+})
+
+describe('captureHistorySandwichDeleted', () => {
+  it('calls posthog.capture with history_sandwich_deleted', () => {
+    captureHistorySandwichDeleted()
+    expect(mockCapture).toHaveBeenCalledWith('history_sandwich_deleted')
+  })
+})
+
+describe('captureHistoryCleared', () => {
+  it('calls posthog.capture with history_cleared', () => {
+    captureHistoryCleared({ deletedCount: 10, includedFavorites: false })
+    expect(mockCapture).toHaveBeenCalledWith('history_cleared', { deleted_count: 10, included_favorites: false })
+  })
+})
+
+describe('captureHistoryViewed', () => {
+  it('calls posthog.capture with history_viewed', () => {
+    captureHistoryViewed()
+    expect(mockCapture).toHaveBeenCalledWith('history_viewed')
+  })
+})
+
+describe('captureHistorySearched', () => {
+  it('calls posthog.capture with history_searched', () => {
+    captureHistorySearched({ query: 'turkey', resultsCount: 3, filtersApplied: ['favorites_only'] })
+    expect(mockCapture).toHaveBeenCalledWith('history_searched', { query: 'turkey', results_count: 3, filters_applied: ['favorites_only'] })
   })
 })
 

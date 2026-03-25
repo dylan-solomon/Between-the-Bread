@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Share2 } from 'lucide-react'
+import { Share2, Bookmark } from 'lucide-react'
 import { toast } from 'sonner'
 import type { SandwichComposition } from '@/types'
 import { generateSandwichName } from '@/engine/naming'
@@ -7,6 +7,7 @@ import { createShare } from '@/api/shareApi'
 import { captureShareLinkCreated, captureShareLinkCopied, captureCostContextToggled } from '@/analytics/events'
 import { calculateTotalEstimatedCost } from '@/utils/cost'
 import NutritionPanel from '@/components/NutritionPanel'
+import StarRating from '@/components/StarRating'
 import type { CostContext } from '@/utils/cost'
 
 const NO_CHEESE_SLUG = 'no-cheese'
@@ -39,9 +40,13 @@ type Props = {
   isRolling?: boolean
   costDataLastUpdated?: string
   defaultCostContext?: CostContext
+  onSave?: () => void
+  savedId?: string | null
+  onRate?: (rating: number) => void
+  currentRating?: number | null
 }
 
-export default function SummaryCard({ composition, isRolling = false, costDataLastUpdated, defaultCostContext = 'retail' }: Props) {
+export default function SummaryCard({ composition, isRolling = false, costDataLastUpdated, defaultCostContext = 'retail', onSave, savedId, onRate, currentRating }: Props) {
   const [sharing, setSharing] = useState(false)
   const [costContext, setCostContext] = useState<CostContext>(defaultCostContext)
 
@@ -118,15 +123,34 @@ export default function SummaryCard({ composition, isRolling = false, costDataLa
 
       <NutritionPanel composition={composition} />
 
-      <button
-        type="button"
-        onClick={() => { void handleShare() }}
-        disabled={sharing || isRolling}
-        className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        <Share2 size={14} />
-        Share
-      </button>
+      {onRate !== undefined && (
+        <div className="mt-3 flex justify-center">
+          <StarRating value={currentRating ?? null} onChange={onRate} />
+        </div>
+      )}
+
+      <div className="mt-3 flex items-center justify-center gap-2">
+        {onSave !== undefined && (
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={isRolling || savedId !== undefined && savedId !== null}
+            className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Bookmark size={14} />
+            {savedId !== undefined && savedId !== null ? 'Saved' : 'Save'}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => { void handleShare() }}
+          disabled={sharing || isRolling}
+          className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Share2 size={14} />
+          Share
+        </button>
+      </div>
     </div>
   )
 }

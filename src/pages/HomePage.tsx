@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import AppShell from '@/components/AppShell'
 import CategoryList from '@/components/CategoryList'
 import ChefSpecialRow from '@/components/ChefSpecialRow'
@@ -14,13 +15,19 @@ import { useRollOrchestration } from '@/hooks/useRollOrchestration'
 import { useIngredients } from '@/hooks/useIngredients'
 import { useCompatMatrix } from '@/hooks/useCompatMatrix'
 import { useProfile } from '@/hooks/useProfile'
+import { useAuth } from '@/context/AuthContext'
+import { useAuthPrompt } from '@/context/AuthPromptContext'
 import { filterByDiet } from '@/utils/dietary'
 import { BASE_CATEGORIES } from '@/engine/randomizer'
+import { saveSandwich, updateSavedSandwich } from '@/api/savedSandwiches'
+import { generateSandwichName } from '@/engine/naming'
 import {
   captureDietaryFilterToggled,
   captureDietaryFilterWarning,
   captureSmartModeToggled,
   captureDoubleToggled,
+  captureHistorySandwichSaved,
+  captureHistorySandwichRated,
 } from '@/analytics/events'
 import type { CategorySlug, DoubleCategory, DietaryTag, Ingredient } from '@/types'
 import type { CostContext } from '@/utils/cost'
@@ -31,11 +38,15 @@ export default function HomePage() {
   const { pools, categories, costDataLastUpdated, loading } = useIngredients()
   const { matrix } = useCompatMatrix()
   const { profile } = useProfile()
+  const { user, session: authSession } = useAuth()
+  const { prompt } = useAuthPrompt()
   const session = useSandwichSession()
   const history = useSessionHistory()
   const [activeDietFilters, setActiveDietFilters] = useState<DietaryTag[]>([])
   const [smartMode, setSmartMode] = useState(false)
   const [defaultCostContext, setDefaultCostContext] = useState<CostContext>('retail')
+  const [savedId, setSavedId] = useState<string | null>(null)
+  const [currentRating, setCurrentRating] = useState<number | null>(null)
   const profileApplied = useRef(false)
 
   useEffect(() => {
@@ -84,6 +95,81 @@ export default function HomePage() {
     captureSmartModeToggled({ isActive: next })
   }
 
+  const handleSave = useCallback(async () => {
+    if (user === null || authSession === null) {
+      prompt('save your sandwich')
+      return
+    }
+    if (session.composition === null) return
+
+    try {
+      const name = generateSandwichName(session.composition)
+      const compositionIds = Object.fromEntries(
+        Object.entries(session.composition).map(([cat, ingredients]) => [
+          cat,
+          (ingredients as Ingredient[]).map((i) => i.id ?? i.slug),
+        ]),
+      ) as Record<string, unknown[]>
+
+      const result = await saveSandwich(authSession.access_token, {
+        composition: compositionIds,
+        name,
+      })
+      setSavedId(result.id)
+      captureHistorySandwichSaved({ sandwichName: name, savedCount: 1 })
+      toast.success('Sandwich saved!')
+    } catch {
+      toast.error('Failed to save sandwich. Please try again.')
+    }
+  }, [user, authSession, session.composition, prompt])
+
+  const handleRate = useCallback(async (rating: number) => {
+    if (user === null || authSession === null) {
+      prompt('rate this sandwich')
+      return
+    }
+
+    let currentSavedId = savedId
+
+    if (currentSavedId === null && session.composition !== null) {
+      try {
+        const name = generateSandwichName(session.composition)
+        const compositionIds = Object.fromEntries(
+          Object.entries(session.composition).map(([cat, ingredients]) => [
+            cat,
+            (ingredients as Ingredient[]).map((i) => i.id ?? i.slug),
+          ]),
+        ) as Record<string, unknown[]>
+
+        const result = await saveSandwich(authSession.access_token, {
+          composition: compositionIds,
+          name,
+        })
+        currentSavedId = result.id
+        setSavedId(result.id)
+        captureHistorySandwichSaved({ sandwichName: name, savedCount: 1 })
+      } catch {
+        toast.error('Failed to save sandwich. Please try again.')
+        return
+      }
+    }
+
+    if (currentSavedId === null) return
+
+    try {
+      const previousRating = currentRating
+      await updateSavedSandwich(authSession.access_token, currentSavedId, { rating })
+      setCurrentRating(rating)
+      captureHistorySandwichRated({
+        rating,
+        previousRating,
+        sandwichName: session.composition !== null ? generateSandwichName(session.composition) : '',
+      })
+    } catch {
+      toast.error('Failed to save rating. Please try again.')
+    }
+  }, [user, authSession, savedId, session.composition, prompt, currentRating])
+
   const { isRolling, rollingCategory, chefsSpecial, chefsSpecialLocked, toggleChefsSpecialLock, rollAll, rollOne, loadFromHistory } =
     useRollOrchestration(
       { ...session, addHistoryEntry: history.addEntry },
@@ -102,7 +188,17 @@ export default function HomePage() {
         </div>
 
         <div className="min-h-20">
-          {!isRolling && <SummaryCard composition={session.composition} costDataLastUpdated={costDataLastUpdated} defaultCostContext={defaultCostContext} />}
+          {!isRolling && (
+            <SummaryCard
+              composition={session.composition}
+              costDataLastUpdated={costDataLastUpdated}
+              defaultCostContext={defaultCostContext}
+              onSave={() => { void handleSave() }}
+              savedId={savedId}
+              onRate={(r) => { void handleRate(r) }}
+              currentRating={currentRating}
+            />
+          )}
         </div>
 
         <div className="flex flex-wrap justify-center gap-2">
@@ -113,7 +209,7 @@ export default function HomePage() {
           hasRolled={session.hasRolled}
           isRolling={isRolling}
           disabled={loading}
-          onClick={rollAll}
+          onClick={() => { setSavedId(null); setCurrentRating(null); rollAll() }}
         />
 
         <div className="flex justify-center">
