@@ -137,7 +137,7 @@ describe('Header', () => {
       expect(screen.getByRole('link', { name: /settings/i })).toHaveAttribute('href', '/account/settings')
     })
 
-    it('shows account menu with History link on click', async () => {
+    it('shows account menu with My Sandwiches link on click', async () => {
       renderHeader()
       await waitFor(() => {
         expect(screen.getByText('test@example.com')).toBeInTheDocument()
@@ -145,7 +145,7 @@ describe('Header', () => {
 
       await userEvent.click(screen.getByRole('button', { name: /account/i }))
 
-      expect(screen.getByRole('link', { name: /history/i })).toHaveAttribute('href', '/account/history')
+      expect(screen.getByRole('link', { name: /my sandwiches/i })).toHaveAttribute('href', '/account/history')
     })
 
     it('calls signOut when Log out is clicked', async () => {

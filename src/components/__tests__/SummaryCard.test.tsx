@@ -231,6 +231,66 @@ describe('SummaryCard', () => {
     })
   })
 
+  describe('Save button', () => {
+    it('renders a Save button when onSave is provided', () => {
+      render(<SummaryCard composition={makeComposition()} onSave={vi.fn()} />)
+      expect(screen.getByRole('button', { name: /^save$/i })).toBeInTheDocument()
+    })
+
+    it('does not render a Save button when onSave is not provided', () => {
+      render(<SummaryCard composition={makeComposition()} />)
+      expect(screen.queryByRole('button', { name: /^save$/i })).not.toBeInTheDocument()
+    })
+
+    it('calls onSave when Save button is clicked', () => {
+      const onSave = vi.fn()
+      render(<SummaryCard composition={makeComposition()} onSave={onSave} />)
+      fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+      expect(onSave).toHaveBeenCalledTimes(1)
+    })
+
+    it('shows "Saved" text when savedId is provided', () => {
+      render(<SummaryCard composition={makeComposition()} onSave={vi.fn()} savedId="saved-1" />)
+      expect(screen.getByRole('button', { name: /^saved$/i })).toBeInTheDocument()
+    })
+
+    it('disables Save button while rolling', () => {
+      render(<SummaryCard composition={makeComposition()} onSave={vi.fn()} isRolling />)
+      expect(screen.getByRole('button', { name: /^save$/i })).toBeDisabled()
+    })
+
+    it('disables Saved button when already saved', () => {
+      render(<SummaryCard composition={makeComposition()} onSave={vi.fn()} savedId="saved-1" />)
+      expect(screen.getByRole('button', { name: /^saved$/i })).toBeDisabled()
+    })
+  })
+
+  describe('Star rating', () => {
+    it('renders star rating when onRate is provided', () => {
+      render(<SummaryCard composition={makeComposition()} onRate={vi.fn()} />)
+      expect(screen.getByRole('group', { name: /rating/i })).toBeInTheDocument()
+    })
+
+    it('does not render star rating when onRate is not provided', () => {
+      render(<SummaryCard composition={makeComposition()} />)
+      expect(screen.queryByRole('group', { name: /rating/i })).not.toBeInTheDocument()
+    })
+
+    it('calls onRate with the selected value', () => {
+      const onRate = vi.fn()
+      render(<SummaryCard composition={makeComposition()} onRate={onRate} />)
+      fireEvent.click(screen.getAllByTitle('Good / Above Average')[0])
+      expect(onRate).toHaveBeenCalledWith(4)
+    })
+
+    it('displays the current rating', () => {
+      render(<SummaryCard composition={makeComposition()} onRate={vi.fn()} currentRating={3} />)
+      const stars = screen.getAllByRole('button').filter((btn) => btn.closest('[role="group"]'))
+      const filledStars = stars.filter((btn) => btn.getAttribute('data-filled') === 'true')
+      expect(filledStars).toHaveLength(3)
+    })
+  })
+
   describe('Nutrition panel', () => {
     it('renders the "Show nutrition" toggle when composition is present', () => {
       render(<SummaryCard composition={makeComposition()} />)

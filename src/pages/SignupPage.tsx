@@ -54,7 +54,7 @@ export default function SignupPage() {
           </div>
         )}
 
-        <form onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-5">
+        <form action="#" onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-5">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
               Email
@@ -62,6 +62,7 @@ export default function SignupPage() {
             <input
               id="email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => { setEmail(e.target.value); }}
               required
@@ -76,6 +77,7 @@ export default function SignupPage() {
             <input
               id="password"
               type="password"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => { setPassword(e.target.value); }}
               required
@@ -90,6 +92,7 @@ export default function SignupPage() {
             <input
               id="confirm-password"
               type="password"
+              autoComplete="new-password"
               value={confirmPassword}
               onChange={(e) => { setConfirmPassword(e.target.value); }}
               required

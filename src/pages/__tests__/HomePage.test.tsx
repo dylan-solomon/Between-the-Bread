@@ -3,6 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
+import { AuthPromptProvider } from '@/context/AuthPromptContext'
 import HomePage from '@/pages/HomePage'
 import { makeCategories, makePool } from '@/test/factories'
 import type { CompatMatrixRow } from '@/types'
@@ -46,11 +47,17 @@ vi.mock('@/hooks/useCompatMatrix', () => ({
 // Last category (index 4) commits at 4 * 840 + 640 = 3999ms → use 4500ms to be safe.
 const FULL_ROLL_MS = 4500
 
+vi.mock('@/components/AuthPromptModal', () => ({
+  default: () => null,
+}))
+
 const renderPage = () =>
   render(
     <MemoryRouter>
       <AuthProvider>
-        <HomePage />
+        <AuthPromptProvider>
+          <HomePage />
+        </AuthPromptProvider>
       </AuthProvider>
     </MemoryRouter>,
   )
@@ -168,6 +175,55 @@ describe('HomePage', () => {
       await userEvent.click(screen.getByRole('switch', { name: /smart mode/i }))
       await userEvent.click(screen.getByRole('switch', { name: /smart mode/i }))
       expect(screen.getByRole('switch', { name: /smart mode/i })).toHaveAttribute('aria-checked', 'false')
+    })
+  })
+
+  describe('load from saved sandwich', () => {
+    it('loads a saved sandwich from sessionStorage and shows summary card', async () => {
+      const storedComposition = {
+        composition: {
+          bread: [{ slug: 'item-0', name: 'item-0' }],
+          protein: [{ slug: 'item-0', name: 'item-0' }],
+          cheese: [{ slug: 'item-0', name: 'item-0' }],
+          toppings: [{ slug: 'item-0', name: 'item-0' }],
+          condiments: [{ slug: 'item-0', name: 'item-0' }],
+        },
+      }
+      sessionStorage.setItem('btb_load_sandwich', JSON.stringify(storedComposition))
+      renderPage()
+      // Should show the sandwich name heading (from SummaryCard)
+      expect(await screen.findByRole('heading', { level: 2 })).toBeInTheDocument()
+    })
+
+    it('clears sessionStorage after loading', () => {
+      const storedComposition = {
+        composition: {
+          bread: [{ slug: 'item-0', name: 'item-0' }],
+          protein: [{ slug: 'item-0', name: 'item-0' }],
+          cheese: [{ slug: 'item-0', name: 'item-0' }],
+          toppings: [{ slug: 'item-0', name: 'item-0' }],
+          condiments: [{ slug: 'item-0', name: 'item-0' }],
+        },
+      }
+      sessionStorage.setItem('btb_load_sandwich', JSON.stringify(storedComposition))
+      renderPage()
+      expect(sessionStorage.getItem('btb_load_sandwich')).toBeNull()
+    })
+
+    it('hides empty state prompt when loaded from history', async () => {
+      const storedComposition = {
+        composition: {
+          bread: [{ slug: 'item-0', name: 'item-0' }],
+          protein: [{ slug: 'item-0', name: 'item-0' }],
+          cheese: [{ slug: 'item-0', name: 'item-0' }],
+          toppings: [{ slug: 'item-0', name: 'item-0' }],
+          condiments: [{ slug: 'item-0', name: 'item-0' }],
+        },
+      }
+      sessionStorage.setItem('btb_load_sandwich', JSON.stringify(storedComposition))
+      renderPage()
+      await screen.findByRole('heading', { level: 2 })
+      expect(screen.queryByText(/roll the dice to build your sandwich/i)).not.toBeInTheDocument()
     })
   })
 })

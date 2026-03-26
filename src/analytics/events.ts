@@ -169,6 +169,38 @@ export const captureAuthPromptDismissed = (props: { actionAttempted: string }): 
   posthog.capture('account_auth_prompt_dismissed', { action_attempted: props.actionAttempted })
 }
 
+export const captureHistorySandwichSaved = (props: { sandwichName: string; savedCount: number }): void => {
+  posthog.capture('history_sandwich_saved', { sandwich_name: props.sandwichName, saved_count: props.savedCount })
+}
+
+export const captureHistorySandwichRated = (props: { rating: number; previousRating: number | null; sandwichName: string }): void => {
+  posthog.capture('history_sandwich_rated', { rating: props.rating, previous_rating: props.previousRating, sandwich_name: props.sandwichName })
+}
+
+export const captureHistorySandwichFavorited = (props: { sandwichName: string; totalFavorites: number }): void => {
+  posthog.capture('history_sandwich_favorited', { sandwich_name: props.sandwichName, total_favorites: props.totalFavorites })
+}
+
+export const captureHistorySandwichUnfavorited = (props: { sandwichName: string }): void => {
+  posthog.capture('history_sandwich_unfavorited', { sandwich_name: props.sandwichName })
+}
+
+export const captureHistorySandwichDeleted = (): void => {
+  posthog.capture('history_sandwich_deleted')
+}
+
+export const captureHistoryCleared = (props: { deletedCount: number; includedFavorites: boolean }): void => {
+  posthog.capture('history_cleared', { deleted_count: props.deletedCount, included_favorites: props.includedFavorites })
+}
+
+export const captureHistoryViewed = (): void => {
+  posthog.capture('history_viewed')
+}
+
+export const captureHistorySearched = (props: { query: string; resultsCount: number; filtersApplied: string[] }): void => {
+  posthog.capture('history_searched', { query: props.query, results_count: props.resultsCount, filters_applied: props.filtersApplied })
+}
+
 export const captureAccountSignedUp = (props: { method: string }): void => {
   posthog.capture('account_signed_up', { method: props.method })
 }

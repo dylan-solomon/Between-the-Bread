@@ -49,6 +49,7 @@ export default function AuthPromptModal({ isOpen, actionLabel, onDismiss }: Prop
         <div className="mt-6 flex gap-3">
           <Link
             to={`/login?redirect=${redirectParam}`}
+            onClick={onDismiss}
             className="flex-1 rounded-md bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary/90"
           >
             Log in
