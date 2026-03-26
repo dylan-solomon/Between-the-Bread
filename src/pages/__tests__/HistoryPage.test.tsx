@@ -231,6 +231,26 @@ describe('HistoryPage', () => {
       expect(description).toHaveTextContent('Mayo')
     })
 
+    it('filters out UUID strings from composition description', async () => {
+      mockFetchSavedSandwiches.mockResolvedValue(
+        makeListResponse([makeSavedSandwich({
+          composition: {
+            bread: ['3a49c944-ea63-4ac9-95f9-bed736a97e04'],
+            protein: [{ slug: 'turkey', name: 'Turkey' }],
+            cheese: ['0ef2ba9c-eeb7-4b6a-8f3d-abc123def456'],
+            toppings: [{ slug: 'lettuce', name: 'Lettuce' }],
+            condiments: [{ slug: 'mayo', name: 'Mayo' }],
+          },
+        })]),
+      )
+      renderPage()
+      const description = await screen.findByTestId('sandwich-description')
+      expect(description).toHaveTextContent('Turkey')
+      expect(description).toHaveTextContent('Lettuce')
+      expect(description).toHaveTextContent('Mayo')
+      expect(description.textContent).not.toContain('3a49c944')
+    })
+
     it('sandwich name is a clickable link to the home page', async () => {
       mockFetchSavedSandwiches.mockResolvedValue(
         makeListResponse([makeSavedSandwich({ id: 's1', name: 'The Reuben' })]),

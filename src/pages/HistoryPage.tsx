@@ -29,8 +29,10 @@ const PAGE_SIZE = 10
 const DEBOUNCE_MS = 300
 const LOAD_SANDWICH_KEY = 'btb_load_sandwich'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 const extractName = (item: unknown): string => {
-  if (typeof item === 'string') return item
+  if (typeof item === 'string') return UUID_RE.test(item) ? '' : item
   if (typeof item === 'object' && item !== null && 'name' in item) return String((item as { name: unknown }).name)
   return ''
 }
@@ -56,6 +58,7 @@ const buildDescription = (composition: Partial<Record<string, unknown[]>>): stri
     ...(composition.bread ?? []),
   ]
     .map(extractName)
+    .filter((n) => n !== '')
     .join(', ')
 }
 
@@ -345,7 +348,7 @@ export default function HistoryPage() {
                     </Link>
                     <p
                       data-testid="session-sandwich-description"
-                      className="mt-0.5 text-xs italic text-neutral-400 truncate"
+                      className="mt-0.5 text-xs italic text-neutral-400"
                     >
                       {buildSessionDescription(entry.composition as Record<string, Ingredient[]>)}
                     </p>
@@ -458,7 +461,7 @@ export default function HistoryPage() {
                       </Link>
                       <p
                         data-testid="sandwich-description"
-                        className="mt-0.5 text-xs italic text-neutral-400 truncate"
+                        className="mt-0.5 text-xs italic text-neutral-400"
                       >
                         {buildDescription(sandwich.composition)}
                       </p>
