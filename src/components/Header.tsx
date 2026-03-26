@@ -67,7 +67,7 @@ export default function Header() {
                   onClick={() => { setMenuOpen(false) }}
                   className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
                 >
-                  History
+                  My Sandwiches
                 </Link>
                 <button
                   onClick={() => void handleSignOut()}

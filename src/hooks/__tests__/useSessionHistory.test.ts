@@ -1,10 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useSessionHistory } from '@/hooks/useSessionHistory'
+import { useSessionHistory, SESSION_HISTORY_KEY } from '@/hooks/useSessionHistory'
 import { makeComposition } from '@/test/factories'
 
+beforeEach(() => {
+  sessionStorage.removeItem(SESSION_HISTORY_KEY)
+})
+
 describe('useSessionHistory', () => {
-  it('starts with empty entries', () => {
+  it('starts with empty entries when sessionStorage is empty', () => {
     const { result } = renderHook(() => useSessionHistory())
     expect(result.current.entries).toHaveLength(0)
   })
@@ -58,5 +62,39 @@ describe('useSessionHistory', () => {
     expect(result.current.entries).toHaveLength(20)
     expect(result.current.entries[0]?.name).toBe('Sandwich 20')
     expect(result.current.entries.at(-1)?.name).toBe('Sandwich 1')
+  })
+
+  describe('sessionStorage persistence', () => {
+    it('persists entries to sessionStorage when an entry is added', () => {
+      const { result } = renderHook(() => useSessionHistory())
+      act(() => { result.current.addEntry(makeComposition(), 'Persisted Sandwich') })
+      const stored = sessionStorage.getItem(SESSION_HISTORY_KEY)
+      expect(stored).not.toBeNull()
+      const parsed = JSON.parse(stored ?? '[]') as unknown[]
+      expect(parsed).toHaveLength(1)
+    })
+
+    it('restores entries from sessionStorage on init', () => {
+      const { result: first } = renderHook(() => useSessionHistory())
+      act(() => { first.current.addEntry(makeComposition(), 'Restored Sandwich') })
+
+      const { result: second } = renderHook(() => useSessionHistory())
+      expect(second.current.entries).toHaveLength(1)
+      expect(second.current.entries[0]?.name).toBe('Restored Sandwich')
+    })
+
+    it('restores timestamps as Date objects', () => {
+      const { result: first } = renderHook(() => useSessionHistory())
+      act(() => { first.current.addEntry(makeComposition(), 'Dated Sandwich') })
+
+      const { result: second } = renderHook(() => useSessionHistory())
+      expect(second.current.entries[0]?.timestamp).toBeInstanceOf(Date)
+    })
+
+    it('handles corrupt sessionStorage gracefully', () => {
+      sessionStorage.setItem(SESSION_HISTORY_KEY, 'not-json')
+      const { result } = renderHook(() => useSessionHistory())
+      expect(result.current.entries).toHaveLength(0)
+    })
   })
 })

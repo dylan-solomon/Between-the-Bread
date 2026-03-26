@@ -177,4 +177,53 @@ describe('HomePage', () => {
       expect(screen.getByRole('switch', { name: /smart mode/i })).toHaveAttribute('aria-checked', 'false')
     })
   })
+
+  describe('load from saved sandwich', () => {
+    it('loads a saved sandwich from sessionStorage and shows summary card', async () => {
+      const storedComposition = {
+        composition: {
+          bread: [{ slug: 'item-0', name: 'item-0' }],
+          protein: [{ slug: 'item-0', name: 'item-0' }],
+          cheese: [{ slug: 'item-0', name: 'item-0' }],
+          toppings: [{ slug: 'item-0', name: 'item-0' }],
+          condiments: [{ slug: 'item-0', name: 'item-0' }],
+        },
+      }
+      sessionStorage.setItem('btb_load_sandwich', JSON.stringify(storedComposition))
+      renderPage()
+      // Should show the sandwich name heading (from SummaryCard)
+      expect(await screen.findByRole('heading', { level: 2 })).toBeInTheDocument()
+    })
+
+    it('clears sessionStorage after loading', () => {
+      const storedComposition = {
+        composition: {
+          bread: [{ slug: 'item-0', name: 'item-0' }],
+          protein: [{ slug: 'item-0', name: 'item-0' }],
+          cheese: [{ slug: 'item-0', name: 'item-0' }],
+          toppings: [{ slug: 'item-0', name: 'item-0' }],
+          condiments: [{ slug: 'item-0', name: 'item-0' }],
+        },
+      }
+      sessionStorage.setItem('btb_load_sandwich', JSON.stringify(storedComposition))
+      renderPage()
+      expect(sessionStorage.getItem('btb_load_sandwich')).toBeNull()
+    })
+
+    it('hides empty state prompt when loaded from history', async () => {
+      const storedComposition = {
+        composition: {
+          bread: [{ slug: 'item-0', name: 'item-0' }],
+          protein: [{ slug: 'item-0', name: 'item-0' }],
+          cheese: [{ slug: 'item-0', name: 'item-0' }],
+          toppings: [{ slug: 'item-0', name: 'item-0' }],
+          condiments: [{ slug: 'item-0', name: 'item-0' }],
+        },
+      }
+      sessionStorage.setItem('btb_load_sandwich', JSON.stringify(storedComposition))
+      renderPage()
+      await screen.findByRole('heading', { level: 2 })
+      expect(screen.queryByText(/roll the dice to build your sandwich/i)).not.toBeInTheDocument()
+    })
+  })
 })

@@ -18,6 +18,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { useAuth } from '@/context/AuthContext'
 import { useAuthPrompt } from '@/context/AuthPromptContext'
 import { filterByDiet } from '@/utils/dietary'
+import { resolveComposition } from '@/utils/resolveComposition'
 import { BASE_CATEGORIES } from '@/engine/randomizer'
 import { saveSandwich, updateSavedSandwich } from '@/api/savedSandwiches'
 import { generateSandwichName } from '@/engine/naming'
@@ -29,7 +30,7 @@ import {
   captureHistorySandwichSaved,
   captureHistorySandwichRated,
 } from '@/analytics/events'
-import type { CategorySlug, DoubleCategory, DietaryTag, Ingredient } from '@/types'
+import type { CategorySlug, DoubleCategory, DietaryTag, Ingredient, SandwichComposition } from '@/types'
 import type { CostContext } from '@/utils/cost'
 
 const EMPTY_POOLS: Partial<Record<CategorySlug, Ingredient[]>> = {}
@@ -48,6 +49,26 @@ export default function HomePage() {
   const [savedId, setSavedId] = useState<string | null>(null)
   const [currentRating, setCurrentRating] = useState<number | null>(null)
   const profileApplied = useRef(false)
+  const savedSandwichLoaded = useRef(false)
+
+  useEffect(() => {
+    if (loading || savedSandwichLoaded.current) return
+    const raw = sessionStorage.getItem('btb_load_sandwich')
+    if (raw === null) return
+    sessionStorage.removeItem('btb_load_sandwich')
+    savedSandwichLoaded.current = true
+    try {
+      const parsed = JSON.parse(raw) as { composition?: Record<string, unknown[]> }
+      if (parsed.composition !== undefined) {
+        const resolved = resolveComposition(parsed.composition, pools)
+        if (resolved !== null) {
+          session.loadComposition(resolved)
+        }
+      }
+    } catch {
+      // Invalid data — silently ignore
+    }
+  }, [loading, pools, session])
 
   useEffect(() => {
     if (profile === null || profileApplied.current) return
@@ -95,6 +116,14 @@ export default function HomePage() {
     captureSmartModeToggled({ isActive: next })
   }
 
+  const serializeComposition = (composition: SandwichComposition): Record<string, unknown[]> =>
+    Object.fromEntries(
+      Object.entries(composition).map(([cat, ingredients]) => [
+        cat,
+        (ingredients as Ingredient[]).map((i) => ({ slug: i.slug, name: i.name })),
+      ]),
+    ) as Record<string, unknown[]>
+
   const handleSave = useCallback(async () => {
     if (user === null || authSession === null) {
       prompt('save your sandwich')
@@ -104,15 +133,8 @@ export default function HomePage() {
 
     try {
       const name = generateSandwichName(session.composition)
-      const compositionIds = Object.fromEntries(
-        Object.entries(session.composition).map(([cat, ingredients]) => [
-          cat,
-          (ingredients as Ingredient[]).map((i) => i.id ?? i.slug),
-        ]),
-      ) as Record<string, unknown[]>
-
       const result = await saveSandwich(authSession.access_token, {
-        composition: compositionIds,
+        composition: serializeComposition(session.composition),
         name,
       })
       setSavedId(result.id)
@@ -134,15 +156,8 @@ export default function HomePage() {
     if (currentSavedId === null && session.composition !== null) {
       try {
         const name = generateSandwichName(session.composition)
-        const compositionIds = Object.fromEntries(
-          Object.entries(session.composition).map(([cat, ingredients]) => [
-            cat,
-            (ingredients as Ingredient[]).map((i) => i.id ?? i.slug),
-          ]),
-        ) as Record<string, unknown[]>
-
         const result = await saveSandwich(authSession.access_token, {
-          composition: compositionIds,
+          composition: serializeComposition(session.composition),
           name,
         })
         currentSavedId = result.id

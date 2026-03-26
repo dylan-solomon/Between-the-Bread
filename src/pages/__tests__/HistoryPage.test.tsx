@@ -3,7 +3,10 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
+import { SESSION_HISTORY_KEY } from '@/hooks/useSessionHistory'
+import { makeComposition } from '@/test/factories'
 import type { SavedSandwich } from '@/api/savedSandwiches'
+import type { HistoryEntry } from '@/types'
 
 const {
   mockFetchSavedSandwiches,
@@ -93,10 +96,20 @@ const renderPage = () =>
     </MemoryRouter>,
   )
 
+const makeSessionEntry = (overrides: Partial<HistoryEntry> = {}): HistoryEntry => ({
+  id: crypto.randomUUID(),
+  composition: makeComposition(),
+  name: 'Session Sandwich',
+  timestamp: new Date(),
+  ...overrides,
+})
+
 // Lazy import so mocks are in place
 let HistoryPage: React.ComponentType
 beforeEach(async () => {
   vi.clearAllMocks()
+  sessionStorage.removeItem(SESSION_HISTORY_KEY)
+  sessionStorage.removeItem('btb_load_sandwich')
   mockFetchSavedSandwiches.mockResolvedValue(makeListResponse([]))
   const mod = await import('@/pages/HistoryPage')
   HistoryPage = mod.default
@@ -106,7 +119,19 @@ describe('HistoryPage', () => {
   describe('initial load', () => {
     it('renders a heading', async () => {
       renderPage()
-      expect(await screen.findByRole('heading', { name: /saved sandwiches/i })).toBeInTheDocument()
+      expect(await screen.findByRole('heading', { name: /my sandwiches/i })).toBeInTheDocument()
+    })
+
+    it('renders Session and Saved tab buttons', async () => {
+      renderPage()
+      expect(await screen.findByRole('tab', { name: /session/i })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: /saved/i })).toBeInTheDocument()
+    })
+
+    it('Saved tab is selected by default', async () => {
+      renderPage()
+      const savedTab = await screen.findByRole('tab', { name: /saved/i })
+      expect(savedTab).toHaveAttribute('aria-selected', 'true')
     })
 
     it('shows a loading state while sandwiches are being fetched', async () => {
@@ -183,6 +208,56 @@ describe('HistoryPage', () => {
       )
       renderPage()
       expect(await screen.findByRole('button', { name: /favorite/i })).toBeInTheDocument()
+    })
+
+    it('shows ingredient description from stored composition', async () => {
+      mockFetchSavedSandwiches.mockResolvedValue(
+        makeListResponse([makeSavedSandwich({
+          composition: {
+            bread: [{ slug: 'sourdough', name: 'Sourdough' }],
+            protein: [{ slug: 'turkey', name: 'Turkey' }],
+            cheese: [{ slug: 'swiss', name: 'Swiss' }],
+            toppings: [{ slug: 'lettuce', name: 'Lettuce' }],
+            condiments: [{ slug: 'mayo', name: 'Mayo' }],
+          },
+        })]),
+      )
+      renderPage()
+      const description = await screen.findByTestId('sandwich-description')
+      expect(description).toHaveTextContent('Turkey')
+      expect(description).toHaveTextContent('Swiss')
+      expect(description).toHaveTextContent('Sourdough')
+      expect(description).toHaveTextContent('Lettuce')
+      expect(description).toHaveTextContent('Mayo')
+    })
+
+    it('sandwich name is a clickable link to the home page', async () => {
+      mockFetchSavedSandwiches.mockResolvedValue(
+        makeListResponse([makeSavedSandwich({ id: 's1', name: 'The Reuben' })]),
+      )
+      renderPage()
+      const link = await screen.findByRole('link', { name: /the reuben/i })
+      expect(link).toHaveAttribute('href', '/')
+    })
+
+    it('stores composition in sessionStorage when sandwich link is clicked', async () => {
+      const composition = {
+        bread: [{ slug: 'sourdough', name: 'Sourdough' }],
+        protein: [{ slug: 'turkey', name: 'Turkey' }],
+        cheese: [{ slug: 'swiss', name: 'Swiss' }],
+        toppings: [{ slug: 'lettuce', name: 'Lettuce' }],
+        condiments: [{ slug: 'mayo', name: 'Mayo' }],
+      }
+      mockFetchSavedSandwiches.mockResolvedValue(
+        makeListResponse([makeSavedSandwich({ id: 's1', name: 'The Reuben', composition })]),
+      )
+      renderPage()
+      const link = await screen.findByRole('link', { name: /the reuben/i })
+      fireEvent.click(link)
+      const stored = sessionStorage.getItem('btb_load_sandwich')
+      expect(stored).not.toBeNull()
+      const parsed = JSON.parse(stored ?? '{}') as Record<string, unknown>
+      expect(parsed).toHaveProperty('composition')
     })
   })
 
@@ -421,9 +496,88 @@ describe('HistoryPage', () => {
         ),
       )
       renderPage()
-      await screen.findByRole('heading', { name: /saved sandwiches/i })
+      await screen.findByRole('heading', { name: /my sandwiches/i })
       expect(screen.queryByText(/approaching.*limit/i)).not.toBeInTheDocument()
       expect(screen.queryByText(/history full/i)).not.toBeInTheDocument()
+    })
+  })
+
+  describe('session history tab', () => {
+    it('switching to Session tab shows session history entries', async () => {
+      sessionStorage.setItem(
+        SESSION_HISTORY_KEY,
+        JSON.stringify([makeSessionEntry({ name: 'My Session Roll' })]),
+      )
+      renderPage()
+      const sessionTab = await screen.findByRole('tab', { name: /session/i })
+      await userEvent.click(sessionTab)
+      expect(await screen.findByText('My Session Roll')).toBeInTheDocument()
+    })
+
+    it('Session tab is selected after clicking it', async () => {
+      renderPage()
+      const sessionTab = await screen.findByRole('tab', { name: /session/i })
+      await userEvent.click(sessionTab)
+      expect(sessionTab).toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('shows empty state when no session entries exist', async () => {
+      renderPage()
+      const sessionTab = await screen.findByRole('tab', { name: /session/i })
+      await userEvent.click(sessionTab)
+      expect(await screen.findByText(/no sandwiches rolled/i)).toBeInTheDocument()
+    })
+
+    it('session entries are clickable links to the home page', async () => {
+      sessionStorage.setItem(
+        SESSION_HISTORY_KEY,
+        JSON.stringify([makeSessionEntry({ name: 'Clickable Roll' })]),
+      )
+      renderPage()
+      const sessionTab = await screen.findByRole('tab', { name: /session/i })
+      await userEvent.click(sessionTab)
+      const link = await screen.findByRole('link', { name: /clickable roll/i })
+      expect(link).toHaveAttribute('href', '/')
+    })
+
+    it('session entries show ingredient description', async () => {
+      sessionStorage.setItem(
+        SESSION_HISTORY_KEY,
+        JSON.stringify([makeSessionEntry({ name: 'Descriptive Roll' })]),
+      )
+      renderPage()
+      const sessionTab = await screen.findByRole('tab', { name: /session/i })
+      await userEvent.click(sessionTab)
+      const description = await screen.findByTestId('session-sandwich-description')
+      expect(description).toHaveTextContent('Turkey')
+      expect(description).toHaveTextContent('Swiss')
+      expect(description).toHaveTextContent('Sourdough')
+    })
+
+    it('switching back to Saved tab shows saved sandwiches', async () => {
+      mockFetchSavedSandwiches.mockResolvedValue(
+        makeListResponse([makeSavedSandwich({ name: 'Saved One' })]),
+      )
+      renderPage()
+      await screen.findByText('Saved One')
+      const sessionTab = await screen.findByRole('tab', { name: /session/i })
+      await userEvent.click(sessionTab)
+      expect(screen.queryByText('Saved One')).not.toBeInTheDocument()
+      const savedTab = screen.getByRole('tab', { name: /saved/i })
+      await userEvent.click(savedTab)
+      expect(await screen.findByText('Saved One')).toBeInTheDocument()
+    })
+
+    it('stores composition in sessionStorage when session entry link is clicked', async () => {
+      const entry = makeSessionEntry({ name: 'Store Test' })
+      sessionStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify([entry]))
+      renderPage()
+      const sessionTab = await screen.findByRole('tab', { name: /session/i })
+      await userEvent.click(sessionTab)
+      const link = await screen.findByRole('link', { name: /store test/i })
+      fireEvent.click(link)
+      const stored = sessionStorage.getItem('btb_load_sandwich')
+      expect(stored).not.toBeNull()
     })
   })
 })
