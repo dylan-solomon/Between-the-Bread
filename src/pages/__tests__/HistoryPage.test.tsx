@@ -279,6 +279,19 @@ describe('HistoryPage', () => {
       const parsed = JSON.parse(stored ?? '{}') as Record<string, unknown>
       expect(parsed).toHaveProperty('composition')
     })
+
+    it('includes savedId and rating when clicking a saved sandwich link', async () => {
+      mockFetchSavedSandwiches.mockResolvedValue(
+        makeListResponse([makeSavedSandwich({ id: 's99', name: 'Rated Sandwich', rating: 4 })]),
+      )
+      renderPage()
+      const link = await screen.findByRole('link', { name: /rated sandwich/i })
+      fireEvent.click(link)
+      const stored = sessionStorage.getItem('btb_load_sandwich')
+      const parsed = JSON.parse(stored ?? '{}') as Record<string, unknown>
+      expect(parsed).toHaveProperty('savedId', 's99')
+      expect(parsed).toHaveProperty('rating', 4)
+    })
   })
 
   describe('search', () => {

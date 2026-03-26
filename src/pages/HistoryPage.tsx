@@ -453,7 +453,7 @@ export default function HistoryPage() {
                       <Link
                         to="/"
                         onClick={() => {
-                          sessionStorage.setItem(LOAD_SANDWICH_KEY, JSON.stringify({ composition: sandwich.composition }))
+                          sessionStorage.setItem(LOAD_SANDWICH_KEY, JSON.stringify({ composition: sandwich.composition, savedId: sandwich.id, rating: sandwich.rating }))
                         }}
                         className="font-display text-sm font-semibold text-neutral-900 truncate block hover:text-primary transition"
                       >

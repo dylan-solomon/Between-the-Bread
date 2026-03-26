@@ -58,11 +58,13 @@ export default function HomePage() {
     sessionStorage.removeItem('btb_load_sandwich')
     savedSandwichLoaded.current = true
     try {
-      const parsed = JSON.parse(raw) as { composition?: Record<string, unknown[]> }
+      const parsed = JSON.parse(raw) as { composition?: Record<string, unknown[]>; savedId?: string; rating?: number }
       if (parsed.composition !== undefined) {
         const resolved = resolveComposition(parsed.composition, pools)
         if (resolved !== null) {
           session.loadComposition(resolved)
+          if (typeof parsed.savedId === 'string') setSavedId(parsed.savedId)
+          if (typeof parsed.rating === 'number') setCurrentRating(parsed.rating)
         }
       }
     } catch {
