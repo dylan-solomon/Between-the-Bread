@@ -22,6 +22,7 @@ import {
   captureAccountSignedUp,
   captureAccountLoggedIn,
   captureAccountLoggedOut,
+  captureAccountDeleted,
   captureAuthPrompted,
   captureAuthPromptDismissed,
   captureHistorySandwichSaved,
@@ -466,6 +467,13 @@ describe('identifyUser', () => {
       signup_method: 'email',
       signup_date: '2026-01-01',
     })
+  })
+})
+
+describe('captureAccountDeleted', () => {
+  it('fires account_deleted event', () => {
+    captureAccountDeleted()
+    expect(mockCapture).toHaveBeenCalledWith('account_deleted')
   })
 })
 

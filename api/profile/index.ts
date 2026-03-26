@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
 import { ok, err } from '../_lib/response.js'
 import { authenticateRequest } from '../_lib/auth.js'
 
@@ -90,6 +91,35 @@ const handlePatch = async (req: VercelRequest, res: VercelResponse): Promise<voi
   res.status(200).json(ok({ updated: Object.keys(updates).filter((k) => k !== 'updated_at') }))
 }
 
+const handleDelete = async (req: VercelRequest, res: VercelResponse): Promise<void> => {
+  const auth = await authenticateRequest(req, res)
+  if (auth === null) return
+
+  const body = (req.body ?? {}) as Record<string, unknown>
+  if (body.confirm !== true) {
+    res.status(400).json(err('CONFIRMATION_REQUIRED', 'Request body must include confirm: true.', 400))
+    return
+  }
+
+  const url = process.env.SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url || !serviceRoleKey) {
+    res.status(500).json(err('CONFIG_ERROR', 'Missing service role configuration.', 500))
+    return
+  }
+
+  const adminClient = createClient(url, serviceRoleKey)
+  const { error } = await adminClient.auth.admin.deleteUser(auth.user.id)
+
+  if (error !== null) {
+    res.status(500).json(err('DELETE_FAILED', 'Failed to delete account.', 500))
+    return
+  }
+
+  res.status(200).json(ok({ deleted: true }))
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
@@ -100,6 +130,9 @@ export default async function handler(
       return
     case 'PATCH':
       await handlePatch(req, res)
+      return
+    case 'DELETE':
+      await handleDelete(req, res)
       return
     default:
       res.status(405).json(err('METHOD_NOT_ALLOWED', 'Method not allowed.', 405))

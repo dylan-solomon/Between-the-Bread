@@ -238,5 +238,109 @@ describe('SettingsPage', () => {
         expect(screen.getByRole('alert')).toBeInTheDocument()
       })
     })
+
+    describe('account deletion', () => {
+      it('shows a delete account button', async () => {
+        await renderSettings()
+        await waitFor(() => {
+          expect(screen.getByLabelText(/display name/i)).toHaveValue('SandwichFan')
+        })
+        expect(screen.getByRole('button', { name: /delete account/i })).toBeInTheDocument()
+      })
+
+      it('shows a confirmation modal when delete button is clicked', async () => {
+        await renderSettings()
+        await waitFor(() => {
+          expect(screen.getByLabelText(/display name/i)).toHaveValue('SandwichFan')
+        })
+        await userEvent.click(screen.getByRole('button', { name: /delete account/i }))
+        expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+        expect(screen.getByText(/permanently delete your account\?/i)).toBeInTheDocument()
+      })
+
+      it('dismisses the modal when cancel is clicked', async () => {
+        await renderSettings()
+        await waitFor(() => {
+          expect(screen.getByLabelText(/display name/i)).toHaveValue('SandwichFan')
+        })
+        await userEvent.click(screen.getByRole('button', { name: /delete account/i }))
+        await userEvent.click(screen.getByRole('button', { name: /cancel/i }))
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+      })
+
+      it('calls DELETE /api/profile with confirm: true on confirmation', async () => {
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve(profileResponse),
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve({ data: { deleted: true } }),
+          })
+
+        await renderSettings()
+        await waitFor(() => {
+          expect(screen.getByLabelText(/display name/i)).toHaveValue('SandwichFan')
+        })
+        await userEvent.click(screen.getByRole('button', { name: /delete account/i }))
+        await userEvent.click(screen.getByRole('button', { name: /yes, delete/i }))
+
+        await waitFor(() => {
+          expect(mockFetch).toHaveBeenCalledTimes(2)
+        })
+
+        const deleteCall = mockFetch.mock.calls[1] as [string, RequestInit]
+        expect(deleteCall[0]).toBe('/api/profile')
+        expect(deleteCall[1].method).toBe('DELETE')
+        expect(JSON.parse(deleteCall[1].body as string)).toEqual({ confirm: true })
+      })
+
+      it('signs out and redirects to homepage on successful deletion', async () => {
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve(profileResponse),
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve({ data: { deleted: true } }),
+          })
+
+        await renderSettings()
+        await waitFor(() => {
+          expect(screen.getByLabelText(/display name/i)).toHaveValue('SandwichFan')
+        })
+        await userEvent.click(screen.getByRole('button', { name: /delete account/i }))
+        await userEvent.click(screen.getByRole('button', { name: /yes, delete/i }))
+
+        await waitFor(() => {
+          expect(mockNavigate).toHaveBeenCalledWith('/', expect.objectContaining({ replace: true }))
+        })
+      })
+
+      it('shows an error when deletion fails', async () => {
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve(profileResponse),
+          })
+          .mockResolvedValueOnce({
+            ok: false,
+            json: () => Promise.resolve({ error: { message: 'Failed' } }),
+          })
+
+        await renderSettings()
+        await waitFor(() => {
+          expect(screen.getByLabelText(/display name/i)).toHaveValue('SandwichFan')
+        })
+        await userEvent.click(screen.getByRole('button', { name: /delete account/i }))
+        await userEvent.click(screen.getByRole('button', { name: /yes, delete/i }))
+
+        await waitFor(() => {
+          expect(screen.getByRole('alert')).toBeInTheDocument()
+        })
+      })
+    })
   })
 })

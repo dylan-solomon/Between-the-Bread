@@ -213,6 +213,10 @@ export const captureAccountLoggedOut = (): void => {
   posthog.capture('account_logged_out')
 }
 
+export const captureAccountDeleted = (): void => {
+  posthog.capture('account_deleted')
+}
+
 export const identifyUser = (props: {
   userId: string
   email: string
