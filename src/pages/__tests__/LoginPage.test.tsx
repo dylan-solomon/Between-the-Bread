@@ -159,4 +159,19 @@ describe('LoginPage', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
   })
+
+  it('submits the form when Enter is pressed in the password field', async () => {
+    mockSignInWithPassword.mockResolvedValue({ data: {}, error: null })
+    renderPage()
+
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123{Enter}')
+
+    await waitFor(() => {
+      expect(mockSignInWithPassword).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123',
+      })
+    })
+  })
 })

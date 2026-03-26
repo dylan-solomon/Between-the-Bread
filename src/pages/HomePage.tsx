@@ -120,7 +120,7 @@ export default function HomePage() {
     Object.fromEntries(
       Object.entries(composition).map(([cat, ingredients]) => [
         cat,
-        (ingredients as Ingredient[]).map((i) => ({ slug: i.slug, name: i.name })),
+        ingredients.map((i) => ({ slug: i.slug, name: i.name })),
       ]),
     ) as Record<string, unknown[]>
 

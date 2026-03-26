@@ -22,7 +22,7 @@ const findIngredient = (
 }
 
 export const resolveComposition = (
-  stored: Record<string, unknown[]>,
+  stored: Partial<Record<string, unknown[]>>,
   pools: Partial<Record<CategorySlug, Ingredient[]>>,
 ): SandwichComposition | null => {
   const result: Partial<SandwichComposition> = {}

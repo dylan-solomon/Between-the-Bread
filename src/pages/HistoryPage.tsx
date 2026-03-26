@@ -43,7 +43,7 @@ const extractSlug = (item: unknown): string => {
 
 const NO_CHEESE_SLUG = 'no-cheese'
 
-const buildDescription = (composition: Record<string, unknown[]>): string => {
+const buildDescription = (composition: Partial<Record<string, unknown[]>>): string => {
   const chefsSpecial = composition['chefs-special'] ?? []
   const cheese = (composition.cheese ?? []).filter((i) => extractSlug(i) !== NO_CHEESE_SLUG)
 
@@ -59,7 +59,7 @@ const buildDescription = (composition: Record<string, unknown[]>): string => {
     .join(', ')
 }
 
-const buildSessionDescription = (composition: Record<string, Ingredient[]>): string => {
+const buildSessionDescription = (composition: Partial<Record<string, Ingredient[]>>): string => {
   const chefsSpecial = composition['chefs-special'] ?? []
   const cheese = (composition.cheese ?? []).filter((i) => i.slug !== NO_CHEESE_SLUG)
 
@@ -334,7 +334,7 @@ export default function HistoryPage() {
                         const serialized = Object.fromEntries(
                           Object.entries(entry.composition).map(([cat, ingredients]) => [
                             cat,
-                            (ingredients as Ingredient[]).map((i) => ({ slug: i.slug, name: i.name })),
+                            ingredients.map((i) => ({ slug: i.slug, name: i.name })),
                           ]),
                         )
                         sessionStorage.setItem(LOAD_SANDWICH_KEY, JSON.stringify({ composition: serialized }))

@@ -76,9 +76,9 @@ const handleGet = async (req: VercelRequest, res: VercelResponse): Promise<void>
     offset: offsetStr = '0',
   } = req.query as Record<string, string | undefined>
 
-  const limit = Math.min(Math.max(parseInt(limitStr ?? '20', 10) || 20, 1), 50)
-  const offset = Math.max(parseInt(offsetStr ?? '0', 10) || 0, 0)
-  const sortConfig = VALID_SORTS[sort ?? 'newest'] ?? VALID_SORTS.newest
+  const limit = Math.min(Math.max(parseInt(limitStr, 10) || 20, 1), 50)
+  const offset = Math.max(parseInt(offsetStr, 10) || 0, 0)
+  const sortConfig = VALID_SORTS[sort] ?? VALID_SORTS.newest
 
   let query = supabase
     .from('saved_sandwiches')
@@ -113,7 +113,7 @@ const handleGet = async (req: VercelRequest, res: VercelResponse): Promise<void>
     return
   }
 
-  res.status(200).json(ok(data, { count: data?.length ?? 0, total: count ?? 0, limit, offset }))
+  res.status(200).json(ok(data, { count: data.length, total: count ?? 0, limit, offset }))
 }
 
 const handleDelete = async (req: VercelRequest, res: VercelResponse): Promise<void> => {

@@ -72,4 +72,11 @@ describe('AuthPromptModal', () => {
     renderModal()
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
   })
+
+  it('calls onDismiss when the Log in link is clicked', async () => {
+    const onDismiss = vi.fn()
+    renderModal({ onDismiss })
+    await userEvent.click(screen.getByRole('link', { name: /log in/i }))
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+  })
 })
