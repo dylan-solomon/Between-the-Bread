@@ -174,4 +174,19 @@ describe('LoginPage', () => {
       })
     })
   })
+
+  it('submits the form when Enter is pressed in the email field', async () => {
+    mockSignInWithPassword.mockResolvedValue({ data: {}, error: null })
+    renderPage()
+
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com{Enter}')
+
+    await waitFor(() => {
+      expect(mockSignInWithPassword).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123',
+      })
+    })
+  })
 })

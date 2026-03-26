@@ -24,6 +24,7 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
     setError(null)
 
     if (password !== confirmPassword) {
@@ -43,6 +44,14 @@ export default function SignupPage() {
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      const form = (e.target as HTMLElement).closest('form')
+      if (form !== null) form.requestSubmit()
+    }
+  }
+
   return (
     <AppShell>
       <div className="mx-auto max-w-[480px] px-4 py-12">
@@ -54,7 +63,7 @@ export default function SignupPage() {
           </div>
         )}
 
-        <form action="#" onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-5">
+        <form onSubmit={(e) => void handleSubmit(e)} onKeyDown={handleKeyDown} className="mt-8 space-y-5">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
               Email
