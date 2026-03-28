@@ -225,5 +225,23 @@ describe('HomePage', () => {
       await screen.findByRole('heading', { level: 2 })
       expect(screen.queryByText(/roll the dice to build your sandwich/i)).not.toBeInTheDocument()
     })
+
+    it('restores savedId and rating when loaded from a saved sandwich', async () => {
+      const storedData = {
+        composition: {
+          bread: [{ slug: 'item-0', name: 'item-0' }],
+          protein: [{ slug: 'item-0', name: 'item-0' }],
+          cheese: [{ slug: 'item-0', name: 'item-0' }],
+          toppings: [{ slug: 'item-0', name: 'item-0' }],
+          condiments: [{ slug: 'item-0', name: 'item-0' }],
+        },
+        savedId: 'saved-123',
+        rating: 4,
+      }
+      sessionStorage.setItem('btb_load_sandwich', JSON.stringify(storedData))
+      renderPage()
+      const saveButton = await screen.findByRole('button', { name: /saved/i })
+      expect(saveButton).toBeDisabled()
+    })
   })
 })

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AppShell from '@/components/AppShell'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { useAuth } from '@/context/AuthContext'
 import type { DietaryTag } from '@/types'
+import { captureAccountDeleted } from '@/analytics/events'
 
 const DIETARY_OPTIONS: readonly { tag: DietaryTag; label: string }[] = [
   { tag: 'vegetarian', label: 'Vegetarian' },
@@ -31,12 +33,15 @@ const INITIAL_STATE: ProfileFormState = {
 
 export default function SettingsPage() {
   const { loading: authLoading, authenticated } = useRequireAuth()
-  const { session } = useAuth()
+  const { session, signOut } = useAuth()
+  const navigate = useNavigate()
   const [form, setForm] = useState<ProfileFormState>(INITIAL_STATE)
   const [profileLoading, setProfileLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (!authenticated || session === null) return
@@ -100,6 +105,32 @@ export default function SettingsPage() {
     }))
   }
 
+  const handleDeleteAccount = async () => {
+    if (session === null) return
+
+    setDeleting(true)
+    setErrorMessage(null)
+    captureAccountDeleted()
+
+    const res = await fetch('/api/profile', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ confirm: true }),
+    })
+
+    if (res.ok) {
+      await signOut()
+      void navigate('/', { replace: true })
+    } else {
+      setErrorMessage('Failed to delete account. Please try again.')
+      setShowDeleteConfirm(false)
+      setDeleting(false)
+    }
+  }
+
   if (authLoading || !authenticated) return null
 
   return (
@@ -111,7 +142,7 @@ export default function SettingsPage() {
           <p className="mt-8 text-sm text-neutral-500">Loading preferences...</p>
         )}
 
-        {!profileLoading && (
+        {!profileLoading && (<>
           <form onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-6">
             <div>
               <label htmlFor="display-name" className="block text-sm font-medium text-neutral-700">
@@ -221,6 +252,51 @@ export default function SettingsPage() {
               {saving ? 'Saving...' : 'Save'}
             </button>
           </form>
+
+          <div className="mt-12 border-t border-neutral-200 pt-8">
+            <h2 className="font-display text-lg font-semibold text-red-700">Danger Zone</h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              This action is permanent and cannot be undone.
+            </p>
+            <button
+              type="button"
+              onClick={() => { setShowDeleteConfirm(true) }}
+              className="mt-4 rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+            >
+              Delete Account
+            </button>
+          </div>
+        </>)}
+
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+            <div role="alertdialog" aria-labelledby="delete-title" aria-describedby="delete-desc" className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+              <h3 id="delete-title" className="font-display text-lg font-bold text-neutral-900">
+                Permanently delete your account?
+              </h3>
+              <p id="delete-desc" className="mt-2 text-sm text-neutral-600">
+                All your data — profile, saved sandwiches, and ratings — will be permanently deleted. This cannot be undone.
+              </p>
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowDeleteConfirm(false) }}
+                  disabled={deleting}
+                  className="flex-1 rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { void handleDeleteAccount() }}
+                  disabled={deleting}
+                  className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting...' : 'Yes, Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </AppShell>

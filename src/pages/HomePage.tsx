@@ -30,6 +30,13 @@ import {
   captureHistorySandwichSaved,
   captureHistorySandwichRated,
 } from '@/analytics/events'
+import {
+  setDietaryFilters,
+  setUsesSmartMode,
+  setUsesDoubleProtein,
+  setUsesDoubleCheese,
+  setLastActiveAt,
+} from '@/analytics/userProperties'
 import type { CategorySlug, DoubleCategory, DietaryTag, Ingredient, SandwichComposition } from '@/types'
 import type { CostContext } from '@/utils/cost'
 
@@ -58,11 +65,13 @@ export default function HomePage() {
     sessionStorage.removeItem('btb_load_sandwich')
     savedSandwichLoaded.current = true
     try {
-      const parsed = JSON.parse(raw) as { composition?: Record<string, unknown[]> }
+      const parsed = JSON.parse(raw) as { composition?: Record<string, unknown[]>; savedId?: string; rating?: number }
       if (parsed.composition !== undefined) {
         const resolved = resolveComposition(parsed.composition, pools)
         if (resolved !== null) {
           session.loadComposition(resolved)
+          if (typeof parsed.savedId === 'string') setSavedId(parsed.savedId)
+          if (typeof parsed.rating === 'number') setCurrentRating(parsed.rating)
         }
       }
     } catch {
@@ -85,6 +94,7 @@ export default function HomePage() {
       const isActive = !prev.includes(tag)
       const newFilters = isActive ? [...prev, tag] : prev.filter((t) => t !== tag)
       captureDietaryFilterToggled({ tag, isActive, activeFilters: newFilters })
+      setDietaryFilters(newFilters)
       if (newFilters.length > 0) {
         const emptyCategories = BASE_CATEGORIES.filter(
           (slug) => filterByDiet(pools[slug] ?? [], newFilters).length === 0,
@@ -109,11 +119,14 @@ export default function HomePage() {
     const enabled = !session.doubleCategories.has(category)
     session.toggleDouble(category)
     captureDoubleToggled({ category, enabled })
+    if (category === 'protein') setUsesDoubleProtein(enabled)
+    if (category === 'cheese') setUsesDoubleCheese(enabled)
   }
 
   const toggleSmartMode = (next: boolean) => {
     setSmartMode(next)
     captureSmartModeToggled({ isActive: next })
+    setUsesSmartMode(next)
   }
 
   const serializeComposition = (composition: SandwichComposition): Record<string, unknown[]> =>
@@ -139,6 +152,7 @@ export default function HomePage() {
       })
       setSavedId(result.id)
       captureHistorySandwichSaved({ sandwichName: name, savedCount: 1 })
+      setLastActiveAt()
       toast.success('Sandwich saved!')
     } catch {
       toast.error('Failed to save sandwich. Please try again.')
@@ -180,6 +194,7 @@ export default function HomePage() {
         previousRating,
         sandwichName: session.composition !== null ? generateSandwichName(session.composition) : '',
       })
+      setLastActiveAt()
     } catch {
       toast.error('Failed to save rating. Please try again.')
     }

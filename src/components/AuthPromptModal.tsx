@@ -26,6 +26,10 @@ export default function AuthPromptModal({ isOpen, actionLabel, onDismiss }: Prop
   if (!isOpen) return null
 
   const redirectParam = encodeURIComponent(location.pathname + location.search)
+  const trigger = actionLabel.includes('save') ? 'save_prompt'
+    : actionLabel.includes('rate') ? 'rate_prompt'
+    : actionLabel.includes('history') ? 'history_prompt'
+    : 'direct'
 
   return (
     <div
@@ -48,7 +52,7 @@ export default function AuthPromptModal({ isOpen, actionLabel, onDismiss }: Prop
         </p>
         <div className="mt-6 flex gap-3">
           <Link
-            to={`/login?redirect=${redirectParam}`}
+            to={`/login?redirect=${redirectParam}&trigger=${trigger}`}
             onClick={onDismiss}
             className="flex-1 rounded-md bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary/90"
           >

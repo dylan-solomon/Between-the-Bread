@@ -24,13 +24,21 @@ import {
   captureHistoryCleared,
   captureHistorySandwichRated,
 } from '@/analytics/events'
+import {
+  setTotalSaved,
+  setTotalFavorites,
+  setAvgRatingGiven,
+  setLastActiveAt,
+} from '@/analytics/userProperties'
 
 const PAGE_SIZE = 10
 const DEBOUNCE_MS = 300
 const LOAD_SANDWICH_KEY = 'btb_load_sandwich'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 const extractName = (item: unknown): string => {
-  if (typeof item === 'string') return item
+  if (typeof item === 'string') return UUID_RE.test(item) ? '' : item
   if (typeof item === 'object' && item !== null && 'name' in item) return String((item as { name: unknown }).name)
   return ''
 }
@@ -56,6 +64,7 @@ const buildDescription = (composition: Partial<Record<string, unknown[]>>): stri
     ...(composition.bread ?? []),
   ]
     .map(extractName)
+    .filter((n) => n !== '')
     .join(', ')
 }
 
@@ -229,9 +238,13 @@ export default function HistoryPage() {
       if (nextFav) {
         const totalFavorites = sandwiches.filter((s) => s.is_favorite).length + 1
         captureHistorySandwichFavorited({ sandwichName: sandwich.name, totalFavorites })
+        setTotalFavorites(totalFavorites)
       } else {
+        const totalFavorites = sandwiches.filter((s) => s.is_favorite).length - 1
         captureHistorySandwichUnfavorited({ sandwichName: sandwich.name })
+        setTotalFavorites(totalFavorites)
       }
+      setLastActiveAt()
     } catch {
       toast.error('Failed to update favorite.')
     }
@@ -244,6 +257,8 @@ export default function HistoryPage() {
       captureHistorySandwichDeleted()
       setSandwiches((prev) => prev.filter((s) => s.id !== sandwich.id))
       setTotal((prev) => prev - 1)
+      setTotalSaved(total - 1)
+      setLastActiveAt()
       toast.success('Sandwich deleted.')
     } catch {
       toast.error('Failed to delete sandwich.')
@@ -262,6 +277,13 @@ export default function HistoryPage() {
         previousRating: sandwich.rating,
         sandwichName: sandwich.name,
       })
+      const allRatings = sandwiches
+        .map((s) => (s.id === sandwich.id ? rating : s.rating))
+        .filter((r): r is number => r !== null)
+      if (allRatings.length > 0) {
+        setAvgRatingGiven(allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length)
+      }
+      setLastActiveAt()
     } catch {
       toast.error('Failed to save rating.')
     }
@@ -272,6 +294,8 @@ export default function HistoryPage() {
     try {
       const deletedCount = await clearSavedSandwiches(session.access_token, false)
       captureHistoryCleared({ deletedCount, includedFavorites: false })
+      setTotalSaved(total - deletedCount)
+      setLastActiveAt()
       setConfirmClear(false)
       void fetchData({ q: query, sort, favorites_only: favoritesOnly || undefined, rating: ratingFilter, offset: 0 })
       toast.success(`Cleared ${String(deletedCount)} sandwich${deletedCount === 1 ? '' : 'es'}.`)
@@ -345,7 +369,7 @@ export default function HistoryPage() {
                     </Link>
                     <p
                       data-testid="session-sandwich-description"
-                      className="mt-0.5 text-xs italic text-neutral-400 truncate"
+                      className="mt-0.5 text-xs italic text-neutral-400"
                     >
                       {buildSessionDescription(entry.composition as Record<string, Ingredient[]>)}
                     </p>
@@ -450,7 +474,7 @@ export default function HistoryPage() {
                       <Link
                         to="/"
                         onClick={() => {
-                          sessionStorage.setItem(LOAD_SANDWICH_KEY, JSON.stringify({ composition: sandwich.composition }))
+                          sessionStorage.setItem(LOAD_SANDWICH_KEY, JSON.stringify({ composition: sandwich.composition, savedId: sandwich.id, rating: sandwich.rating }))
                         }}
                         className="font-display text-sm font-semibold text-neutral-900 truncate block hover:text-primary transition"
                       >
@@ -458,7 +482,7 @@ export default function HistoryPage() {
                       </Link>
                       <p
                         data-testid="sandwich-description"
-                        className="mt-0.5 text-xs italic text-neutral-400 truncate"
+                        className="mt-0.5 text-xs italic text-neutral-400"
                       >
                         {buildDescription(sandwich.composition)}
                       </p>

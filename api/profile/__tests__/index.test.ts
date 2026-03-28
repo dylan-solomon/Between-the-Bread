@@ -8,12 +8,18 @@ const mockEq = vi.fn()
 const mockSingle = vi.fn()
 const mockUpdate = vi.fn()
 const mockUpdateEq = vi.fn()
+const mockAdminDeleteUser = vi.fn()
 
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({
-    auth: { getUser: mockGetUser },
-    from: mockFrom,
-  }),
+  createClient: (_url: string, key: string) => {
+    if (key === 'service-role-key') {
+      return { auth: { admin: { deleteUser: mockAdminDeleteUser } } }
+    }
+    return {
+      auth: { getUser: mockGetUser },
+      from: mockFrom,
+    }
+  },
 }))
 
 import handler from '../index.js'
@@ -67,9 +73,11 @@ beforeEach(() => {
   mockSingle.mockReset()
   mockUpdate.mockReset()
   mockUpdateEq.mockReset()
+  mockAdminDeleteUser.mockReset()
 
   vi.stubEnv('SUPABASE_URL', 'https://test.supabase.co')
   vi.stubEnv('SUPABASE_ANON_KEY', 'test-key')
+  vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
 
   mockGetUser.mockResolvedValue({ data: { user: validUser }, error: null })
   mockFrom.mockReturnValue({ select: mockSelect, update: mockUpdate })
@@ -155,13 +163,49 @@ describe('PATCH /api/profile', () => {
   })
 })
 
-describe('unsupported methods', () => {
-  it('returns 405 for DELETE', async () => {
+describe('DELETE /api/profile', () => {
+  it('returns 400 when confirm is not true', async () => {
     const res = makeRes()
-    await handler(makeReq({ method: 'DELETE' }), res)
-    expect(res._status).toBe(405)
+    await handler(makeReq({ method: 'DELETE', body: {} }), res)
+    expect(res._status).toBe(400)
   })
 
+  it('returns 400 when confirm is false', async () => {
+    const res = makeRes()
+    await handler(makeReq({ method: 'DELETE', body: { confirm: false } }), res)
+    expect(res._status).toBe(400)
+  })
+
+  it('returns 500 when service role key is missing', async () => {
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', '')
+    const res = makeRes()
+    await handler(makeReq({ method: 'DELETE', body: { confirm: true } }), res)
+    expect(res._status).toBe(500)
+  })
+
+  it('returns 500 when admin deleteUser fails', async () => {
+    mockAdminDeleteUser.mockResolvedValue({ error: { message: 'Admin error' } })
+    const res = makeRes()
+    await handler(makeReq({ method: 'DELETE', body: { confirm: true } }), res)
+    expect(res._status).toBe(500)
+  })
+
+  it('calls admin deleteUser with the authenticated user id', async () => {
+    mockAdminDeleteUser.mockResolvedValue({ error: null })
+    const res = makeRes()
+    await handler(makeReq({ method: 'DELETE', body: { confirm: true } }), res)
+    expect(mockAdminDeleteUser).toHaveBeenCalledWith('user-123')
+  })
+
+  it('returns 200 on successful deletion', async () => {
+    mockAdminDeleteUser.mockResolvedValue({ error: null })
+    const res = makeRes()
+    await handler(makeReq({ method: 'DELETE', body: { confirm: true } }), res)
+    expect(res._status).toBe(200)
+  })
+})
+
+describe('unsupported methods', () => {
   it('returns 405 for POST', async () => {
     const res = makeRes()
     await handler(makeReq({ method: 'POST' }), res)

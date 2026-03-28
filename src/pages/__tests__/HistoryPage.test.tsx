@@ -231,6 +231,26 @@ describe('HistoryPage', () => {
       expect(description).toHaveTextContent('Mayo')
     })
 
+    it('filters out UUID strings from composition description', async () => {
+      mockFetchSavedSandwiches.mockResolvedValue(
+        makeListResponse([makeSavedSandwich({
+          composition: {
+            bread: ['3a49c944-ea63-4ac9-95f9-bed736a97e04'],
+            protein: [{ slug: 'turkey', name: 'Turkey' }],
+            cheese: ['0ef2ba9c-eeb7-4b6a-8f3d-abc123def456'],
+            toppings: [{ slug: 'lettuce', name: 'Lettuce' }],
+            condiments: [{ slug: 'mayo', name: 'Mayo' }],
+          },
+        })]),
+      )
+      renderPage()
+      const description = await screen.findByTestId('sandwich-description')
+      expect(description).toHaveTextContent('Turkey')
+      expect(description).toHaveTextContent('Lettuce')
+      expect(description).toHaveTextContent('Mayo')
+      expect(description.textContent).not.toContain('3a49c944')
+    })
+
     it('sandwich name is a clickable link to the home page', async () => {
       mockFetchSavedSandwiches.mockResolvedValue(
         makeListResponse([makeSavedSandwich({ id: 's1', name: 'The Reuben' })]),
@@ -258,6 +278,19 @@ describe('HistoryPage', () => {
       expect(stored).not.toBeNull()
       const parsed = JSON.parse(stored ?? '{}') as Record<string, unknown>
       expect(parsed).toHaveProperty('composition')
+    })
+
+    it('includes savedId and rating when clicking a saved sandwich link', async () => {
+      mockFetchSavedSandwiches.mockResolvedValue(
+        makeListResponse([makeSavedSandwich({ id: 's99', name: 'Rated Sandwich', rating: 4 })]),
+      )
+      renderPage()
+      const link = await screen.findByRole('link', { name: /rated sandwich/i })
+      fireEvent.click(link)
+      const stored = sessionStorage.getItem('btb_load_sandwich')
+      const parsed = JSON.parse(stored ?? '{}') as Record<string, unknown>
+      expect(parsed).toHaveProperty('savedId', 's99')
+      expect(parsed).toHaveProperty('rating', 4)
     })
   })
 

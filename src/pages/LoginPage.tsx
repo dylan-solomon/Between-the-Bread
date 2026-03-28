@@ -2,6 +2,16 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AppShell from '@/components/AppShell'
 import { useAuth } from '@/context/AuthContext'
+import { captureAccountLoggedIn, identifyUser } from '@/analytics/events'
+import { setLastActiveAt } from '@/analytics/userProperties'
+
+const buildSignupUrl = (redirectTo: string, trigger: string | null): string => {
+  const params = new URLSearchParams()
+  if (redirectTo !== '/') params.set('redirect', redirectTo)
+  if (trigger !== null) params.set('trigger', trigger)
+  const qs = params.toString()
+  return qs.length > 0 ? `/signup?${qs}` : '/signup'
+}
 
 const getErrorMessage = (err: unknown): string => {
   if (err instanceof Error) return err.message
@@ -22,18 +32,36 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false)
 
   const redirectTo = searchParams.get('redirect') ?? '/'
+  const trigger = searchParams.get('trigger')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
     setError(null)
     setSubmitting(true)
 
     try {
-      await signIn(email, password)
+      const user = await signIn(email, password)
+      captureAccountLoggedIn({ method: 'email' })
+      identifyUser({
+        userId: user.id,
+        email: user.email ?? email,
+        signupMethod: 'email',
+        signupDate: user.created_at,
+      })
+      setLastActiveAt()
       void navigate(redirectTo, { replace: true })
     } catch (err: unknown) {
       setError(getErrorMessage(err))
       setSubmitting(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      const form = (e.target as HTMLElement).closest('form')
+      if (form !== null) form.requestSubmit()
     }
   }
 
@@ -48,7 +76,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form action="#" onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-5">
+        <form onSubmit={(e) => void handleSubmit(e)} onKeyDown={handleKeyDown} className="mt-8 space-y-5">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
               Email
@@ -94,7 +122,7 @@ export default function LoginPage() {
           </Link>
           <span className="text-neutral-500">
             No account?{' '}
-            <Link to={redirectTo === '/' ? '/signup' : `/signup?redirect=${encodeURIComponent(redirectTo)}`} className="font-medium text-primary hover:underline">
+            <Link to={buildSignupUrl(redirectTo, trigger)} className="font-medium text-primary hover:underline">
               Sign up
             </Link>
           </span>

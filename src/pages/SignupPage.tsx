@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AppShell from '@/components/AppShell'
 import { useAuth } from '@/context/AuthContext'
+import { captureAccountSignedUp, identifyUser } from '@/analytics/events'
+import { setLastActiveAt } from '@/analytics/userProperties'
 
 const getErrorMessage = (err: unknown): string => {
   if (err instanceof Error) return err.message
@@ -24,6 +26,7 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
     setError(null)
 
     if (password !== confirmPassword) {
@@ -34,12 +37,29 @@ export default function SignupPage() {
     setSubmitting(true)
 
     try {
-      await signUp(email, password)
+      const user = await signUp(email, password)
+      captureAccountSignedUp({ method: 'email' })
+      identifyUser({
+        userId: user.id,
+        email: user.email ?? email,
+        signupMethod: 'email',
+        signupDate: user.created_at,
+        signupTrigger: searchParams.get('trigger') ?? 'direct',
+      })
+      setLastActiveAt()
       const redirectTo = searchParams.get('redirect') ?? '/'
       void navigate(redirectTo, { replace: true })
     } catch (err: unknown) {
       setError(getErrorMessage(err))
       setSubmitting(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      const form = (e.target as HTMLElement).closest('form')
+      if (form !== null) form.requestSubmit()
     }
   }
 
@@ -54,7 +74,7 @@ export default function SignupPage() {
           </div>
         )}
 
-        <form action="#" onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-5">
+        <form onSubmit={(e) => void handleSubmit(e)} onKeyDown={handleKeyDown} className="mt-8 space-y-5">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
               Email
