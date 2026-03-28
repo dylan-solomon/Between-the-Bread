@@ -24,6 +24,12 @@ import {
   captureHistoryCleared,
   captureHistorySandwichRated,
 } from '@/analytics/events'
+import {
+  setTotalSaved,
+  setTotalFavorites,
+  setAvgRatingGiven,
+  setLastActiveAt,
+} from '@/analytics/userProperties'
 
 const PAGE_SIZE = 10
 const DEBOUNCE_MS = 300
@@ -232,9 +238,13 @@ export default function HistoryPage() {
       if (nextFav) {
         const totalFavorites = sandwiches.filter((s) => s.is_favorite).length + 1
         captureHistorySandwichFavorited({ sandwichName: sandwich.name, totalFavorites })
+        setTotalFavorites(totalFavorites)
       } else {
+        const totalFavorites = sandwiches.filter((s) => s.is_favorite).length - 1
         captureHistorySandwichUnfavorited({ sandwichName: sandwich.name })
+        setTotalFavorites(totalFavorites)
       }
+      setLastActiveAt()
     } catch {
       toast.error('Failed to update favorite.')
     }
@@ -247,6 +257,8 @@ export default function HistoryPage() {
       captureHistorySandwichDeleted()
       setSandwiches((prev) => prev.filter((s) => s.id !== sandwich.id))
       setTotal((prev) => prev - 1)
+      setTotalSaved(total - 1)
+      setLastActiveAt()
       toast.success('Sandwich deleted.')
     } catch {
       toast.error('Failed to delete sandwich.')
@@ -265,6 +277,13 @@ export default function HistoryPage() {
         previousRating: sandwich.rating,
         sandwichName: sandwich.name,
       })
+      const allRatings = sandwiches
+        .map((s) => (s.id === sandwich.id ? rating : s.rating))
+        .filter((r): r is number => r !== null)
+      if (allRatings.length > 0) {
+        setAvgRatingGiven(allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length)
+      }
+      setLastActiveAt()
     } catch {
       toast.error('Failed to save rating.')
     }
@@ -275,6 +294,8 @@ export default function HistoryPage() {
     try {
       const deletedCount = await clearSavedSandwiches(session.access_token, false)
       captureHistoryCleared({ deletedCount, includedFavorites: false })
+      setTotalSaved(total - deletedCount)
+      setLastActiveAt()
       setConfirmClear(false)
       void fetchData({ q: query, sort, favorites_only: favoritesOnly || undefined, rating: ratingFilter, offset: 0 })
       toast.success(`Cleared ${String(deletedCount)} sandwich${deletedCount === 1 ? '' : 'es'}.`)

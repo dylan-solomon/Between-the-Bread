@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { User, Session, Provider } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { captureAccountLoggedOut, resetIdentity } from '@/analytics/events'
 
 type AuthContextValue = {
   user: User | null
@@ -9,8 +10,8 @@ type AuthContextValue = {
   loading: boolean
   passwordRecovery: boolean
   clearPasswordRecovery: () => void
-  signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string) => Promise<void>
+  signIn: (email: string, password: string) => Promise<User>
+  signUp: (email: string, password: string) => Promise<User>
   signInWithOAuth: (provider: Provider) => Promise<void>
   signOut: () => Promise<void>
 }
@@ -46,14 +47,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => { subscription.unsubscribe() }
   }, [])
 
-  const signIn = async (email: string, password: string): Promise<void> => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const signIn = async (email: string, password: string): Promise<User> => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+    return data.user
   }
 
-  const signUp = async (email: string, password: string): Promise<void> => {
-    const { error } = await supabase.auth.signUp({ email, password })
+  const signUp = async (email: string, password: string): Promise<User> => {
+    const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
+    return data.user as User
   }
 
   const signInWithOAuth = async (provider: Provider): Promise<void> => {
@@ -61,6 +64,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const signOut = async (): Promise<void> => {
+    captureAccountLoggedOut()
+    resetIdentity()
     await supabase.auth.signOut()
   }
 

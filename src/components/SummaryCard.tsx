@@ -5,6 +5,7 @@ import type { SandwichComposition } from '@/types'
 import { generateSandwichName } from '@/engine/naming'
 import { createShare } from '@/api/shareApi'
 import { captureShareLinkCreated, captureShareLinkCopied, captureCostContextToggled } from '@/analytics/events'
+import { setCostContext as setCostContextProperty } from '@/analytics/userProperties'
 import { calculateTotalEstimatedCost } from '@/utils/cost'
 import NutritionPanel from '@/components/NutritionPanel'
 import StarRating from '@/components/StarRating'
@@ -73,6 +74,7 @@ export default function SummaryCard({ composition, isRolling = false, costDataLa
   const handleContextChange = (context: CostContext) => {
     setCostContext(context)
     captureCostContextToggled({ context })
+    setCostContextProperty(context)
   }
 
   const costRange = costDataLastUpdated !== undefined

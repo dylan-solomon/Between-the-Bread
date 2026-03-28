@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import AppShell from '@/components/AppShell'
 import { useAuth } from '@/context/AuthContext'
+import { captureAccountSignedUp, identifyUser } from '@/analytics/events'
+import { setLastActiveAt } from '@/analytics/userProperties'
 
 const getErrorMessage = (err: unknown): string => {
   if (err instanceof Error) return err.message
@@ -35,7 +37,16 @@ export default function SignupPage() {
     setSubmitting(true)
 
     try {
-      await signUp(email, password)
+      const user = await signUp(email, password)
+      captureAccountSignedUp({ method: 'email' })
+      identifyUser({
+        userId: user.id,
+        email: user.email ?? email,
+        signupMethod: 'email',
+        signupDate: user.created_at,
+        signupTrigger: searchParams.get('trigger') ?? 'direct',
+      })
+      setLastActiveAt()
       const redirectTo = searchParams.get('redirect') ?? '/'
       void navigate(redirectTo, { replace: true })
     } catch (err: unknown) {

@@ -6,13 +6,15 @@ import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 
 type AuthCallback = (event: AuthChangeEvent, session: Session | null) => void
 
-const { mockGetSession, mockOnAuthStateChange, mockSignInWithPassword, mockSignUp, mockSignInWithOAuth, mockSignOut } = vi.hoisted(() => ({
+const { mockGetSession, mockOnAuthStateChange, mockSignInWithPassword, mockSignUp, mockSignInWithOAuth, mockSignOut, mockCaptureAccountLoggedOut, mockResetIdentity } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockOnAuthStateChange: vi.fn(),
   mockSignInWithPassword: vi.fn(),
   mockSignUp: vi.fn(),
   mockSignInWithOAuth: vi.fn(),
   mockSignOut: vi.fn(),
+  mockCaptureAccountLoggedOut: vi.fn(),
+  mockResetIdentity: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase', () => ({
@@ -26,6 +28,11 @@ vi.mock('@/lib/supabase', () => ({
       signOut: mockSignOut,
     },
   },
+}))
+
+vi.mock('@/analytics/events', () => ({
+  captureAccountLoggedOut: mockCaptureAccountLoggedOut,
+  resetIdentity: mockResetIdentity,
 }))
 
 const makeUser = (overrides: Partial<User> = {}): User => ({
@@ -94,6 +101,8 @@ beforeEach(() => {
   mockSignUp.mockReset()
   mockSignInWithOAuth.mockReset()
   mockSignOut.mockReset()
+  mockCaptureAccountLoggedOut.mockReset()
+  mockResetIdentity.mockReset()
 
   mockGetSession.mockResolvedValue({ data: { session: null }, error: null })
   mockOnAuthStateChange.mockImplementation((cb: AuthCallback) => {
@@ -180,6 +189,30 @@ describe('AuthProvider', () => {
     })
   })
 
+  it('signIn returns user data on success', async () => {
+    const user = makeUser()
+    mockSignInWithPassword.mockResolvedValue({ data: { user, session: makeSession() }, error: null })
+
+    let returnedUser: User | undefined
+    const CaptureSignIn = () => {
+      const { signIn } = useAuth()
+      return (
+        <button onClick={async () => { returnedUser = await signIn('test@example.com', 'password123') }}>
+          Sign In
+        </button>
+      )
+    }
+
+    render(<AuthProvider><CaptureSignIn /></AuthProvider>)
+    await waitFor(() => { expect(mockGetSession).toHaveBeenCalled() })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
+
+    expect(returnedUser).toBeDefined()
+    expect(returnedUser!.id).toBe('user-123')
+    expect(returnedUser!.email).toBe('test@example.com')
+  })
+
   it('signUp calls supabase signUp', async () => {
     mockSignUp.mockResolvedValue({ data: {}, error: null })
 
@@ -192,6 +225,30 @@ describe('AuthProvider', () => {
       email: 'test@example.com',
       password: 'password123',
     })
+  })
+
+  it('signUp returns user data on success', async () => {
+    const user = makeUser()
+    mockSignUp.mockResolvedValue({ data: { user, session: makeSession() }, error: null })
+
+    let returnedUser: User | undefined
+    const CaptureSignUp = () => {
+      const { signUp } = useAuth()
+      return (
+        <button onClick={async () => { returnedUser = await signUp('test@example.com', 'password123') }}>
+          Sign Up
+        </button>
+      )
+    }
+
+    render(<AuthProvider><CaptureSignUp /></AuthProvider>)
+    await waitFor(() => { expect(mockGetSession).toHaveBeenCalled() })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sign Up' }))
+
+    expect(returnedUser).toBeDefined()
+    expect(returnedUser!.id).toBe('user-123')
+    expect(returnedUser!.email).toBe('test@example.com')
   })
 
   it('signOut calls supabase signOut', async () => {
@@ -261,6 +318,31 @@ describe('AuthProvider', () => {
 
     unmount()
     expect(mockUnsubscribe).toHaveBeenCalled()
+  })
+
+  it('signOut fires captureAccountLoggedOut before signing out', async () => {
+    mockSignOut.mockResolvedValue({ error: null })
+
+    render(<AuthProvider><SignOutButton /></AuthProvider>)
+    await waitFor(() => { expect(mockGetSession).toHaveBeenCalled() })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sign Out' }))
+
+    expect(mockCaptureAccountLoggedOut).toHaveBeenCalled()
+    expect(mockCaptureAccountLoggedOut.mock.invocationCallOrder[0]).toBeLessThan(
+      mockSignOut.mock.invocationCallOrder[0],
+    )
+  })
+
+  it('signOut calls resetIdentity', async () => {
+    mockSignOut.mockResolvedValue({ error: null })
+
+    render(<AuthProvider><SignOutButton /></AuthProvider>)
+    await waitFor(() => { expect(mockGetSession).toHaveBeenCalled() })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sign Out' }))
+
+    expect(mockResetIdentity).toHaveBeenCalled()
   })
 })
 

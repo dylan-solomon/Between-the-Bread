@@ -468,6 +468,22 @@ describe('identifyUser', () => {
       signup_date: '2026-01-01',
     })
   })
+
+  it('includes signup_trigger when provided', () => {
+    identifyUser({ userId: 'user-123', email: 'test@example.com', signupMethod: 'email', signupDate: '2026-01-01', signupTrigger: 'save_prompt' })
+    expect(mockIdentify).toHaveBeenCalledWith('user-123', {
+      email: 'test@example.com',
+      signup_method: 'email',
+      signup_date: '2026-01-01',
+      signup_trigger: 'save_prompt',
+    })
+  })
+
+  it('omits signup_trigger when not provided', () => {
+    identifyUser({ userId: 'user-123', email: 'test@example.com', signupMethod: 'email', signupDate: '2026-01-01' })
+    const properties = mockIdentify.mock.calls[0][1] as Record<string, unknown>
+    expect(properties).not.toHaveProperty('signup_trigger')
+  })
 })
 
 describe('captureAccountDeleted', () => {

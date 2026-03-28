@@ -11,9 +11,17 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate }
 })
 
-const { mockGetSession, mockOnAuthStateChange } = vi.hoisted(() => ({
+const { mockGetSession, mockOnAuthStateChange, mockCaptureAccountDeleted, mockResetIdentity } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockOnAuthStateChange: vi.fn(),
+  mockCaptureAccountDeleted: vi.fn(),
+  mockResetIdentity: vi.fn(),
+}))
+
+vi.mock('@/analytics/events', () => ({
+  captureAccountDeleted: mockCaptureAccountDeleted,
+  resetIdentity: mockResetIdentity,
+  captureAccountLoggedOut: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase', () => ({
@@ -316,6 +324,29 @@ describe('SettingsPage', () => {
 
         await waitFor(() => {
           expect(mockNavigate).toHaveBeenCalledWith('/', expect.objectContaining({ replace: true }))
+        })
+      })
+
+      it('calls resetIdentity on successful deletion', async () => {
+        mockFetch
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve(profileResponse),
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve({ data: { deleted: true } }),
+          })
+
+        await renderSettings()
+        await waitFor(() => {
+          expect(screen.getByLabelText(/display name/i)).toHaveValue('SandwichFan')
+        })
+        await userEvent.click(screen.getByRole('button', { name: /delete account/i }))
+        await userEvent.click(screen.getByRole('button', { name: /yes, delete/i }))
+
+        await waitFor(() => {
+          expect(mockResetIdentity).toHaveBeenCalled()
         })
       })
 

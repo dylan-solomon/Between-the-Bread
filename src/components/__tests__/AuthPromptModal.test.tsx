@@ -33,10 +33,16 @@ describe('AuthPromptModal', () => {
     expect(screen.getByText(/log in to rate this sandwich/i)).toBeInTheDocument()
   })
 
-  it('has a Log in link that navigates to /login with redirect', () => {
-    renderModal()
+  it('has a Log in link that navigates to /login with redirect and trigger', () => {
+    renderModal({ actionLabel: 'save your sandwich' })
     const link = screen.getByRole('link', { name: /log in/i })
-    expect(link).toHaveAttribute('href', '/login?redirect=%2F')
+    expect(link).toHaveAttribute('href', '/login?redirect=%2F&trigger=save_prompt')
+  })
+
+  it('maps rate action label to rate_prompt trigger', () => {
+    renderModal({ actionLabel: 'rate this sandwich' })
+    const link = screen.getByRole('link', { name: /log in/i })
+    expect(link).toHaveAttribute('href', '/login?redirect=%2F&trigger=rate_prompt')
   })
 
   it('has a Not now button that calls onDismiss', async () => {

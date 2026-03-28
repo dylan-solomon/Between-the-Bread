@@ -4,10 +4,12 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 
-const { mockGetSession, mockOnAuthStateChange, mockSignUp } = vi.hoisted(() => ({
+const { mockGetSession, mockOnAuthStateChange, mockSignUp, mockCaptureAccountSignedUp, mockIdentifyUser } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockOnAuthStateChange: vi.fn(),
   mockSignUp: vi.fn(),
+  mockCaptureAccountSignedUp: vi.fn(),
+  mockIdentifyUser: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase', () => ({
@@ -21,6 +23,13 @@ vi.mock('@/lib/supabase', () => ({
       signOut: vi.fn(),
     },
   },
+}))
+
+vi.mock('@/analytics/events', () => ({
+  captureAccountSignedUp: mockCaptureAccountSignedUp,
+  identifyUser: mockIdentifyUser,
+  captureAccountLoggedOut: vi.fn(),
+  resetIdentity: vi.fn(),
 }))
 
 const mockNavigate = vi.fn()
@@ -45,6 +54,8 @@ beforeEach(() => {
   mockOnAuthStateChange.mockReset()
   mockSignUp.mockReset()
   mockNavigate.mockReset()
+  mockCaptureAccountSignedUp.mockReset()
+  mockIdentifyUser.mockReset()
 
   mockGetSession.mockResolvedValue({ data: { session: null }, error: null })
   mockOnAuthStateChange.mockImplementation(() => ({
@@ -82,7 +93,7 @@ describe('SignupPage', () => {
   })
 
   it('calls signUp with email and password on submit', async () => {
-    mockSignUp.mockResolvedValue({ data: {}, error: null })
+    mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
     renderPage()
 
     await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
@@ -97,7 +108,7 @@ describe('SignupPage', () => {
   })
 
   it('navigates to home after successful signup', async () => {
-    mockSignUp.mockResolvedValue({ data: {}, error: null })
+    mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
     renderPage()
 
     await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
@@ -152,7 +163,7 @@ describe('SignupPage', () => {
   })
 
   it('navigates to redirect param after successful signup', async () => {
-    mockSignUp.mockResolvedValue({ data: {}, error: null })
+    mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
     renderPage('/signup?redirect=%2Faccount%2Fsettings')
 
     await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
@@ -169,5 +180,74 @@ describe('SignupPage', () => {
     renderPage()
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+  })
+
+  it('fires captureAccountSignedUp on successful signup', async () => {
+    mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
+    renderPage()
+
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+
+    await waitFor(() => {
+      expect(mockCaptureAccountSignedUp).toHaveBeenCalledWith({ method: 'email' })
+    })
+  })
+
+  it('calls identifyUser with user data and direct trigger on successful signup', async () => {
+    mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
+    renderPage()
+
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+
+    await waitFor(() => {
+      expect(mockIdentifyUser).toHaveBeenCalledWith({
+        userId: 'user-1',
+        email: 'test@example.com',
+        signupMethod: 'email',
+        signupDate: '2026-01-01T00:00:00Z',
+        signupTrigger: 'direct',
+      })
+    })
+  })
+
+  it('passes signup_trigger from URL params to identifyUser', async () => {
+    mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
+    renderPage('/signup?redirect=%2F&trigger=save_prompt')
+
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+
+    await waitFor(() => {
+      expect(mockIdentifyUser).toHaveBeenCalledWith(
+        expect.objectContaining({ signupTrigger: 'save_prompt' }),
+      )
+    })
+  })
+
+  it('does not fire analytics on failed signup', async () => {
+    mockSignUp.mockResolvedValue({
+      data: {},
+      error: { message: 'User already registered' },
+    })
+    renderPage()
+
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+    expect(mockCaptureAccountSignedUp).not.toHaveBeenCalled()
+    expect(mockIdentifyUser).not.toHaveBeenCalled()
   })
 })

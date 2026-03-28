@@ -222,12 +222,17 @@ export const identifyUser = (props: {
   email: string
   signupMethod: string
   signupDate: string
+  signupTrigger?: string
 }): void => {
-  posthog.identify(props.userId, {
+  const properties: Record<string, string> = {
     email: props.email,
     signup_method: props.signupMethod,
     signup_date: props.signupDate,
-  })
+  }
+  if (props.signupTrigger !== undefined) {
+    properties.signup_trigger = props.signupTrigger
+  }
+  posthog.identify(props.userId, properties)
 }
 
 export const resetIdentity = (): void => {
