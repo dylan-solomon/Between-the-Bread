@@ -197,7 +197,7 @@ describe('AuthProvider', () => {
     const CaptureSignIn = () => {
       const { signIn } = useAuth()
       return (
-        <button onClick={async () => { returnedUser = await signIn('test@example.com', 'password123') }}>
+        <button onClick={() => { void signIn('test@example.com', 'password123').then((u) => { returnedUser = u }) }}>
           Sign In
         </button>
       )
@@ -208,9 +208,9 @@ describe('AuthProvider', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
 
-    expect(returnedUser).toBeDefined()
-    expect(returnedUser!.id).toBe('user-123')
-    expect(returnedUser!.email).toBe('test@example.com')
+    await waitFor(() => { expect(returnedUser).toBeDefined() })
+    expect(returnedUser?.id).toBe('user-123')
+    expect(returnedUser?.email).toBe('test@example.com')
   })
 
   it('signUp calls supabase signUp', async () => {
@@ -235,7 +235,7 @@ describe('AuthProvider', () => {
     const CaptureSignUp = () => {
       const { signUp } = useAuth()
       return (
-        <button onClick={async () => { returnedUser = await signUp('test@example.com', 'password123') }}>
+        <button onClick={() => { void signUp('test@example.com', 'password123').then((u) => { returnedUser = u }) }}>
           Sign Up
         </button>
       )
@@ -246,9 +246,9 @@ describe('AuthProvider', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Sign Up' }))
 
-    expect(returnedUser).toBeDefined()
-    expect(returnedUser!.id).toBe('user-123')
-    expect(returnedUser!.email).toBe('test@example.com')
+    await waitFor(() => { expect(returnedUser).toBeDefined() })
+    expect(returnedUser?.id).toBe('user-123')
+    expect(returnedUser?.email).toBe('test@example.com')
   })
 
   it('signOut calls supabase signOut', async () => {

@@ -123,7 +123,7 @@ export default function SettingsPage() {
 
     if (res.ok) {
       await signOut()
-      navigate('/', { replace: true })
+      void navigate('/', { replace: true })
     } else {
       setErrorMessage('Failed to delete account. Please try again.')
       setShowDeleteConfirm(false)
