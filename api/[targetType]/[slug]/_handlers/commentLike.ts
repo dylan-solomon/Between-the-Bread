@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { ok, err } from '../../../../_lib/response.js'
-import { authenticateRequest } from '../../../../_lib/auth.js'
+import { ok, err } from '../../../_lib/response.js'
+import { authenticateRequest } from '../../../_lib/auth.js'
 
 const UNIQUE_VIOLATION = '23505'
 

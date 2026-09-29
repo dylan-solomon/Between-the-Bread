@@ -18,7 +18,7 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }))
 
-import handler from '../like.js'
+import handler from '../_handlers/commentLike.js'
 
 const makeReq = (overrides: Partial<VercelRequest> = {}): VercelRequest =>
   ({
