@@ -22,7 +22,7 @@ const handleGet = async (req: VercelRequest, res: VercelResponse): Promise<void>
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('display_name, dietary_filters, smart_mode_default, double_protein, double_cheese, cost_context, created_at, updated_at')
+    .select('display_name, dietary_filters, smart_mode_default, double_protein, double_cheese, cost_context, is_admin, created_at, updated_at')
     .eq('id', user.id)
     .single()
 

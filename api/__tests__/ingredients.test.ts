@@ -51,6 +51,9 @@ const setupMock = (
     if (table === 'categories') {
       return { select: () => ({ order: () => Promise.resolve({ data: categories, error: null }) }) }
     }
+    if (table === 'config') {
+      return { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { value: '2026-03-01' }, error: null }) }) }) }
+    }
     return { select: () => ({ eq: () => Promise.resolve({ data: ingredients, error: null }) }) }
   })
 }
@@ -60,7 +63,7 @@ beforeEach(() => { mockFrom.mockReset() })
 describe('GET /api/ingredients', () => {
   it('returns 200 with ingredients grouped by category', async () => {
     setupMock()
-    const { default: handler } = await import('../ingredients')
+    const { default: handler } = await import('../ingredients/[[...id]]')
     const res = makeRes()
     await handler(makeReq(), res)
 
@@ -70,13 +73,14 @@ describe('GET /api/ingredients', () => {
     expect(body.data.categories).toHaveLength(1)
     expect(body.meta).toMatchObject({
       ingredient_count: 1,
+      cost_data_last_updated: '2026-03-01',
       filters_applied: [],
     })
   })
 
   it('nests ingredients under their category and omits category_id', async () => {
     setupMock()
-    const { default: handler } = await import('../ingredients')
+    const { default: handler } = await import('../ingredients/[[...id]]')
     const res = makeRes()
     await handler(makeReq(), res)
 
@@ -94,7 +98,7 @@ describe('GET /api/ingredients', () => {
     const nonVeganIngredient = { ...stubIngredient, id: 'ing-2', name: 'Ham', slug: 'ham', dietary_tags: ['gluten_free'] }
     setupMock([stubCategory], [veganIngredient, nonVeganIngredient])
 
-    const { default: handler } = await import('../ingredients')
+    const { default: handler } = await import('../ingredients/[[...id]]')
     const res = makeRes()
     await handler(makeReq('GET', { diet: 'vegan' }), res)
 
@@ -107,7 +111,7 @@ describe('GET /api/ingredients', () => {
   })
 
   it('returns 405 for non-GET requests', async () => {
-    const { default: handler } = await import('../ingredients')
+    const { default: handler } = await import('../ingredients/[[...id]]')
     const res = makeRes()
     await handler(makeReq('POST'), res)
 
@@ -119,10 +123,13 @@ describe('GET /api/ingredients', () => {
       if (table === 'categories') {
         return { select: () => ({ order: () => Promise.resolve({ data: null, error: { message: 'db error' } }) }) }
       }
+      if (table === 'config') {
+        return { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { value: '2026-03-01' }, error: null }) }) }) }
+      }
       return { select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }) }
     })
 
-    const { default: handler } = await import('../ingredients')
+    const { default: handler } = await import('../ingredients/[[...id]]')
     const res = makeRes()
     await handler(makeReq(), res)
 

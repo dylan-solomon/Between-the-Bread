@@ -52,6 +52,7 @@ export const fetchIngredients = async (diet?: string[]): Promise<FetchIngredient
   )
 
   const categories: Category[] = data.categories.map((cat) => ({
+    id: cat.id,
     name: cat.name,
     slug: cat.slug as CategorySlug,
     display_order: cat.display_order,

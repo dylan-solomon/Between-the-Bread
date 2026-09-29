@@ -6,7 +6,7 @@ import AppShell from '@/components/AppShell'
 import StarRating from '@/components/StarRating'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { useAuth } from '@/context/AuthContext'
-import { SESSION_HISTORY_KEY } from '@/hooks/useSessionHistory'
+import { SESSION_HISTORY_KEY, LOAD_SANDWICH_KEY } from '@/hooks/useSessionHistory'
 import {
   fetchSavedSandwiches,
   updateSavedSandwich,
@@ -33,7 +33,6 @@ import {
 
 const PAGE_SIZE = 10
 const DEBOUNCE_MS = 300
-const LOAD_SANDWICH_KEY = 'btb_load_sandwich'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 

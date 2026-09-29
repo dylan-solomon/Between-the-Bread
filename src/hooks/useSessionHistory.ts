@@ -3,6 +3,7 @@ import type { HistoryEntry, SandwichComposition } from '@/types'
 
 const MAX_ENTRIES = 20
 export const SESSION_HISTORY_KEY = 'btb_session_history'
+export const LOAD_SANDWICH_KEY = 'btb_load_sandwich'
 
 type StoredEntry = Omit<HistoryEntry, 'timestamp'> & { timestamp: string }
 

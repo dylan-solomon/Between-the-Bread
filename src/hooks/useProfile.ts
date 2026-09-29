@@ -9,6 +9,7 @@ export type UserProfile = {
   double_protein: boolean
   double_cheese: boolean
   cost_context: 'retail' | 'restaurant'
+  is_admin: boolean
 }
 
 type UseProfileResult = {
