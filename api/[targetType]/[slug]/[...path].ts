@@ -41,5 +41,10 @@ export default async function handler(
     return
   }
 
-  res.status(404).json(err('NOT_FOUND', 'Route not found.', 404))
+  // TEMP DEBUG: echoing raw routing info to diagnose a production 404.
+  // Remove this once the catch-all routing issue is confirmed and fixed.
+  res.status(404).json({
+    ...err('NOT_FOUND', 'Route not found.', 404),
+    debug: { rawQuery: req.query, url: req.url },
+  })
 }
