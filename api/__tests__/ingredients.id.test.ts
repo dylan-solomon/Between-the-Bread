@@ -8,7 +8,7 @@ vi.mock('../_lib/supabase.js', () => ({
 }))
 
 const makeReq = (method = 'GET', id = 'test-uuid'): VercelRequest =>
-  ({ method, query: { id } }) as unknown as VercelRequest
+  ({ method, query: { id: [id] } }) as unknown as VercelRequest
 
 const makeRes = () => {
   const res = { status: vi.fn(), json: vi.fn() } as unknown as VercelResponse
@@ -41,7 +41,7 @@ describe('GET /api/ingredients/:id', () => {
       }),
     })
 
-    const { default: handler } = await import('../ingredients/[id]')
+    const { default: handler } = await import('../ingredients/[[...id]]')
     const res = makeRes()
     await handler(makeReq(), res)
 
@@ -65,7 +65,7 @@ describe('GET /api/ingredients/:id', () => {
       }),
     })
 
-    const { default: handler } = await import('../ingredients/[id]')
+    const { default: handler } = await import('../ingredients/[[...id]]')
     const res = makeRes()
     await handler(makeReq('GET', 'nonexistent-uuid'), res)
 
@@ -75,7 +75,7 @@ describe('GET /api/ingredients/:id', () => {
   })
 
   it('returns 405 for non-GET requests', async () => {
-    const { default: handler } = await import('../ingredients/[id]')
+    const { default: handler } = await import('../ingredients/[[...id]]')
     const res = makeRes()
     await handler(makeReq('POST'), res)
 

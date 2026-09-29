@@ -14,6 +14,12 @@ const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
 const HistoryPage = lazy(() => import('@/pages/HistoryPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const SharedSandwich = lazy(() => import('@/pages/SharedSandwich'))
+const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'))
+const DashboardPage = lazy(() => import('@/pages/admin/DashboardPage'))
+const IngredientsAdminPage = lazy(() => import('@/pages/admin/IngredientsPage'))
+const CompatMatrixPage = lazy(() => import('@/pages/admin/CompatMatrixPage'))
+const ModerationPage = lazy(() => import('@/pages/admin/ModerationPage'))
+const ConfigPage = lazy(() => import('@/pages/admin/ConfigPage'))
 
 const withSuspense = (Component: React.ComponentType) => (
   <Suspense>
@@ -37,6 +43,17 @@ export const routes: RouteObject[] = [
       { path: '/account/settings', element: withSuspense(SettingsPage) },
       { path: '/account/history', element: withSuspense(HistoryPage) },
       { path: '/s/:hash', element: withSuspense(SharedSandwich) },
+      {
+        path: '/admin',
+        element: withSuspense(AdminLayout),
+        children: [
+          { index: true, element: withSuspense(DashboardPage) },
+          { path: 'ingredients', element: withSuspense(IngredientsAdminPage) },
+          { path: 'compat-matrix', element: withSuspense(CompatMatrixPage) },
+          { path: 'moderation', element: withSuspense(ModerationPage) },
+          { path: 'config', element: withSuspense(ConfigPage) },
+        ],
+      },
       { path: '*', element: withSuspense(NotFoundPage) },
     ],
   },

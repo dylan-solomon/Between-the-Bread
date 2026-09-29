@@ -50,6 +50,7 @@ export type EstimatedCost = {
 }
 
 export type Category = {
+  id?: string
   name: string
   slug: CategorySlug
   display_order: number
