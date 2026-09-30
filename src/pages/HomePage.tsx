@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import AppShell from '@/components/AppShell'
 import CategoryList from '@/components/CategoryList'
 import ChefSpecialRow from '@/components/ChefSpecialRow'
 import DietaryFilters from '@/components/DietaryFilters'
@@ -211,65 +210,63 @@ export default function HomePage() {
     )
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-[480px] px-4 py-8 flex flex-col gap-6">
-        <div className={session.composition !== null && !isRolling ? 'animate-float' : undefined}>
-          <SandwichVisual composition={session.composition} />
-        </div>
-
-        <div className="min-h-20">
-          {!isRolling && (
-            <SummaryCard
-              composition={session.composition}
-              costDataLastUpdated={costDataLastUpdated}
-              defaultCostContext={defaultCostContext}
-              onSave={() => { void handleSave() }}
-              savedId={savedId}
-              onRate={(r) => { void handleRate(r) }}
-              currentRating={currentRating}
-            />
-          )}
-        </div>
-
-        <div className="flex flex-wrap justify-center gap-2">
-          <DietaryFilters activeTags={activeDietFilters} onToggle={toggleDietFilter} />
-        </div>
-
-        <RollAllButton
-          hasRolled={session.hasRolled}
-          isRolling={isRolling}
-          disabled={loading}
-          onClick={() => { setSavedId(null); setCurrentRating(null); rollAll() }}
-        />
-
-        <div className="flex justify-center">
-          <SmartModeToggle isActive={smartMode} onToggle={toggleSmartMode} />
-        </div>
-
-        <CategoryList
-          composition={session.composition}
-          lockedCategories={session.lockedCategories}
-          doubleCategories={session.doubleCategories}
-          isRolling={isRolling}
-          rollingCategory={rollingCategory}
-          onToggleLock={session.toggleLock}
-          onToggleDouble={handleToggleDouble}
-          onRoll={rollOne}
-          categories={categories}
-          pools={activePools}
-        />
-
-        <ChefSpecialRow
-          chefsSpecial={chefsSpecial}
-          isLocked={chefsSpecialLocked}
-          onToggleLock={toggleChefsSpecialLock}
-        />
-
-        <SessionHistory
-          entries={history.entries}
-          onLoad={(entry) => { loadFromHistory(entry.composition) }}
-        />
+    <div className="mx-auto max-w-[480px] px-4 py-8 flex flex-col gap-6">
+      <div className={session.composition !== null && !isRolling ? 'animate-float' : undefined}>
+        <SandwichVisual composition={session.composition} />
       </div>
-    </AppShell>
+
+      <div className="min-h-20">
+        {!isRolling && (
+          <SummaryCard
+            composition={session.composition}
+            costDataLastUpdated={costDataLastUpdated}
+            defaultCostContext={defaultCostContext}
+            onSave={() => { void handleSave() }}
+            savedId={savedId}
+            onRate={(r) => { void handleRate(r) }}
+            currentRating={currentRating}
+          />
+        )}
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-2">
+        <DietaryFilters activeTags={activeDietFilters} onToggle={toggleDietFilter} />
+      </div>
+
+      <RollAllButton
+        hasRolled={session.hasRolled}
+        isRolling={isRolling}
+        disabled={loading}
+        onClick={() => { setSavedId(null); setCurrentRating(null); rollAll() }}
+      />
+
+      <div className="flex justify-center">
+        <SmartModeToggle isActive={smartMode} onToggle={toggleSmartMode} />
+      </div>
+
+      <CategoryList
+        composition={session.composition}
+        lockedCategories={session.lockedCategories}
+        doubleCategories={session.doubleCategories}
+        isRolling={isRolling}
+        rollingCategory={rollingCategory}
+        onToggleLock={session.toggleLock}
+        onToggleDouble={handleToggleDouble}
+        onRoll={rollOne}
+        categories={categories}
+        pools={activePools}
+      />
+
+      <ChefSpecialRow
+        chefsSpecial={chefsSpecial}
+        isLocked={chefsSpecialLocked}
+        onToggleLock={toggleChefsSpecialLock}
+      />
+
+      <SessionHistory
+        entries={history.entries}
+        onLoad={(entry) => { loadFromHistory(entry.composition) }}
+      />
+    </div>
   )
 }

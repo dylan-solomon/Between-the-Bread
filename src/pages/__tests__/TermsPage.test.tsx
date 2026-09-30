@@ -29,9 +29,4 @@ describe('TermsPage', () => {
     expect(screen.getByRole('heading', { name: 'Terms of Service' })).toBeInTheDocument()
   })
 
-  it('renders within the app shell (header and footer present)', () => {
-    renderPage()
-    expect(screen.getByRole('banner')).toBeInTheDocument()
-    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
-  })
 })

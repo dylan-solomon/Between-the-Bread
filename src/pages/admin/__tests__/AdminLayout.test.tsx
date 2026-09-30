@@ -45,4 +45,11 @@ describe('AdminLayout', () => {
     expect(screen.getByRole('link', { name: 'Config' })).toBeInTheDocument()
     expect(screen.getByText('Dashboard content')).toBeInTheDocument()
   })
+
+  it('leaves the main landmark to the site shell', () => {
+    mockUseRequireAdmin.mockReturnValue({ loading: false, authorized: true })
+    renderLayout()
+
+    expect(screen.queryByRole('main')).not.toBeInTheDocument()
+  })
 })
