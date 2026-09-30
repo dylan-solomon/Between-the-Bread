@@ -9,6 +9,7 @@ const ADMIN_COLUMNS =
 
 const DUPLICATE_KEY = '23505'
 const NO_ROWS = 'PGRST116'
+const PHOTO_BUCKET = 'user-photos'
 
 const updateBySlug = async (
   res: VercelResponse,
@@ -47,7 +48,7 @@ const deletePermanently = async (
 ): Promise<void> => {
   const lookup = await auth.supabase
     .from('sandwich_database')
-    .select('published')
+    .select('id, published')
     .eq('slug', slug)
     .maybeSingle()
 
@@ -61,9 +62,32 @@ const deletePermanently = async (
     return
   }
 
-  if ((lookup.data as { published: boolean }).published) {
+  const { id, published } = lookup.data as { id: string; published: boolean }
+
+  if (published) {
     res.status(409).json(err('SANDWICH_PUBLISHED', 'Unpublish the sandwich before deleting it permanently.', 409))
     return
+  }
+
+  const photos = await auth.supabase
+    .from('photos')
+    .select('storage_path')
+    .eq('target_type', 'database')
+    .eq('target_id', id)
+
+  if (photos.error !== null) {
+    res.status(500).json(err('INTERNAL_ERROR', 'Failed to delete sandwich.', 500))
+    return
+  }
+
+  const paths = (photos.data as { storage_path: string }[]).map((photo) => photo.storage_path)
+
+  if (paths.length > 0) {
+    const removal = await auth.supabase.storage.from(PHOTO_BUCKET).remove(paths)
+    if (removal.error !== null) {
+      res.status(500).json(err('INTERNAL_ERROR', 'Failed to remove sandwich photos.', 500))
+      return
+    }
   }
 
   const { error } = await auth.supabase.from('sandwich_database').delete().eq('slug', slug)
