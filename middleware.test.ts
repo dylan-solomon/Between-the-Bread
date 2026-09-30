@@ -163,3 +163,108 @@ describe('OG middleware for encyclopedia entries', () => {
     expect(config.matcher).toContain('/sandwiches/:slug')
   })
 })
+
+const shellWithStaticTags = `<html><head>
+    <title>Between the Bread</title>
+    <meta property="og:title" content="Generic title" />
+    <meta
+      property="og:description"
+      content="Generic description"
+    />
+    <meta property="og:image" content="https://betweenbread.co/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Generic title" />
+    <meta name="twitter:image" content="https://betweenbread.co/og-image.png" />
+    <meta name="description" content="Keep me" />
+  </head><body>app</body></html>`
+
+const mockShareAndShell = (shell = shellWithStaticTags) => {
+  vi.mocked(fetch)
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: { hash: 'abc12345', name: 'The Club' } }), { status: 200 }),
+    )
+    .mockResolvedValueOnce(new Response(shell, { status: 200 }))
+}
+
+const count = (html: string, text: string): number => html.split(text).length - 1
+
+describe('Twitter cards for shared sandwiches', () => {
+  it('adds a large image card with the sandwich name and generated image', async () => {
+    mockShareAndShell()
+
+    const html = await (await middleware(makeRequest('/s/abc12345'))).text()
+
+    expect(html).toContain('<meta name="twitter:card" content="summary_large_image" />')
+    expect(html).toContain('<meta name="twitter:title" content="The Club" />')
+    expect(html).toContain('<meta name="twitter:image" content="https://betweenbread.co/api/og/sandwich/abc12345" />')
+  })
+
+  it('replaces the generic tags from the page shell instead of duplicating them', async () => {
+    mockShareAndShell()
+
+    const html = await (await middleware(makeRequest('/s/abc12345'))).text()
+
+    expect(html).not.toContain('Generic title')
+    expect(html).not.toContain('Generic description')
+    expect(html).not.toContain('og-image.png')
+    expect(count(html, 'property="og:title"')).toBe(1)
+    expect(count(html, 'property="og:image"')).toBe(1)
+    expect(count(html, 'name="twitter:card"')).toBe(1)
+    expect(count(html, 'name="twitter:image"')).toBe(1)
+  })
+
+  it('keeps unrelated tags from the page shell', async () => {
+    mockShareAndShell()
+
+    const html = await (await middleware(makeRequest('/s/abc12345'))).text()
+
+    expect(html).toContain('<meta name="description" content="Keep me" />')
+  })
+})
+
+describe('Twitter cards for encyclopedia entries', () => {
+  it('adds a large image card with the entry title, description and image', async () => {
+    mockEntryAndShell()
+
+    const html = await (await middleware(makeRequest('/sandwiches/reuben'))).text()
+
+    expect(html).toContain('<meta name="twitter:card" content="summary_large_image" />')
+    expect(html).toContain('<meta name="twitter:title" content="Reuben" />')
+    expect(html).toContain('<meta name="twitter:description" content="Corned beef and sauerkraut on rye." />')
+    expect(html).toContain('<meta name="twitter:image" content="https://example.com/reuben.jpg" />')
+  })
+
+  it('uses a plain summary card with no image when the entry has none', async () => {
+    mockEntryAndShell({ data: { name: 'Reuben', slug: 'reuben', description: null, image_url: null } })
+
+    const html = await (await middleware(makeRequest('/sandwiches/reuben'))).text()
+
+    expect(html).toContain('<meta name="twitter:card" content="summary" />')
+    expect(html).not.toContain('twitter:image')
+    expect(html).not.toContain('twitter:description')
+  })
+
+  it('replaces the generic tags from the page shell instead of duplicating them', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(new Response(JSON.stringify(reubenEntry), { status: 200 }))
+      .mockResolvedValueOnce(new Response(shellWithStaticTags, { status: 200 }))
+
+    const html = await (await middleware(makeRequest('/sandwiches/reuben'))).text()
+
+    expect(html).not.toContain('Generic title')
+    expect(html).not.toContain('og-image.png')
+    expect(count(html, 'property="og:image"')).toBe(1)
+    expect(count(html, 'name="twitter:title"')).toBe(1)
+  })
+
+  it('escapes special characters in the Twitter tags', async () => {
+    mockEntryAndShell({
+      data: { name: 'Reuben "Classic"', slug: 'reuben', description: '<script>x</script>', image_url: null },
+    })
+
+    const html = await (await middleware(makeRequest('/sandwiches/reuben'))).text()
+
+    expect(html).not.toContain('<script>')
+    expect(html).toContain('<meta name="twitter:title" content="Reuben &quot;Classic&quot;" />')
+  })
+})
