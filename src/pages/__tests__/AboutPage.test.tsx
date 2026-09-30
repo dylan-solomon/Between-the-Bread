@@ -29,12 +29,6 @@ describe('AboutPage', () => {
     expect(screen.getByRole('heading', { name: 'About Between the Bread' })).toBeInTheDocument()
   })
 
-  it('renders within the app shell (header and footer present)', () => {
-    renderPage()
-    expect(screen.getByRole('banner')).toBeInTheDocument()
-    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
-  })
-
   it('renders the core mission statement', () => {
     renderPage()
     expect(screen.getByText(/The world needs more unpredictable sandwiches/)).toBeInTheDocument()

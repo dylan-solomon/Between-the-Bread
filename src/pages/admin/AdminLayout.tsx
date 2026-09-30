@@ -16,7 +16,7 @@ export default function AdminLayout() {
   if (loading || !authorized) return null
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-[calc(100vh-3.5rem)]">
       <nav className="w-48 shrink-0 border-r border-neutral-200 bg-neutral-50 p-4">
         <p className="mb-4 font-display text-sm font-bold text-neutral-900">Admin</p>
         <ul className="space-y-1">
@@ -37,9 +37,9 @@ export default function AdminLayout() {
           ))}
         </ul>
       </nav>
-      <main className="flex-1 p-6">
+      <div className="flex-1 p-6">
         <Outlet />
-      </main>
+      </div>
     </div>
   )
 }

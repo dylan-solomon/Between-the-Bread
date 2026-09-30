@@ -12,7 +12,7 @@ vi.mock('@/lib/supabase', () => ({
     },
   },
 }))
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { routes } from '@/router'
@@ -72,5 +72,44 @@ describe('Router', () => {
   it('renders the encyclopedia entry page at /sandwiches/:slug', async () => {
     renderRoute('/sandwiches/reuben')
     expect(await screen.findByRole('status', { name: 'Loading sandwich' })).toBeInTheDocument()
+  })
+})
+
+describe('Site shell', () => {
+  it.each([
+    '/',
+    '/about',
+    '/privacy',
+    '/terms',
+    '/login',
+    '/signup',
+    '/forgot-password',
+    '/reset-password',
+    '/account/settings',
+    '/account/history',
+    '/sandwiches',
+    '/sandwiches/reuben',
+    '/s/abc12345',
+    '/admin',
+    '/admin/database',
+    '/this-does-not-exist',
+  ])('shows one header, one footer and one main area at %s', async (path) => {
+    renderRoute(path)
+
+    await screen.findByRole('banner')
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('banner')).toHaveLength(1)
+      expect(screen.getAllByRole('contentinfo')).toHaveLength(1)
+      expect(screen.getAllByRole('main')).toHaveLength(1)
+    })
+  })
+
+  it('links to the encyclopedia from the header on every page', async () => {
+    renderRoute('/sandwiches')
+
+    const header = await screen.findByRole('banner')
+
+    expect(header).toHaveTextContent('Sandwiches')
   })
 })

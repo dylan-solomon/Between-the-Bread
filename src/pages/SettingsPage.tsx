@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AppShell from '@/components/AppShell'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { useAuth } from '@/context/AuthContext'
 import type { DietaryTag } from '@/types'
@@ -128,171 +127,169 @@ export default function SettingsPage() {
   if (authLoading || !authenticated) return null
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-[480px] px-4 py-12">
-        <h1 className="font-display text-3xl font-bold text-neutral-900">Settings</h1>
+    <div className="mx-auto max-w-[480px] px-4 py-12">
+      <h1 className="font-display text-3xl font-bold text-neutral-900">Settings</h1>
 
-        {profileLoading && (
-          <p className="mt-8 text-sm text-neutral-500">Loading preferences...</p>
-        )}
+      {profileLoading && (
+        <p className="mt-8 text-sm text-neutral-500">Loading preferences...</p>
+      )}
 
-        {!profileLoading && (<>
-          <form onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-6">
-            <div>
-              <label htmlFor="display-name" className="block text-sm font-medium text-neutral-700">
-                Display Name
-              </label>
+      {!profileLoading && (<>
+        <form onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-6">
+          <div>
+            <label htmlFor="display-name" className="block text-sm font-medium text-neutral-700">
+              Display Name
+            </label>
+            <input
+              id="display-name"
+              type="text"
+              value={form.display_name}
+              onChange={(e) => { setForm((prev) => ({ ...prev, display_name: e.target.value })) }}
+              className="mt-1 block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
+          <fieldset>
+            <legend className="text-sm font-medium text-neutral-700">Default Dietary Filters</legend>
+            <div className="mt-2 space-y-2">
+              {DIETARY_TAGS.map(({ tag, filterLabel }) => (
+                <label key={tag} className="flex items-center gap-2 text-sm text-neutral-700">
+                  <input
+                    type="checkbox"
+                    checked={form.dietary_filters.includes(tag)}
+                    onChange={() => { toggleDietaryFilter(tag) }}
+                    className="rounded border-neutral-300 text-primary focus:ring-primary"
+                  />
+                  {filterLabel}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm text-neutral-700">
               <input
-                id="display-name"
-                type="text"
-                value={form.display_name}
-                onChange={(e) => { setForm((prev) => ({ ...prev, display_name: e.target.value })) }}
-                className="mt-1 block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-neutral-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                type="checkbox"
+                checked={form.smart_mode_default}
+                onChange={(e) => { setForm((prev) => ({ ...prev, smart_mode_default: e.target.checked })) }}
+                className="rounded border-neutral-300 text-primary focus:ring-primary"
               />
+              Smart Mode
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-neutral-700">
+              <input
+                type="checkbox"
+                checked={form.double_protein}
+                onChange={(e) => { setForm((prev) => ({ ...prev, double_protein: e.target.checked })) }}
+                className="rounded border-neutral-300 text-primary focus:ring-primary"
+              />
+              Double Protein
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-neutral-700">
+              <input
+                type="checkbox"
+                checked={form.double_cheese}
+                onChange={(e) => { setForm((prev) => ({ ...prev, double_cheese: e.target.checked })) }}
+                className="rounded border-neutral-300 text-primary focus:ring-primary"
+              />
+              Double Cheese
+            </label>
+          </div>
+
+          <fieldset>
+            <legend className="text-sm font-medium text-neutral-700">Cost Display</legend>
+            <div className="mt-2 space-y-2">
+              <label className="flex items-center gap-2 text-sm text-neutral-700">
+                <input
+                  type="radio"
+                  name="cost_context"
+                  value="retail"
+                  checked={form.cost_context === 'retail'}
+                  onChange={() => { setForm((prev) => ({ ...prev, cost_context: 'retail' })) }}
+                  className="border-neutral-300 text-primary focus:ring-primary"
+                />
+                Retail
+              </label>
+              <label className="flex items-center gap-2 text-sm text-neutral-700">
+                <input
+                  type="radio"
+                  name="cost_context"
+                  value="restaurant"
+                  checked={form.cost_context === 'restaurant'}
+                  onChange={() => { setForm((prev) => ({ ...prev, cost_context: 'restaurant' })) }}
+                  className="border-neutral-300 text-primary focus:ring-primary"
+                />
+                Restaurant
+              </label>
             </div>
+          </fieldset>
 
-            <fieldset>
-              <legend className="text-sm font-medium text-neutral-700">Default Dietary Filters</legend>
-              <div className="mt-2 space-y-2">
-                {DIETARY_TAGS.map(({ tag, filterLabel }) => (
-                  <label key={tag} className="flex items-center gap-2 text-sm text-neutral-700">
-                    <input
-                      type="checkbox"
-                      checked={form.dietary_filters.includes(tag)}
-                      onChange={() => { toggleDietaryFilter(tag) }}
-                      className="rounded border-neutral-300 text-primary focus:ring-primary"
-                    />
-                    {filterLabel}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm text-neutral-700">
-                <input
-                  type="checkbox"
-                  checked={form.smart_mode_default}
-                  onChange={(e) => { setForm((prev) => ({ ...prev, smart_mode_default: e.target.checked })) }}
-                  className="rounded border-neutral-300 text-primary focus:ring-primary"
-                />
-                Smart Mode
-              </label>
-
-              <label className="flex items-center gap-2 text-sm text-neutral-700">
-                <input
-                  type="checkbox"
-                  checked={form.double_protein}
-                  onChange={(e) => { setForm((prev) => ({ ...prev, double_protein: e.target.checked })) }}
-                  className="rounded border-neutral-300 text-primary focus:ring-primary"
-                />
-                Double Protein
-              </label>
-
-              <label className="flex items-center gap-2 text-sm text-neutral-700">
-                <input
-                  type="checkbox"
-                  checked={form.double_cheese}
-                  onChange={(e) => { setForm((prev) => ({ ...prev, double_cheese: e.target.checked })) }}
-                  className="rounded border-neutral-300 text-primary focus:ring-primary"
-                />
-                Double Cheese
-              </label>
+          {errorMessage !== null && (
+            <div role="alert" className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
             </div>
+          )}
 
-            <fieldset>
-              <legend className="text-sm font-medium text-neutral-700">Cost Display</legend>
-              <div className="mt-2 space-y-2">
-                <label className="flex items-center gap-2 text-sm text-neutral-700">
-                  <input
-                    type="radio"
-                    name="cost_context"
-                    value="retail"
-                    checked={form.cost_context === 'retail'}
-                    onChange={() => { setForm((prev) => ({ ...prev, cost_context: 'retail' })) }}
-                    className="border-neutral-300 text-primary focus:ring-primary"
-                  />
-                  Retail
-                </label>
-                <label className="flex items-center gap-2 text-sm text-neutral-700">
-                  <input
-                    type="radio"
-                    name="cost_context"
-                    value="restaurant"
-                    checked={form.cost_context === 'restaurant'}
-                    onChange={() => { setForm((prev) => ({ ...prev, cost_context: 'restaurant' })) }}
-                    className="border-neutral-300 text-primary focus:ring-primary"
-                  />
-                  Restaurant
-                </label>
-              </div>
-            </fieldset>
+          {successMessage !== null && (
+            <p className="text-sm text-green-700">{successMessage}</p>
+          )}
 
-            {errorMessage !== null && (
-              <div role="alert" className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-                {errorMessage}
-              </div>
-            )}
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </form>
 
-            {successMessage !== null && (
-              <p className="text-sm text-green-700">{successMessage}</p>
-            )}
+        <div className="mt-12 border-t border-neutral-200 pt-8">
+          <h2 className="font-display text-lg font-semibold text-red-700">Danger Zone</h2>
+          <p className="mt-1 text-sm text-neutral-500">
+            This action is permanent and cannot be undone.
+          </p>
+          <button
+            type="button"
+            onClick={() => { setShowDeleteConfirm(true) }}
+            className="mt-4 rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+          >
+            Delete Account
+          </button>
+        </div>
+      </>)}
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-          </form>
-
-          <div className="mt-12 border-t border-neutral-200 pt-8">
-            <h2 className="font-display text-lg font-semibold text-red-700">Danger Zone</h2>
-            <p className="mt-1 text-sm text-neutral-500">
-              This action is permanent and cannot be undone.
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div role="alertdialog" aria-labelledby="delete-title" aria-describedby="delete-desc" className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+            <h3 id="delete-title" className="font-display text-lg font-bold text-neutral-900">
+              Permanently delete your account?
+            </h3>
+            <p id="delete-desc" className="mt-2 text-sm text-neutral-600">
+              All your data — profile, saved sandwiches, and ratings — will be permanently deleted. This cannot be undone.
             </p>
-            <button
-              type="button"
-              onClick={() => { setShowDeleteConfirm(true) }}
-              className="mt-4 rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
-            >
-              Delete Account
-            </button>
-          </div>
-        </>)}
-
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-            <div role="alertdialog" aria-labelledby="delete-title" aria-describedby="delete-desc" className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
-              <h3 id="delete-title" className="font-display text-lg font-bold text-neutral-900">
-                Permanently delete your account?
-              </h3>
-              <p id="delete-desc" className="mt-2 text-sm text-neutral-600">
-                All your data — profile, saved sandwiches, and ratings — will be permanently deleted. This cannot be undone.
-              </p>
-              <div className="mt-6 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => { setShowDeleteConfirm(false) }}
-                  disabled={deleting}
-                  className="flex-1 rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { void handleDeleteAccount() }}
-                  disabled={deleting}
-                  className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                >
-                  {deleting ? 'Deleting...' : 'Yes, Delete'}
-                </button>
-              </div>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setShowDeleteConfirm(false) }}
+                disabled={deleting}
+                className="flex-1 rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => { void handleDeleteAccount() }}
+                disabled={deleting}
+                className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
             </div>
           </div>
-        )}
-      </div>
-    </AppShell>
+        </div>
+      )}
+    </div>
   )
 }

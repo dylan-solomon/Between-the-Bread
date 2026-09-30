@@ -68,11 +68,6 @@ describe('HomePage', () => {
   })
 
   describe('initial render', () => {
-    it('renders within the app shell (header and footer present)', () => {
-      renderPage()
-      expect(screen.getByRole('banner')).toBeInTheDocument()
-      expect(screen.getByRole('contentinfo')).toBeInTheDocument()
-    })
 
     it('shows the Roll the Dice button', () => {
       renderPage()

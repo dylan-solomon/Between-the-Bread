@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { Toaster } from 'sonner'
+import AppShell from '@/components/AppShell'
 import PageViewTracker from '@/components/PageViewTracker'
 import PasswordRecoveryRedirect from '@/components/PasswordRecoveryRedirect'
 import { AuthProvider } from '@/context/AuthContext'
@@ -11,7 +12,9 @@ export default function RootLayout() {
       <AuthPromptProvider>
         <PageViewTracker />
         <PasswordRecoveryRedirect />
-        <Outlet />
+        <AppShell>
+          <Outlet />
+        </AppShell>
         <Toaster richColors position="bottom-center" />
       </AuthPromptProvider>
     </AuthProvider>

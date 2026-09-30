@@ -87,9 +87,7 @@ describe('SignupPage', () => {
 
   it('renders a link to the login page', () => {
     renderPage()
-    const links = screen.getAllByRole('link', { name: /log in/i })
-    const bodyLink = links.find((l) => l.closest('main'))
-    expect(bodyLink).toHaveAttribute('href', '/login')
+    expect(screen.getByRole('link', { name: /log in/i })).toHaveAttribute('href', '/login')
   })
 
   it('calls signUp with email and password on submit', async () => {
@@ -174,12 +172,6 @@ describe('SignupPage', () => {
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/account/settings', { replace: true })
     })
-  })
-
-  it('renders within the app shell', () => {
-    renderPage()
-    expect(screen.getByRole('banner')).toBeInTheDocument()
-    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
   })
 
   it('fires captureAccountSignedUp on successful signup', async () => {

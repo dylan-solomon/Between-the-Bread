@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Heart, Trash2 } from 'lucide-react'
-import AppShell from '@/components/AppShell'
 import StarRating from '@/components/StarRating'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { useAuth } from '@/context/AuthContext'
@@ -316,266 +315,264 @@ export default function HistoryPage() {
     }`
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-[480px] px-4 py-12">
-        <h1 className="font-display text-3xl font-bold text-neutral-900">My Sandwiches</h1>
+    <div className="mx-auto max-w-[480px] px-4 py-12">
+      <h1 className="font-display text-3xl font-bold text-neutral-900">My Sandwiches</h1>
 
-        <div role="tablist" aria-label="Sandwich views" className="mt-6 flex border-b border-neutral-200">
-          <button
-            role="tab"
-            aria-selected={activeTab === 'session'}
-            onClick={() => { setActiveTab('session') }}
-            className={tabClass('session')}
-          >
-            Session
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'saved'}
-            onClick={() => { setActiveTab('saved') }}
-            className={tabClass('saved')}
-          >
-            Saved
-          </button>
+      <div role="tablist" aria-label="Sandwich views" className="mt-6 flex border-b border-neutral-200">
+        <button
+          role="tab"
+          aria-selected={activeTab === 'session'}
+          onClick={() => { setActiveTab('session') }}
+          className={tabClass('session')}
+        >
+          Session
+        </button>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'saved'}
+          onClick={() => { setActiveTab('saved') }}
+          className={tabClass('saved')}
+        >
+          Saved
+        </button>
+      </div>
+
+      {activeTab === 'session' && (
+        <div role="tabpanel" aria-label="Session history">
+          {sessionEntries.length === 0 && (
+            <p className="mt-8 text-center text-sm text-neutral-500">
+              No sandwiches rolled this session yet. Roll a sandwich on the home page!
+            </p>
+          )}
+
+          {sessionEntries.length > 0 && (
+            <ul className="mt-4 divide-y divide-neutral-200">
+              {sessionEntries.map((entry) => (
+                <li key={entry.id} className="py-3">
+                  <Link
+                    to="/"
+                    onClick={() => {
+                      const serialized = Object.fromEntries(
+                        Object.entries(entry.composition).map(([cat, ingredients]) => [
+                          cat,
+                          ingredients.map((i) => ({ slug: i.slug, name: i.name })),
+                        ]),
+                      )
+                      sessionStorage.setItem(LOAD_SANDWICH_KEY, JSON.stringify({ composition: serialized }))
+                    }}
+                    className="font-display text-sm font-semibold text-neutral-900 truncate block hover:text-primary transition"
+                  >
+                    {entry.name}
+                  </Link>
+                  <p
+                    data-testid="session-sandwich-description"
+                    className="mt-0.5 text-xs italic text-neutral-400"
+                  >
+                    {buildSessionDescription(entry.composition as Record<string, Ingredient[]>)}
+                  </p>
+                  <p className="text-xs text-neutral-400">{formatTime(entry.timestamp)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
+      )}
 
-        {activeTab === 'session' && (
-          <div role="tabpanel" aria-label="Session history">
-            {sessionEntries.length === 0 && (
-              <p className="mt-8 text-center text-sm text-neutral-500">
-                No sandwiches rolled this session yet. Roll a sandwich on the home page!
-              </p>
-            )}
+      {activeTab === 'saved' && (
+        <div role="tabpanel" aria-label="Saved sandwiches">
+          {total >= 50 && (
+            <div role="alert" className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+              History full. Remove a sandwich or unfavorite one to make room.
+            </div>
+          )}
 
-            {sessionEntries.length > 0 && (
-              <ul className="mt-4 divide-y divide-neutral-200">
-                {sessionEntries.map((entry) => (
-                  <li key={entry.id} className="py-3">
+          {total >= 45 && total < 50 && (
+            <div role="status" className="mt-4 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              You&apos;re approaching your 50-sandwich limit.
+            </div>
+          )}
+
+          <div className="mt-4 space-y-3">
+            <input
+              type="search"
+              role="searchbox"
+              placeholder="Search sandwiches..."
+              aria-label="Search sandwiches"
+              value={query}
+              onChange={(e) => { handleSearchChange(e.target.value) }}
+              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+
+            <div className="flex flex-wrap gap-2">
+              <label className="flex items-center gap-1.5 text-sm text-neutral-600">
+                <input
+                  type="checkbox"
+                  checked={favoritesOnly}
+                  onChange={handleFavoritesToggle}
+                  className="rounded border-neutral-300 text-primary focus:ring-primary"
+                />
+                Favorites only
+              </label>
+
+              <label className="flex items-center gap-1.5 text-sm text-neutral-600">
+                <span className="sr-only">Filter by rating</span>
+                <select
+                  aria-label="Filter by rating"
+                  value={ratingFilter ?? ''}
+                  onChange={(e) => { handleRatingFilterChange(e.target.value) }}
+                  className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-700"
+                >
+                  <option value="">All ratings</option>
+                  <option value="1">1 star</option>
+                  <option value="2">2 stars</option>
+                  <option value="3">3 stars</option>
+                  <option value="4">4 stars</option>
+                  <option value="5">5 stars</option>
+                </select>
+              </label>
+
+              <label className="flex items-center gap-1.5 text-sm text-neutral-600">
+                <span className="sr-only">Sort by</span>
+                <select
+                  aria-label="Sort by"
+                  value={sort}
+                  onChange={(e) => { handleSortChange(e.target.value as SortOption) }}
+                  className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-700"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
+
+          {loading && (
+            <p className="mt-8 text-sm text-neutral-500">Loading...</p>
+          )}
+
+          {!loading && sandwiches.length === 0 && (
+            <p className="mt-8 text-center text-sm text-neutral-500">
+              {query !== '' ? `No results for "${query}".` : 'No saved sandwiches yet. Roll a sandwich and save it!'}
+            </p>
+          )}
+
+          {!loading && query !== '' && sandwiches.length > 0 && (
+            <p className="mt-4 text-xs text-neutral-400">
+              {total} {total === 1 ? 'result' : 'results'}
+            </p>
+          )}
+
+          {!loading && sandwiches.length > 0 && (
+            <ul className="mt-4 divide-y divide-neutral-200">
+              {sandwiches.map((sandwich) => (
+                <li key={sandwich.id} className="flex items-start gap-3 py-3">
+                  <div className="flex-1 min-w-0">
                     <Link
                       to="/"
                       onClick={() => {
-                        const serialized = Object.fromEntries(
-                          Object.entries(entry.composition).map(([cat, ingredients]) => [
-                            cat,
-                            ingredients.map((i) => ({ slug: i.slug, name: i.name })),
-                          ]),
-                        )
-                        sessionStorage.setItem(LOAD_SANDWICH_KEY, JSON.stringify({ composition: serialized }))
+                        sessionStorage.setItem(LOAD_SANDWICH_KEY, JSON.stringify({ composition: sandwich.composition, savedId: sandwich.id, rating: sandwich.rating }))
                       }}
                       className="font-display text-sm font-semibold text-neutral-900 truncate block hover:text-primary transition"
                     >
-                      {entry.name}
+                      {sandwich.name}
                     </Link>
                     <p
-                      data-testid="session-sandwich-description"
+                      data-testid="sandwich-description"
                       className="mt-0.5 text-xs italic text-neutral-400"
                     >
-                      {buildSessionDescription(entry.composition as Record<string, Ingredient[]>)}
+                      {buildDescription(sandwich.composition)}
                     </p>
-                    <p className="text-xs text-neutral-400">{formatTime(entry.timestamp)}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'saved' && (
-          <div role="tabpanel" aria-label="Saved sandwiches">
-            {total >= 50 && (
-              <div role="alert" className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-                History full. Remove a sandwich or unfavorite one to make room.
-              </div>
-            )}
-
-            {total >= 45 && total < 50 && (
-              <div role="status" className="mt-4 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                You&apos;re approaching your 50-sandwich limit.
-              </div>
-            )}
-
-            <div className="mt-4 space-y-3">
-              <input
-                type="search"
-                role="searchbox"
-                placeholder="Search sandwiches..."
-                aria-label="Search sandwiches"
-                value={query}
-                onChange={(e) => { handleSearchChange(e.target.value) }}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-
-              <div className="flex flex-wrap gap-2">
-                <label className="flex items-center gap-1.5 text-sm text-neutral-600">
-                  <input
-                    type="checkbox"
-                    checked={favoritesOnly}
-                    onChange={handleFavoritesToggle}
-                    className="rounded border-neutral-300 text-primary focus:ring-primary"
-                  />
-                  Favorites only
-                </label>
-
-                <label className="flex items-center gap-1.5 text-sm text-neutral-600">
-                  <span className="sr-only">Filter by rating</span>
-                  <select
-                    aria-label="Filter by rating"
-                    value={ratingFilter ?? ''}
-                    onChange={(e) => { handleRatingFilterChange(e.target.value) }}
-                    className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-700"
-                  >
-                    <option value="">All ratings</option>
-                    <option value="1">1 star</option>
-                    <option value="2">2 stars</option>
-                    <option value="3">3 stars</option>
-                    <option value="4">4 stars</option>
-                    <option value="5">5 stars</option>
-                  </select>
-                </label>
-
-                <label className="flex items-center gap-1.5 text-sm text-neutral-600">
-                  <span className="sr-only">Sort by</span>
-                  <select
-                    aria-label="Sort by"
-                    value={sort}
-                    onChange={(e) => { handleSortChange(e.target.value as SortOption) }}
-                    className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-700"
-                  >
-                    {SORT_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            </div>
-
-            {loading && (
-              <p className="mt-8 text-sm text-neutral-500">Loading...</p>
-            )}
-
-            {!loading && sandwiches.length === 0 && (
-              <p className="mt-8 text-center text-sm text-neutral-500">
-                {query !== '' ? `No results for "${query}".` : 'No saved sandwiches yet. Roll a sandwich and save it!'}
-              </p>
-            )}
-
-            {!loading && query !== '' && sandwiches.length > 0 && (
-              <p className="mt-4 text-xs text-neutral-400">
-                {total} {total === 1 ? 'result' : 'results'}
-              </p>
-            )}
-
-            {!loading && sandwiches.length > 0 && (
-              <ul className="mt-4 divide-y divide-neutral-200">
-                {sandwiches.map((sandwich) => (
-                  <li key={sandwich.id} className="flex items-start gap-3 py-3">
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        to="/"
-                        onClick={() => {
-                          sessionStorage.setItem(LOAD_SANDWICH_KEY, JSON.stringify({ composition: sandwich.composition, savedId: sandwich.id, rating: sandwich.rating }))
-                        }}
-                        className="font-display text-sm font-semibold text-neutral-900 truncate block hover:text-primary transition"
-                      >
-                        {sandwich.name}
-                      </Link>
-                      <p
-                        data-testid="sandwich-description"
-                        className="mt-0.5 text-xs italic text-neutral-400"
-                      >
-                        {buildDescription(sandwich.composition)}
-                      </p>
-                      <p className="text-xs text-neutral-400">{formatDate(sandwich.created_at)}</p>
-                      <div className="mt-1">
-                        <StarRating
-                          value={sandwich.rating}
-                          onChange={(rating) => { void handleRate(sandwich, rating) }}
-                        />
-                      </div>
+                    <p className="text-xs text-neutral-400">{formatDate(sandwich.created_at)}</p>
+                    <div className="mt-1">
+                      <StarRating
+                        value={sandwich.rating}
+                        onChange={(rating) => { void handleRate(sandwich, rating) }}
+                      />
                     </div>
-                    <div className="flex items-center gap-1 pt-1">
-                      <button
-                        type="button"
-                        aria-label={sandwich.is_favorite ? 'Unfavorite' : 'Favorite'}
-                        onClick={() => { void handleToggleFavorite(sandwich) }}
-                        className="rounded p-1 text-neutral-400 transition hover:text-red-500"
-                      >
-                        <Heart
-                          size={16}
-                          className={sandwich.is_favorite ? 'fill-red-500 text-red-500' : ''}
-                        />
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Delete"
-                        onClick={() => { void handleDelete(sandwich) }}
-                        className="rounded p-1 text-neutral-400 transition hover:text-red-600"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {!loading && (hasMore || hasPrev) && (
-              <div className="mt-4 flex justify-between">
-                <button
-                  type="button"
-                  aria-label="Previous page"
-                  disabled={!hasPrev}
-                  onClick={() => { handlePageChange(offset - PAGE_SIZE) }}
-                  className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  aria-label="Next page"
-                  disabled={!hasMore}
-                  onClick={() => { handlePageChange(offset + PAGE_SIZE) }}
-                  className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-
-            {!loading && sandwiches.length > 0 && (
-              <div className="mt-6 text-center">
-                {!confirmClear ? (
-                  <button
-                    type="button"
-                    onClick={() => { setConfirmClear(true) }}
-                    className="text-xs text-neutral-400 underline transition hover:text-red-500"
-                  >
-                    Clear all
-                  </button>
-                ) : (
-                  <div className="space-x-2">
-                    <span className="text-xs text-neutral-500">Clear all non-favorite sandwiches?</span>
+                  </div>
+                  <div className="flex items-center gap-1 pt-1">
                     <button
                       type="button"
-                      onClick={() => { void handleClearAll() }}
-                      className="rounded bg-red-600 px-2.5 py-1 text-xs font-medium text-white transition hover:bg-red-700"
+                      aria-label={sandwich.is_favorite ? 'Unfavorite' : 'Favorite'}
+                      onClick={() => { void handleToggleFavorite(sandwich) }}
+                      className="rounded p-1 text-neutral-400 transition hover:text-red-500"
                     >
-                      Confirm
+                      <Heart
+                        size={16}
+                        className={sandwich.is_favorite ? 'fill-red-500 text-red-500' : ''}
+                      />
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setConfirmClear(false) }}
-                      className="rounded border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50"
+                      aria-label="Delete"
+                      onClick={() => { void handleDelete(sandwich) }}
+                      className="rounded p-1 text-neutral-400 transition hover:text-red-600"
                     >
-                      Cancel
+                      <Trash2 size={16} />
                     </button>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </AppShell>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {!loading && (hasMore || hasPrev) && (
+            <div className="mt-4 flex justify-between">
+              <button
+                type="button"
+                aria-label="Previous page"
+                disabled={!hasPrev}
+                onClick={() => { handlePageChange(offset - PAGE_SIZE) }}
+                className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                aria-label="Next page"
+                disabled={!hasMore}
+                onClick={() => { handlePageChange(offset + PAGE_SIZE) }}
+                className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+          {!loading && sandwiches.length > 0 && (
+            <div className="mt-6 text-center">
+              {!confirmClear ? (
+                <button
+                  type="button"
+                  onClick={() => { setConfirmClear(true) }}
+                  className="text-xs text-neutral-400 underline transition hover:text-red-500"
+                >
+                  Clear all
+                </button>
+              ) : (
+                <div className="space-x-2">
+                  <span className="text-xs text-neutral-500">Clear all non-favorite sandwiches?</span>
+                  <button
+                    type="button"
+                    onClick={() => { void handleClearAll() }}
+                    className="rounded bg-red-600 px-2.5 py-1 text-xs font-medium text-white transition hover:bg-red-700"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setConfirmClear(false) }}
+                    className="rounded border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }

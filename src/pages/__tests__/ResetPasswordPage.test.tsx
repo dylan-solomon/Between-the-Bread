@@ -121,9 +121,4 @@ describe('ResetPasswordPage', () => {
     })
   })
 
-  it('renders within the app shell', () => {
-    renderPage()
-    expect(screen.getByRole('banner')).toBeInTheDocument()
-    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
-  })
 })

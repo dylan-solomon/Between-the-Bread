@@ -171,12 +171,6 @@ describe('LoginPage', () => {
     expect(link).toHaveAttribute('href', '/signup?redirect=%2Faccount%2Fsettings&trigger=save_prompt')
   })
 
-  it('renders within the app shell', () => {
-    renderPage()
-    expect(screen.getByRole('banner')).toBeInTheDocument()
-    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
-  })
-
   it('submits the form when Enter is pressed in the password field', async () => {
     mockSignInWithPassword.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
     renderPage()
