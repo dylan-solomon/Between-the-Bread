@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { supabase } from '../_lib/supabase.js'
-import { ok, err } from '../_lib/response.js'
+import { supabase } from './_lib/supabase.js'
+import { ok, err } from './_lib/response.js'
 
 type DbCategory = {
   id: string
@@ -33,20 +33,15 @@ type ApiIngredient = Omit<DbIngredient, 'category_id'>
 
 type ApiCategory = DbCategory & { ingredients: ApiIngredient[] }
 
-type DbIngredientWithCategory = {
-  id: string
-  name: string
-  slug: string
-  dietary_tags: string[]
-  compat_group: string | null
-  estimated_cost: Record<string, number> | null
-  nutrition: Record<string, number> | null
-  image_asset: string | null
-  is_trigger: boolean
-  categories: { id: string; name: string; slug: string }
-}
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse,
+): Promise<void> {
+  if (req.method !== 'GET') {
+    res.status(405).json(err('METHOD_NOT_ALLOWED', 'Method not allowed.', 405))
+    return
+  }
 
-const listIngredients = async (req: VercelRequest, res: VercelResponse): Promise<void> => {
   const dietParam = typeof req.query.diet === 'string' ? req.query.diet : undefined
   const dietFilter = dietParam
     ? dietParam.split(',').map((s) => s.trim()).filter(Boolean)
@@ -105,42 +100,4 @@ const listIngredients = async (req: VercelRequest, res: VercelResponse): Promise
       },
     ),
   )
-}
-
-const getIngredientById = async (res: VercelResponse, id: string): Promise<void> => {
-  const { data, error } = await supabase
-    .from('ingredients')
-    .select('id, name, slug, dietary_tags, compat_group, estimated_cost, nutrition, image_asset, is_trigger, categories(id, name, slug)')
-    .eq('id', id)
-    .single()
-
-  if (error !== null) {
-    res.status(404).json(err('INGREDIENT_NOT_FOUND', 'Ingredient not found.', 404))
-    return
-  }
-
-  const row = data as unknown as DbIngredientWithCategory
-  const { categories, ...rest } = row
-
-  res.status(200).json(ok({ ...rest, category: categories }))
-}
-
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse,
-): Promise<void> {
-  if (req.method !== 'GET') {
-    res.status(405).json(err('METHOD_NOT_ALLOWED', 'Method not allowed.', 405))
-    return
-  }
-
-  const { id } = req.query as { id?: string[] }
-  const segments = id ?? []
-
-  if (segments.length === 0) {
-    await listIngredients(req, res)
-    return
-  }
-
-  await getIngredientById(res, segments[0])
 }

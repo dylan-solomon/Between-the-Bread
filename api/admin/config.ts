@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import { ok, err } from '../../_lib/response.js'
+import { ok, err } from '../_lib/response.js'
+import { authenticateAdminRequest } from '../_lib/adminAuth.js'
+import type { AdminAuthResult } from '../_lib/adminAuth.js'
 
-const handleGet = async (res: VercelResponse, supabase: SupabaseClient): Promise<void> => {
-  const { data, error } = await supabase.from('config').select('key, value')
+const handleGet = async (res: VercelResponse, auth: AdminAuthResult): Promise<void> => {
+  const { data, error } = await auth.supabase.from('config').select('key, value')
 
   if (error !== null) {
     res.status(500).json(err('INTERNAL_ERROR', 'Failed to fetch config.', 500))
@@ -13,7 +14,7 @@ const handleGet = async (res: VercelResponse, supabase: SupabaseClient): Promise
   res.status(200).json(ok(data))
 }
 
-const handlePatch = async (req: VercelRequest, res: VercelResponse, supabase: SupabaseClient): Promise<void> => {
+const handlePatch = async (req: VercelRequest, res: VercelResponse, auth: AdminAuthResult): Promise<void> => {
   const body = (req.body ?? {}) as Record<string, unknown>
   const { key } = body
 
@@ -27,7 +28,7 @@ const handlePatch = async (req: VercelRequest, res: VercelResponse, supabase: Su
     return
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await auth.supabase
     .from('config')
     .update({ value: body.value })
     .eq('key', key)
@@ -42,19 +43,22 @@ const handlePatch = async (req: VercelRequest, res: VercelResponse, supabase: Su
   res.status(200).json(ok(data))
 }
 
-export default async function handleConfig(
+export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
-  supabase: SupabaseClient,
 ): Promise<void> {
-  switch (req.method) {
-    case 'GET':
-      await handleGet(res, supabase)
-      return
-    case 'PATCH':
-      await handlePatch(req, res, supabase)
-      return
-    default:
-      res.status(405).json(err('METHOD_NOT_ALLOWED', 'Method not allowed.', 405))
+  if (req.method !== 'GET' && req.method !== 'PATCH') {
+    res.status(405).json(err('METHOD_NOT_ALLOWED', 'Method not allowed.', 405))
+    return
   }
+
+  const auth = await authenticateAdminRequest(req, res)
+  if (auth === null) return
+
+  if (req.method === 'GET') {
+    await handleGet(res, auth)
+    return
+  }
+
+  await handlePatch(req, res, auth)
 }

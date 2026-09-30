@@ -1,13 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+const mockGetUser = vi.fn()
 const mockFrom = vi.fn()
-const mockSupabase = { from: mockFrom }
 
-import handleConfig from '../_handlers/config.js'
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: () => ({
+    auth: { getUser: mockGetUser },
+    from: mockFrom,
+  }),
+}))
+
+import handler from '../config.js'
 
 const makeReq = (overrides: Partial<VercelRequest> = {}): VercelRequest =>
-  ({ method: 'GET', body: undefined, query: {}, ...overrides }) as unknown as VercelRequest
+  ({
+    method: 'GET',
+    headers: { authorization: 'Bearer valid-token' },
+    body: undefined,
+    query: {},
+    ...overrides,
+  }) as unknown as VercelRequest
 
 const makeRes = (): VercelResponse & { _status: number; _json: unknown } => {
   const res = {
@@ -19,24 +32,64 @@ const makeRes = (): VercelResponse & { _status: number; _json: unknown } => {
   return res as unknown as VercelResponse & { _status: number; _json: unknown }
 }
 
-beforeEach(() => { vi.clearAllMocks() })
+const validUser = { id: 'admin-1', email: 'admin@example.com' }
+
+const setupAdminCheck = (isAdmin = true) => {
+  mockFrom.mockImplementation((table: string) => {
+    if (table === 'profiles') {
+      return { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { is_admin: isAdmin }, error: null }) }) }) }
+    }
+    throw new Error(`unexpected table in this test: ${table}`)
+  })
+}
+
+beforeEach(() => {
+  vi.resetAllMocks()
+  vi.stubEnv('SUPABASE_URL', 'https://test.supabase.co')
+  vi.stubEnv('SUPABASE_ANON_KEY', 'test-key')
+  mockGetUser.mockResolvedValue({ data: { user: validUser }, error: null })
+})
 
 describe('GET /api/admin/config', () => {
   it('returns 200 with all config rows', async () => {
-    mockFrom.mockReturnValue({ select: () => Promise.resolve({ data: [{ key: 'site_notice', value: null }], error: null }) })
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'profiles') return { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { is_admin: true }, error: null }) }) }) }
+      return { select: () => Promise.resolve({ data: [{ key: 'site_notice', value: null }], error: null }) }
+    })
     const res = makeRes()
 
-    await handleConfig(makeReq(), res, mockSupabase as never)
+    await handler(makeReq(), res)
 
     expect(res._status).toBe(200)
     expect((res._json as { data: unknown[] }).data).toHaveLength(1)
   })
 
-  it('returns 500 when the query fails', async () => {
-    mockFrom.mockReturnValue({ select: () => Promise.resolve({ data: null, error: { message: 'db error' } }) })
+  it('returns 403 when the user is not an admin', async () => {
+    setupAdminCheck(false)
     const res = makeRes()
 
-    await handleConfig(makeReq(), res, mockSupabase as never)
+    await handler(makeReq(), res)
+
+    expect(res._status).toBe(403)
+  })
+
+  it('returns 401 when not authenticated', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: { message: 'Unauthorized' } })
+    const res = makeRes()
+
+    await handler(makeReq(), res)
+
+    expect(res._status).toBe(401)
+  })
+
+  it('returns 500 when the query fails', async () => {
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'profiles') return { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { is_admin: true }, error: null }) }) }) }
+      return { select: () => Promise.resolve({ data: null, error: { message: 'db error' } }) }
+    })
+    const res = makeRes()
+
+    await handler(makeReq(), res)
 
     expect(res._status).toBe(500)
   })
@@ -48,7 +101,10 @@ describe('PATCH /api/admin/config', () => {
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockEq = vi.fn().mockReturnValue({ select: mockSelect })
     const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
-    mockFrom.mockReturnValue({ update: mockUpdate })
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'profiles') return { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { is_admin: true }, error: null }) }) }) }
+      return { update: mockUpdate }
+    })
     return { mockUpdate, mockEq, mockSingle }
   }
 
@@ -57,7 +113,7 @@ describe('PATCH /api/admin/config', () => {
     mockSingle.mockResolvedValue({ data: { key: 'site_notice', value: 'Hello' }, error: null })
     const res = makeRes()
 
-    await handleConfig(makeReq({ method: 'PATCH', body: { key: 'site_notice', value: 'Hello' } }), res, mockSupabase as never)
+    await handler(makeReq({ method: 'PATCH', body: { key: 'site_notice', value: 'Hello' } }), res)
 
     expect(mockUpdate).toHaveBeenCalledWith({ value: 'Hello' })
     expect(mockEq).toHaveBeenCalledWith('key', 'site_notice')
@@ -69,22 +125,24 @@ describe('PATCH /api/admin/config', () => {
     mockSingle.mockResolvedValue({ data: { key: 'site_notice', value: null }, error: null })
     const res = makeRes()
 
-    await handleConfig(makeReq({ method: 'PATCH', body: { key: 'site_notice', value: null } }), res, mockSupabase as never)
+    await handler(makeReq({ method: 'PATCH', body: { key: 'site_notice', value: null } }), res)
 
     expect(res._status).toBe(200)
   })
 
   it('returns 400 when key is missing', async () => {
+    setupAdminCheck()
     const res = makeRes()
-    await handleConfig(makeReq({ method: 'PATCH', body: { value: 'Hello' } }), res, mockSupabase as never)
+    await handler(makeReq({ method: 'PATCH', body: { value: 'Hello' } }), res)
 
     expect(res._status).toBe(400)
     expect((res._json as { error: { code: string } }).error.code).toBe('MISSING_KEY')
   })
 
   it('returns 400 when value is missing from the body', async () => {
+    setupAdminCheck()
     const res = makeRes()
-    await handleConfig(makeReq({ method: 'PATCH', body: { key: 'site_notice' } }), res, mockSupabase as never)
+    await handler(makeReq({ method: 'PATCH', body: { key: 'site_notice' } }), res)
 
     expect(res._status).toBe(400)
     expect((res._json as { error: { code: string } }).error.code).toBe('MISSING_VALUE')
@@ -95,7 +153,7 @@ describe('PATCH /api/admin/config', () => {
     mockSingle.mockResolvedValue({ data: null, error: { message: 'no rows' } })
     const res = makeRes()
 
-    await handleConfig(makeReq({ method: 'PATCH', body: { key: 'nonexistent', value: 'x' } }), res, mockSupabase as never)
+    await handler(makeReq({ method: 'PATCH', body: { key: 'nonexistent', value: 'x' } }), res)
 
     expect(res._status).toBe(404)
   })
@@ -104,7 +162,7 @@ describe('PATCH /api/admin/config', () => {
 describe('unsupported methods', () => {
   it('returns 405 for DELETE', async () => {
     const res = makeRes()
-    await handleConfig(makeReq({ method: 'DELETE' }), res, mockSupabase as never)
+    await handler(makeReq({ method: 'DELETE' }), res)
     expect(res._status).toBe(405)
   })
 })

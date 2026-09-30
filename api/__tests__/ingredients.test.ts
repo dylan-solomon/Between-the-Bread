@@ -63,7 +63,7 @@ beforeEach(() => { mockFrom.mockReset() })
 describe('GET /api/ingredients', () => {
   it('returns 200 with ingredients grouped by category', async () => {
     setupMock()
-    const { default: handler } = await import('../ingredients/[[...id]]')
+    const { default: handler } = await import('../ingredients')
     const res = makeRes()
     await handler(makeReq(), res)
 
@@ -80,7 +80,7 @@ describe('GET /api/ingredients', () => {
 
   it('nests ingredients under their category and omits category_id', async () => {
     setupMock()
-    const { default: handler } = await import('../ingredients/[[...id]]')
+    const { default: handler } = await import('../ingredients')
     const res = makeRes()
     await handler(makeReq(), res)
 
@@ -98,7 +98,7 @@ describe('GET /api/ingredients', () => {
     const nonVeganIngredient = { ...stubIngredient, id: 'ing-2', name: 'Ham', slug: 'ham', dietary_tags: ['gluten_free'] }
     setupMock([stubCategory], [veganIngredient, nonVeganIngredient])
 
-    const { default: handler } = await import('../ingredients/[[...id]]')
+    const { default: handler } = await import('../ingredients')
     const res = makeRes()
     await handler(makeReq('GET', { diet: 'vegan' }), res)
 
@@ -111,7 +111,7 @@ describe('GET /api/ingredients', () => {
   })
 
   it('returns 405 for non-GET requests', async () => {
-    const { default: handler } = await import('../ingredients/[[...id]]')
+    const { default: handler } = await import('../ingredients')
     const res = makeRes()
     await handler(makeReq('POST'), res)
 
@@ -129,7 +129,7 @@ describe('GET /api/ingredients', () => {
       return { select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }) }
     })
 
-    const { default: handler } = await import('../ingredients/[[...id]]')
+    const { default: handler } = await import('../ingredients')
     const res = makeRes()
     await handler(makeReq(), res)
 

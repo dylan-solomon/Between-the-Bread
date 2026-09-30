@@ -1,13 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+const mockGetUser = vi.fn()
 const mockFrom = vi.fn()
-const mockSupabase = { from: mockFrom }
 
-import handleIngredients from '../_handlers/ingredients.js'
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: () => ({
+    auth: { getUser: mockGetUser },
+    from: mockFrom,
+  }),
+}))
+
+import handler from '../ingredients.js'
 
 const makeReq = (overrides: Partial<VercelRequest> = {}): VercelRequest =>
-  ({ method: 'GET', body: undefined, ...overrides }) as unknown as VercelRequest
+  ({
+    method: 'GET',
+    headers: { authorization: 'Bearer valid-token' },
+    body: undefined,
+    query: {},
+    ...overrides,
+  }) as unknown as VercelRequest
 
 const makeRes = (): VercelResponse & { _status: number; _json: unknown } => {
   const res = {
@@ -19,25 +32,50 @@ const makeRes = (): VercelResponse & { _status: number; _json: unknown } => {
   return res as unknown as VercelResponse & { _status: number; _json: unknown }
 }
 
-beforeEach(() => { vi.clearAllMocks() })
+const validUser = { id: 'admin-1', email: 'admin@example.com' }
+
+const adminProfileBranch = { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { is_admin: true }, error: null }) }) }) }
+
+beforeEach(() => {
+  vi.resetAllMocks()
+  vi.stubEnv('SUPABASE_URL', 'https://test.supabase.co')
+  vi.stubEnv('SUPABASE_ANON_KEY', 'test-key')
+  mockGetUser.mockResolvedValue({ data: { user: validUser }, error: null })
+})
 
 describe('GET /api/admin/ingredients', () => {
   it('returns 200 with all ingredients including disabled ones', async () => {
-    mockFrom.mockReturnValue({ select: () => ({ order: () => Promise.resolve({ data: [{ id: 'i1', enabled: false }], error: null }) }) })
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'profiles') return adminProfileBranch
+      return { select: () => ({ order: () => Promise.resolve({ data: [{ id: 'i1', enabled: false }], error: null }) }) }
+    })
     const res = makeRes()
 
-    await handleIngredients(makeReq(), res, mockSupabase as never, undefined)
+    await handler(makeReq(), res)
 
     expect(res._status).toBe(200)
     expect((res._json as { data: unknown[] }).data).toHaveLength(1)
   })
 
-  it('returns 500 when the query fails', async () => {
-    mockFrom.mockReturnValue({ select: () => ({ order: () => Promise.resolve({ data: null, error: { message: 'db error' } }) }) })
+  it('returns 403 when the user is not an admin', async () => {
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'profiles') return { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { is_admin: false }, error: null }) }) }) }
+      throw new Error('should not query ingredients')
+    })
     const res = makeRes()
 
-    await handleIngredients(makeReq(), res, mockSupabase as never, undefined)
+    await handler(makeReq(), res)
+    expect(res._status).toBe(403)
+  })
 
+  it('returns 500 when the query fails', async () => {
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'profiles') return adminProfileBranch
+      return { select: () => ({ order: () => Promise.resolve({ data: null, error: { message: 'db error' } }) }) }
+    })
+    const res = makeRes()
+
+    await handler(makeReq(), res)
     expect(res._status).toBe(500)
   })
 })
@@ -47,7 +85,10 @@ describe('POST /api/admin/ingredients', () => {
     const mockSingle = vi.fn()
     const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
     const mockInsert = vi.fn().mockReturnValue({ select: mockSelect })
-    mockFrom.mockReturnValue({ insert: mockInsert })
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'profiles') return adminProfileBranch
+      return { insert: mockInsert }
+    })
     return { mockInsert, mockSingle }
   }
 
@@ -58,7 +99,7 @@ describe('POST /api/admin/ingredients', () => {
     mockSingle.mockResolvedValue({ data: { id: 'new-1', ...validBody }, error: null })
     const res = makeRes()
 
-    await handleIngredients(makeReq({ method: 'POST', body: validBody }), res, mockSupabase as never, undefined)
+    await handler(makeReq({ method: 'POST', body: validBody }), res)
 
     expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
       category_id: 'cat-1',
@@ -72,22 +113,25 @@ describe('POST /api/admin/ingredients', () => {
   })
 
   it('returns 400 when category_id is missing', async () => {
+    mockFrom.mockImplementation((table: string) => (table === 'profiles' ? adminProfileBranch : { insert: vi.fn() }))
     const res = makeRes()
-    await handleIngredients(makeReq({ method: 'POST', body: { name: 'Havarti', slug: 'havarti' } }), res, mockSupabase as never, undefined)
+    await handler(makeReq({ method: 'POST', body: { name: 'Havarti', slug: 'havarti' } }), res)
     expect(res._status).toBe(400)
     expect((res._json as { error: { code: string } }).error.code).toBe('MISSING_CATEGORY_ID')
   })
 
   it('returns 400 when name is missing', async () => {
+    mockFrom.mockImplementation((table: string) => (table === 'profiles' ? adminProfileBranch : { insert: vi.fn() }))
     const res = makeRes()
-    await handleIngredients(makeReq({ method: 'POST', body: { category_id: 'cat-1', slug: 'havarti' } }), res, mockSupabase as never, undefined)
+    await handler(makeReq({ method: 'POST', body: { category_id: 'cat-1', slug: 'havarti' } }), res)
     expect(res._status).toBe(400)
     expect((res._json as { error: { code: string } }).error.code).toBe('MISSING_NAME')
   })
 
   it('returns 400 when slug is missing', async () => {
+    mockFrom.mockImplementation((table: string) => (table === 'profiles' ? adminProfileBranch : { insert: vi.fn() }))
     const res = makeRes()
-    await handleIngredients(makeReq({ method: 'POST', body: { category_id: 'cat-1', name: 'Havarti' } }), res, mockSupabase as never, undefined)
+    await handler(makeReq({ method: 'POST', body: { category_id: 'cat-1', name: 'Havarti' } }), res)
     expect(res._status).toBe(400)
     expect((res._json as { error: { code: string } }).error.code).toBe('MISSING_SLUG')
   })
@@ -97,54 +141,16 @@ describe('POST /api/admin/ingredients', () => {
     mockSingle.mockResolvedValue({ data: null, error: { message: 'db error' } })
     const res = makeRes()
 
-    await handleIngredients(makeReq({ method: 'POST', body: validBody }), res, mockSupabase as never, undefined)
+    await handler(makeReq({ method: 'POST', body: validBody }), res)
     expect(res._status).toBe(500)
-  })
-})
-
-describe('PATCH /api/admin/ingredients/:id', () => {
-  const setupUpdateChain = () => {
-    const mockSingle = vi.fn()
-    const mockSelect = vi.fn().mockReturnValue({ single: mockSingle })
-    const mockEq = vi.fn().mockReturnValue({ select: mockSelect })
-    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
-    mockFrom.mockReturnValue({ update: mockUpdate })
-    return { mockUpdate, mockEq, mockSingle }
-  }
-
-  it('updates the provided fields', async () => {
-    const { mockUpdate, mockEq, mockSingle } = setupUpdateChain()
-    mockSingle.mockResolvedValue({ data: { id: 'i1', enabled: false }, error: null })
-    const res = makeRes()
-
-    await handleIngredients(makeReq({ method: 'PATCH', body: { enabled: false } }), res, mockSupabase as never, 'i1')
-
-    expect(mockUpdate).toHaveBeenCalledWith({ enabled: false })
-    expect(mockEq).toHaveBeenCalledWith('id', 'i1')
-    expect(res._status).toBe(200)
-  })
-
-  it('returns 400 when the body has no updatable fields', async () => {
-    const res = makeRes()
-    await handleIngredients(makeReq({ method: 'PATCH', body: {} }), res, mockSupabase as never, 'i1')
-    expect(res._status).toBe(400)
-    expect((res._json as { error: { code: string } }).error.code).toBe('NO_UPDATES')
-  })
-
-  it('returns 404 when the ingredient does not exist', async () => {
-    const { mockSingle } = setupUpdateChain()
-    mockSingle.mockResolvedValue({ data: null, error: { message: 'no rows' } })
-    const res = makeRes()
-
-    await handleIngredients(makeReq({ method: 'PATCH', body: { enabled: false } }), res, mockSupabase as never, 'missing')
-    expect(res._status).toBe(404)
   })
 })
 
 describe('unsupported methods', () => {
   it('returns 405 for DELETE', async () => {
+    mockFrom.mockImplementation((table: string) => (table === 'profiles' ? adminProfileBranch : {}))
     const res = makeRes()
-    await handleIngredients(makeReq({ method: 'DELETE' }), res, mockSupabase as never, undefined)
+    await handler(makeReq({ method: 'DELETE' }), res)
     expect(res._status).toBe(405)
   })
 })
