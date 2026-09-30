@@ -3,7 +3,7 @@ import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { authenticateRequest } from './auth.js'
 import { err } from './response.js'
 
-type AdminAuthResult = {
+export type AdminAuthResult = {
   supabase: SupabaseClient
   user: User
 }

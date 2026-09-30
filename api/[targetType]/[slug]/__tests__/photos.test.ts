@@ -22,7 +22,7 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }))
 
-import handler from '../_handlers/photos.js'
+import handler from '../photos.js'
 
 const makeReq = (overrides: Partial<VercelRequest> = {}): VercelRequest =>
   ({

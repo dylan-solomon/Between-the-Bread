@@ -1,13 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+const mockGetUser = vi.fn()
 const mockFrom = vi.fn()
-const mockSupabase = { from: mockFrom }
 
-import handleDashboard from '../_handlers/dashboard.js'
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: () => ({
+    auth: { getUser: mockGetUser },
+    from: mockFrom,
+  }),
+}))
+
+import handler from '../dashboard.js'
 
 const makeReq = (overrides: Partial<VercelRequest> = {}): VercelRequest =>
-  ({ method: 'GET', ...overrides }) as unknown as VercelRequest
+  ({
+    method: 'GET',
+    headers: { authorization: 'Bearer valid-token' },
+    body: undefined,
+    query: {},
+    ...overrides,
+  }) as unknown as VercelRequest
 
 const makeRes = (): VercelResponse & { _status: number; _json: unknown } => {
   const res = {
@@ -19,13 +32,24 @@ const makeRes = (): VercelResponse & { _status: number; _json: unknown } => {
   return res as unknown as VercelResponse & { _status: number; _json: unknown }
 }
 
+const validUser = { id: 'admin-1', email: 'admin@example.com' }
+const adminProfileBranch = { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { is_admin: true }, error: null }) }) }) }
+const notAdminProfileBranch = { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { is_admin: false }, error: null }) }) }) }
+
 const countResult = (count: number) => ({ select: () => Promise.resolve({ count, error: null }) })
 const filteredCountResult = (count: number) => ({ select: () => ({ or: () => Promise.resolve({ count, error: null }) }) })
 const eqCountResult = (count: number) => ({ select: () => ({ eq: () => Promise.resolve({ count, error: null }) }) })
 
+// `profiles` is queried twice with different chain shapes: once by the admin-check
+// (select().eq().single()) and once by this handler's own user count (a plain
+// awaited select()). Track call order to return the right shape each time.
 const setupCounts = () => {
+  let profilesCallCount = 0
   mockFrom.mockImplementation((table: string) => {
-    if (table === 'profiles') return countResult(10)
+    if (table === 'profiles') {
+      profilesCallCount += 1
+      return profilesCallCount === 1 ? adminProfileBranch : countResult(10)
+    }
     if (table === 'saved_sandwiches') return countResult(25)
     if (table === 'shared_sandwiches') return countResult(5)
     if (table === 'ratings') return countResult(40)
@@ -35,14 +59,19 @@ const setupCounts = () => {
   })
 }
 
-beforeEach(() => { vi.clearAllMocks() })
+beforeEach(() => {
+  vi.resetAllMocks()
+  vi.stubEnv('SUPABASE_URL', 'https://test.supabase.co')
+  vi.stubEnv('SUPABASE_ANON_KEY', 'test-key')
+  mockGetUser.mockResolvedValue({ data: { user: validUser }, error: null })
+})
 
 describe('GET /api/admin/dashboard', () => {
   it('returns 200 with aggregated metrics', async () => {
     setupCounts()
     const res = makeRes()
 
-    await handleDashboard(makeReq(), res, mockSupabase as never)
+    await handler(makeReq(), res)
 
     expect(res._status).toBe(200)
     expect((res._json as { data: Record<string, number> }).data).toEqual({
@@ -56,16 +85,24 @@ describe('GET /api/admin/dashboard', () => {
 
   it('returns 500 when any query fails', async () => {
     setupCounts()
+    mockFrom.mockImplementationOnce(() => adminProfileBranch)
     mockFrom.mockImplementationOnce(() => ({ select: () => Promise.resolve({ count: null, error: { message: 'db error' } }) }))
     const res = makeRes()
 
-    await handleDashboard(makeReq(), res, mockSupabase as never)
+    await handler(makeReq(), res)
     expect(res._status).toBe(500)
+  })
+
+  it('returns 403 when the user is not an admin', async () => {
+    mockFrom.mockImplementation((table: string) => (table === 'profiles' ? notAdminProfileBranch : {}))
+    const res = makeRes()
+    await handler(makeReq(), res)
+    expect(res._status).toBe(403)
   })
 
   it('returns 405 for non-GET requests', async () => {
     const res = makeRes()
-    await handleDashboard(makeReq({ method: 'POST' }), res, mockSupabase as never)
+    await handler(makeReq({ method: 'POST' }), res)
     expect(res._status).toBe(405)
   })
 })
