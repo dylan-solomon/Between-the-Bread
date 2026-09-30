@@ -14,11 +14,16 @@ vi.mock('@/lib/supabase', () => ({
 }))
 import { render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import { routes } from '@/router'
 
 const renderRoute = (path: string) => {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
-  render(<RouterProvider router={router} />)
+  render(
+    <HelmetProvider>
+      <RouterProvider router={router} />
+    </HelmetProvider>,
+  )
 }
 
 describe('Router', () => {
@@ -57,5 +62,15 @@ describe('Router', () => {
   it('renders the SharedSandwich page at /s/:hash', async () => {
     renderRoute('/s/abc12345')
     expect(await screen.findByRole('status')).toBeInTheDocument()
+  })
+
+  it('renders the encyclopedia index at /sandwiches', async () => {
+    renderRoute('/sandwiches')
+    expect(await screen.findByRole('heading', { name: 'Sandwich Encyclopedia' })).toBeInTheDocument()
+  })
+
+  it('renders the encyclopedia entry page at /sandwiches/:slug', async () => {
+    renderRoute('/sandwiches/reuben')
+    expect(await screen.findByRole('status', { name: 'Loading sandwich' })).toBeInTheDocument()
   })
 })
