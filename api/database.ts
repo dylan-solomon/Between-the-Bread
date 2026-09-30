@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { supabase } from './_lib/supabase.js'
 import { ok, err } from './_lib/response.js'
 import { isRegion } from './_lib/regions.js'
+import { isAvoidTag, isDietaryTag } from './_lib/dietaryTags.js'
 
 const DEFAULT_LIMIT = 24
 const MAX_LIMIT = 50
@@ -64,12 +65,19 @@ export default async function handler(
     .split(',')
     .map((tag) => tag.trim())
     .filter(Boolean)
+  if (!dietTags.every(isDietaryTag)) {
+    invalid(res, 'diet contains an unsupported dietary tag.')
+    return
+  }
+  const requiredTags = dietTags.filter((tag) => !isAvoidTag(tag))
+  const avoidedTags = dietTags.filter(isAvoidTag)
 
   const base = supabase.from('sandwich_database').select(LIST_COLUMNS, { count: 'exact' })
   const filtered = [
     (query: typeof base) => (region === undefined ? query : query.eq('origin_region', region)),
     (query: typeof base) => (country === undefined ? query : query.eq('origin_country', country)),
-    (query: typeof base) => (dietTags.length === 0 ? query : query.contains('dietary_tags', dietTags)),
+    (query: typeof base) => (requiredTags.length === 0 ? query : query.contains('dietary_tags', requiredTags)),
+    (query: typeof base) => avoidedTags.reduce((acc, tag) => acc.not('dietary_tags', 'cs', `{${tag}}`), query),
     (query: typeof base) =>
       search === undefined || search === ''
         ? query

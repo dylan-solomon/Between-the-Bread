@@ -28,6 +28,35 @@ describe('DietaryFilters', () => {
       renderFilters()
       expect(screen.getByRole('button', { name: 'Dairy-Free' })).toBeInTheDocument()
     })
+
+    it('renders a Pescatarian button', () => {
+      renderFilters()
+      expect(screen.getByRole('button', { name: 'Pescatarian' })).toBeInTheDocument()
+    })
+
+    it.each(['No Pork', 'No Shellfish', 'No Peanuts'])('renders a %s exclusion button', (name) => {
+      renderFilters()
+      expect(screen.getByRole('button', { name })).toBeInTheDocument()
+    })
+
+    it('renders the eight filters in display order', () => {
+      renderFilters()
+      expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual([
+        'Vegan',
+        'Vegetarian',
+        'Pescatarian',
+        'Dairy-Free',
+        'Gluten-Free',
+        'No Pork',
+        'No Shellfish',
+        'No Peanuts',
+      ])
+    })
+
+    it('reminds users that tags do not cover brand variation or cross-contamination', () => {
+      renderFilters()
+      expect(screen.getByText(/cross-contamination/i)).toBeInTheDocument()
+    })
   })
 
   describe('aria-pressed state', () => {
@@ -92,6 +121,24 @@ describe('DietaryFilters', () => {
       renderFilters([], onToggle)
       await userEvent.click(screen.getByRole('button', { name: 'Vegan' }))
       expect(onToggle).toHaveBeenCalledOnce()
+    })
+  })
+
+  describe('avoid filters', () => {
+    it('toggles the contains tag when an exclusion button is clicked', async () => {
+      const onToggle = vi.fn()
+      renderFilters([], onToggle)
+
+      await userEvent.click(screen.getByRole('button', { name: 'No Pork' }))
+
+      expect(onToggle).toHaveBeenCalledWith('contains_pork')
+    })
+
+    it('shows an exclusion as pressed when its contains tag is active', () => {
+      renderFilters(['contains_shellfish'])
+
+      expect(screen.getByRole('button', { name: 'No Shellfish' })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByRole('button', { name: 'No Pork' })).toHaveAttribute('aria-pressed', 'false')
     })
   })
 })

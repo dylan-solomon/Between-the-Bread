@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
+import { captureEncyclopediaEntryViewed, captureEncyclopediaTryThisClicked } from '@/analytics/events'
 import { fetchSandwich } from '@/api/database'
 import type { CanonicalIngredients, SandwichEntry } from '@/api/database'
 import MarkdownText from '@/components/MarkdownText'
 import SandwichVisual from '@/components/SandwichVisual'
 import SandwichCardPage from '@/components/sandwich-page/SandwichCardPage'
 import TryThisSandwich from '@/components/sandwich-page/TryThisSandwich'
+import { DIETARY_DISCLAIMER, getDietaryTag, isDietaryTag } from '@/data/dietaryTags'
 import { useIngredients } from '@/hooks/useIngredients'
 import type { CategorySlug, Ingredient, SandwichComposition } from '@/types'
 
@@ -84,13 +86,24 @@ function Info({ entry, categoryNames }: { entry: SandwichEntry; categoryNames: M
       )}
 
       {entry.dietary_tags.length > 0 && (
-        <ul className="flex flex-wrap gap-2">
-          {entry.dietary_tags.map((tag) => (
-            <li key={tag} className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600">
-              {tag.replace(/_/g, ' ')}
-            </li>
-          ))}
-        </ul>
+        <div>
+          <ul className="flex flex-wrap gap-2">
+            {entry.dietary_tags.filter(isDietaryTag).map((tag) => {
+              const { label, kind } = getDietaryTag(tag)
+              return (
+                <li
+                  key={tag}
+                  className={`rounded-full px-3 py-1 text-xs ${
+                    kind === 'avoid' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-100 text-neutral-600'
+                  }`}
+                >
+                  {label}
+                </li>
+              )
+            })}
+          </ul>
+          <p className="mt-2 text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
+        </div>
       )}
     </div>
   )
@@ -108,7 +121,14 @@ export default function SandwichDetail() {
     }
     setState({ status: 'loading' })
     fetchSandwich(slug)
-      .then((entry) => { setState(entry === null ? { status: 'not-found' } : { status: 'success', entry }) })
+      .then((entry) => {
+        if (entry === null) {
+          setState({ status: 'not-found' })
+          return
+        }
+        setState({ status: 'success', entry })
+        captureEncyclopediaEntryViewed({ slug: entry.slug })
+      })
       .catch(() => { setState({ status: 'error' }) })
   }, [slug])
 
@@ -165,7 +185,13 @@ export default function SandwichDetail() {
         ratingCount={entry.rating_count}
         heroVisual={<Hero entry={entry} pools={pools} />}
         infoSection={<Info entry={entry} categoryNames={categoryNames} />}
-        actionBar={<TryThisSandwich composition={knownCategories(entry.canonical_ingredients)} exact={false} />}
+        actionBar={
+          <TryThisSandwich
+            composition={knownCategories(entry.canonical_ingredients)}
+            exact={false}
+            onTry={() => { captureEncyclopediaTryThisClicked({ slug: entry.slug }) }}
+          />
+        }
       />
     </>
   )

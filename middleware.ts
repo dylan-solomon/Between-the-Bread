@@ -1,49 +1,86 @@
 import { next } from '@vercel/edge'
 
 const SHARE_PATTERN = /^\/s\/([a-zA-Z0-9]{8})$/
+const SANDWICH_PATTERN = /^\/sandwiches\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
 
 type ShareApiResponse = {
   data: { hash: string; name: string }
 }
 
+type SandwichApiResponse = {
+  data: { name: string; slug: string; description: string | null; image_url: string | null }
+}
+
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+const metaTag = (property: string, content: string): string =>
+  `<meta property="${property}" content="${escapeHtml(content)}" />`
+
+const respondWithTags = async (url: URL, tags: string[]): Promise<Response> => {
+  const htmlRes = await fetch(new URL('/', url).toString())
+  const html = await htmlRes.text()
+  const injected = html.replace('<head>', `<head>\n    ${tags.join('\n    ')}`)
+
+  return new Response(injected, {
+    headers: { 'content-type': 'text/html; charset=utf-8' },
+  })
+}
+
+const shareTags = async (url: URL, hash: string): Promise<string[] | null> => {
+  const apiRes = await fetch(`${url.origin}/api/sandwiches/share/${hash}`)
+  if (!apiRes.ok) return null
+
+  const { data } = (await apiRes.json()) as ShareApiResponse
+
+  return [
+    `<title>${escapeHtml(data.name)} | Between the Bread</title>`,
+    metaTag('og:title', data.name),
+    metaTag('og:url', `${url.origin}/s/${hash}`),
+    metaTag('og:type', 'website'),
+    metaTag('og:image', `${url.origin}/api/og/sandwich/${hash}`),
+    metaTag('og:image:width', '1200'),
+    metaTag('og:image:height', '630'),
+  ]
+}
+
+const sandwichTags = async (url: URL, slug: string): Promise<string[] | null> => {
+  const apiRes = await fetch(`${url.origin}/api/database/${slug}`)
+  if (!apiRes.ok) return null
+
+  const { data } = (await apiRes.json()) as SandwichApiResponse
+
+  return [
+    `<title>${escapeHtml(data.name)} | Between the Bread</title>`,
+    metaTag('og:title', data.name),
+    ...(data.description === null ? [] : [metaTag('og:description', data.description)]),
+    ...(data.image_url === null ? [] : [metaTag('og:image', data.image_url)]),
+    metaTag('og:url', `${url.origin}/sandwiches/${slug}`),
+    metaTag('og:type', 'article'),
+  ]
+}
+
 export default async function middleware(req: Request): Promise<Response> {
   const url = new URL(req.url)
-  const match = SHARE_PATTERN.exec(url.pathname)
-
-  if (match === null) {
-    return next()
-  }
-
-  const hash = match[1]
+  const shareMatch = SHARE_PATTERN.exec(url.pathname)
+  const sandwichMatch = SANDWICH_PATTERN.exec(url.pathname)
 
   try {
-    const apiRes = await fetch(`${url.origin}/api/sandwiches/share/${hash}`)
-    if (!apiRes.ok) return next()
+    const tags = shareMatch !== null
+      ? await shareTags(url, shareMatch[1])
+      : sandwichMatch !== null
+        ? await sandwichTags(url, sandwichMatch[1])
+        : null
 
-    const body = (await apiRes.json()) as unknown
-    const { data } = body as ShareApiResponse
-
-    const htmlRes = await fetch(new URL('/', url).toString())
-    const html = await htmlRes.text()
-
-    const ogTags = [
-      `<title>${data.name} | Between the Bread</title>`,
-      `<meta property="og:title" content="${data.name}" />`,
-      `<meta property="og:url" content="${url.origin}/s/${hash}" />`,
-      `<meta property="og:type" content="website" />`,
-      `<meta property="og:image" content="${url.origin}/api/og/sandwich/${hash}" />`,
-      `<meta property="og:image:width" content="1200" />`,
-      `<meta property="og:image:height" content="630" />`,
-    ].join('\n    ')
-
-    const injected = html.replace('<head>', `<head>\n    ${ogTags}`)
-
-    return new Response(injected, {
-      headers: { 'content-type': 'text/html; charset=utf-8' },
-    })
+    return tags === null ? next() : await respondWithTags(url, tags)
   } catch {
     return next()
   }
 }
 
-export const config = { matcher: ['/s/:hash*'] }
+export const config = { matcher: ['/s/:hash*', '/sandwiches/:slug'] }

@@ -4,8 +4,8 @@ import { useAuth } from '@/context/AuthContext'
 import { useIngredients } from '@/hooks/useIngredients'
 import { fetchAdminIngredients, updateIngredient, createIngredient } from '@/api/admin'
 import type { AdminIngredient } from '@/api/admin'
+import { DIETARY_TAGS } from '@/data/dietaryTags'
 
-const DIETARY_TAGS = ['dairy_free', 'gluten_free', 'vegan', 'vegetarian'] as const
 const COMPAT_GROUPS = ['american', 'asian_fusion', 'deli_classic', 'italian', 'mediterranean', 'neutral', 'southern', 'tex_mex'] as const
 
 type RowProps = {
@@ -59,15 +59,15 @@ function IngredientRow({ ingredient, categoryName, onSave }: RowProps) {
       </td>
       <td className="p-2">
         <div className="flex flex-wrap gap-2">
-          {DIETARY_TAGS.map((tag) => (
+          {DIETARY_TAGS.map(({ tag, label }) => (
             <label key={tag} className="flex items-center gap-1 text-xs text-neutral-600">
               <input
                 type="checkbox"
-                aria-label={`${tag}: ${ingredient.name}`}
+                aria-label={`${label}: ${ingredient.name}`}
                 checked={ingredient.dietary_tags.includes(tag)}
                 onChange={() => { toggleTag(tag) }}
               />
-              {tag}
+              {label}
             </label>
           ))}
         </div>

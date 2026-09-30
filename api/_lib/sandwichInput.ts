@@ -1,3 +1,4 @@
+import { isDietaryTag } from './dietaryTags.js'
 import { isRegion } from './regions.js'
 import { isSlug } from './slug.js'
 
@@ -56,8 +57,8 @@ const CHECKS: FieldCheck[] = [
   },
   {
     field: 'dietary_tags',
-    valid: (value) => Array.isArray(value) && value.every((tag) => typeof tag === 'string'),
-    message: 'dietary_tags must be a list of text tags.',
+    valid: (value) => Array.isArray(value) && value.every((tag) => typeof tag === 'string' && isDietaryTag(tag)),
+    message: 'dietary_tags must be a list of supported dietary tags.',
   },
   { field: 'image_url', valid: isHttpUrl, message: 'image_url must be an http(s) URL.' },
   { field: 'published', valid: (value) => typeof value === 'boolean', message: 'published must be true or false.' },

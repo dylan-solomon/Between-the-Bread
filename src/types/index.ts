@@ -1,3 +1,5 @@
+import type { DietaryTag } from '@/data/dietaryTags'
+
 // ─── Primitive unions ────────────────────────────────────────────────────────
 
 export type SelectionType = 'single' | 'multi'
@@ -12,7 +14,7 @@ export type CategorySlug =
   | 'condiments'
   | 'chefs-special'
 
-export type DietaryTag = 'dairy_free' | 'gluten_free' | 'vegan' | 'vegetarian'
+export type { DietaryTag }
 
 export type CompatGroup =
   | 'american'

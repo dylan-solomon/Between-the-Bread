@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { toast } from 'sonner'
+import { captureEncyclopediaFiltered, captureEncyclopediaSearched, captureEncyclopediaViewed } from '@/analytics/events'
 import { fetchSandwiches } from '@/api/database'
 import type { SandwichSort, SandwichSummary } from '@/api/database'
+import { DIETARY_DISCLAIMER, DIETARY_TAGS } from '@/data/dietaryTags'
 import { REGIONS } from '@/data/regions'
 import type { Region } from '@/data/regions'
 
 const PAGE_SIZE = 24
-const DIETARY_TAGS = ['dairy_free', 'gluten_free', 'vegan', 'vegetarian'] as const
 const SORT_OPTIONS: { value: SandwichSort; label: string }[] = [
   { value: 'name', label: 'A–Z' },
   { value: 'rating', label: 'Highest rated' },
@@ -42,8 +43,6 @@ const readFilters = (params: URLSearchParams): Filters => {
 }
 
 const hasActiveFilters = ({ q, region, diet }: Filters): boolean => q !== '' || region !== undefined || diet.length > 0
-
-const formatTag = (tag: string): string => tag.replace(/_/g, ' ')
 
 function SandwichCard({ sandwich }: { sandwich: SandwichSummary }) {
   return (
@@ -90,15 +89,19 @@ export default function SandwichIndex() {
 
   useEffect(() => { setSearchText(filters.q) }, [filters.q])
 
+  useEffect(() => { captureEncyclopediaViewed() }, [])
+
   useEffect(() => {
     let cancelled = false
     setStatus('loading')
-    fetchSandwiches({ ...readFilters(new URLSearchParams(paramsKey)), limit: PAGE_SIZE, offset: 0 })
+    const query = readFilters(new URLSearchParams(paramsKey))
+    fetchSandwiches({ ...query, limit: PAGE_SIZE, offset: 0 })
       .then((page) => {
         if (cancelled) return
         setItems(page.items)
         setTotalCount(page.totalCount)
         setStatus('ready')
+        if (query.q !== '') captureEncyclopediaSearched({ query: query.q, resultsCount: page.totalCount })
       })
       .catch(() => { if (!cancelled) setStatus('error') })
     return () => { cancelled = true }
@@ -113,9 +116,14 @@ export default function SandwichIndex() {
     setParams(next)
   }
 
+  const changeFilters = (changes: Partial<Pick<Filters, 'region' | 'sort' | 'diet'>>) => {
+    const next = { ...filters, ...changes }
+    captureEncyclopediaFiltered({ region: next.region ?? null, diet: next.diet, sort: next.sort ?? 'name' })
+    updateParams({ region: next.region ?? '', sort: next.sort ?? '', diet: next.diet.join(',') })
+  }
+
   const toggleDiet = (tag: string) => {
-    const next = filters.diet.includes(tag) ? filters.diet.filter((t) => t !== tag) : [...filters.diet, tag]
-    updateParams({ diet: next.join(',') })
+    changeFilters({ diet: filters.diet.includes(tag) ? filters.diet.filter((t) => t !== tag) : [...filters.diet, tag] })
   }
 
   const loadMore = () => {
@@ -164,7 +172,7 @@ export default function SandwichIndex() {
           Region
           <select
             value={filters.region ?? ''}
-            onChange={(e) => { updateParams({ region: e.target.value }) }}
+            onChange={(e) => { changeFilters({ region: isRegion(e.target.value) ? e.target.value : undefined }) }}
             className={inputClass}
           >
             <option value="">All regions</option>
@@ -176,7 +184,7 @@ export default function SandwichIndex() {
           Sort by
           <select
             value={filters.sort ?? 'name'}
-            onChange={(e) => { updateParams({ sort: e.target.value === 'name' ? '' : e.target.value }) }}
+            onChange={(e) => { changeFilters({ sort: isSort(e.target.value) && e.target.value !== 'name' ? e.target.value : undefined }) }}
             className={inputClass}
           >
             {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -185,14 +193,15 @@ export default function SandwichIndex() {
 
         <fieldset className="flex flex-wrap gap-3">
           <legend className="sr-only">Dietary</legend>
-          {DIETARY_TAGS.map((tag) => (
+          {DIETARY_TAGS.map(({ tag, filterLabel }) => (
             <label key={tag} className="flex items-center gap-1 text-sm text-neutral-700">
               <input type="checkbox" checked={filters.diet.includes(tag)} onChange={() => { toggleDiet(tag) }} />
-              {formatTag(tag)}
+              {filterLabel}
             </label>
           ))}
         </fieldset>
       </div>
+      <p className="mt-2 text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
 
       <div className="mt-8">
         {status === 'loading' && (

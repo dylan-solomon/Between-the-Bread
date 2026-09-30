@@ -19,7 +19,7 @@ const makeQuery = (result: QueryResult) => {
     calls.push({ method, args })
     return builder
   }
-  for (const method of ['select', 'eq', 'contains', 'textSearch', 'order', 'range']) {
+  for (const method of ['select', 'eq', 'contains', 'not', 'textSearch', 'order', 'range']) {
     builder[method] = chain(method)
   }
   builder.then = (resolve: (value: QueryResult) => unknown) => Promise.resolve(result).then(resolve)
@@ -137,9 +137,39 @@ describe('GET /api/database', () => {
   it('filters by dietary tags requiring all of them', async () => {
     const calls = setupQuery()
 
-    await handler(makeReq('GET', { diet: 'vegan, gluten-free' }), makeRes())
+    await handler(makeReq('GET', { diet: 'vegan, gluten_free' }), makeRes())
 
-    expect(callsTo(calls, 'contains')[0]?.args).toEqual(['dietary_tags', ['vegan', 'gluten-free']])
+    expect(callsTo(calls, 'contains')[0]?.args).toEqual(['dietary_tags', ['vegan', 'gluten_free']])
+  })
+
+  it('excludes entries carrying an avoided contains tag', async () => {
+    const calls = setupQuery()
+
+    await handler(makeReq('GET', { diet: 'contains_pork,contains_shellfish' }), makeRes())
+
+    expect(callsTo(calls, 'not').map((c) => c.args)).toEqual([
+      ['dietary_tags', 'cs', '{contains_pork}'],
+      ['dietary_tags', 'cs', '{contains_shellfish}'],
+    ])
+    expect(callsTo(calls, 'contains')).toHaveLength(0)
+  })
+
+  it('combines must-have and avoided tags', async () => {
+    const calls = setupQuery()
+
+    await handler(makeReq('GET', { diet: 'pescatarian,contains_peanuts' }), makeRes())
+
+    expect(callsTo(calls, 'contains')[0]?.args).toEqual(['dietary_tags', ['pescatarian']])
+    expect(callsTo(calls, 'not')[0]?.args).toEqual(['dietary_tags', 'cs', '{contains_peanuts}'])
+  })
+
+  it('rejects an unknown dietary tag', async () => {
+    setupQuery()
+    const res = makeRes()
+
+    await handler(makeReq('GET', { diet: 'vegan,keto' }), res)
+
+    expect(statusOf(res)).toBe(400)
   })
 
   it('searches full text with web-style query syntax', async () => {

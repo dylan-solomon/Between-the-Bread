@@ -33,6 +33,11 @@ import {
   captureHistoryCleared,
   captureHistoryViewed,
   captureHistorySearched,
+  captureEncyclopediaViewed,
+  captureEncyclopediaEntryViewed,
+  captureEncyclopediaSearched,
+  captureEncyclopediaFiltered,
+  captureEncyclopediaTryThisClicked,
   identifyUser,
   resetIdentity,
 } from '@/analytics/events'
@@ -456,6 +461,33 @@ describe('captureHistorySearched', () => {
   it('calls posthog.capture with history_searched', () => {
     captureHistorySearched({ query: 'turkey', resultsCount: 3, filtersApplied: ['favorites_only'] })
     expect(mockCapture).toHaveBeenCalledWith('history_searched', { query: 'turkey', results_count: 3, filters_applied: ['favorites_only'] })
+  })
+})
+
+describe('encyclopedia events', () => {
+  it('captureEncyclopediaViewed fires encyclopedia_viewed', () => {
+    captureEncyclopediaViewed()
+    expect(mockCapture).toHaveBeenCalledWith('encyclopedia_viewed')
+  })
+
+  it('captureEncyclopediaEntryViewed fires encyclopedia_entry_viewed with the slug', () => {
+    captureEncyclopediaEntryViewed({ slug: 'reuben' })
+    expect(mockCapture).toHaveBeenCalledWith('encyclopedia_entry_viewed', { slug: 'reuben' })
+  })
+
+  it('captureEncyclopediaSearched fires encyclopedia_searched with the query and result count', () => {
+    captureEncyclopediaSearched({ query: 'ham', resultsCount: 4 })
+    expect(mockCapture).toHaveBeenCalledWith('encyclopedia_searched', { query: 'ham', results_count: 4 })
+  })
+
+  it('captureEncyclopediaFiltered fires encyclopedia_filtered with the filter values', () => {
+    captureEncyclopediaFiltered({ region: 'Asia', diet: ['vegan'], sort: 'rating' })
+    expect(mockCapture).toHaveBeenCalledWith('encyclopedia_filtered', { region: 'Asia', diet: ['vegan'], sort: 'rating' })
+  })
+
+  it('captureEncyclopediaTryThisClicked fires encyclopedia_try_this_clicked with the slug', () => {
+    captureEncyclopediaTryThisClicked({ slug: 'reuben' })
+    expect(mockCapture).toHaveBeenCalledWith('encyclopedia_try_this_clicked', { slug: 'reuben' })
   })
 })
 

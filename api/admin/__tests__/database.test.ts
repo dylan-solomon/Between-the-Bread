@@ -145,6 +145,17 @@ describe('POST /api/admin/database', () => {
     expect(inserted[0]).not.toHaveProperty('rating_count')
   })
 
+  it('accepts the supported dietary tags', async () => {
+    const { inserted } = setupSandwichTable({ data: stubRow, error: null })
+    const tags = ['pescatarian', 'contains_pork', 'contains_shellfish', 'contains_peanuts']
+    const res = makeRes()
+
+    await handler(post({ ...validBody, dietary_tags: tags }), res)
+
+    expect(res._status).toBe(201)
+    expect(inserted[0]).toMatchObject({ dietary_tags: tags })
+  })
+
   it('accepts a minimal entry with only a name and slug', async () => {
     const { inserted } = setupSandwichTable({ data: stubRow, error: null })
     const res = makeRes()
@@ -162,6 +173,7 @@ describe('POST /api/admin/database', () => {
     ['an unknown region', { ...validBody, origin_region: 'Atlantis' }],
     ['canonical ingredients that are not an object', { ...validBody, canonical_ingredients: ['Rye'] }],
     ['dietary tags that are not strings', { ...validBody, dietary_tags: [1, 2] }],
+    ['an unsupported dietary tag', { ...validBody, dietary_tags: ['vegan', 'keto'] }],
     ['an image url that is not http(s)', { ...validBody, image_url: 'javascript:alert(1)' }],
     ['a non-boolean published flag', { ...validBody, published: 'yes' }],
   ])('rejects %s with 400', async (_label, body) => {

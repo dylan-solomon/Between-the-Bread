@@ -4,14 +4,8 @@ import AppShell from '@/components/AppShell'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { useAuth } from '@/context/AuthContext'
 import type { DietaryTag } from '@/types'
+import { DIETARY_TAGS } from '@/data/dietaryTags'
 import { captureAccountDeleted } from '@/analytics/events'
-
-const DIETARY_OPTIONS: readonly { tag: DietaryTag; label: string }[] = [
-  { tag: 'vegetarian', label: 'Vegetarian' },
-  { tag: 'vegan', label: 'Vegan' },
-  { tag: 'gluten_free', label: 'Gluten-Free' },
-  { tag: 'dairy_free', label: 'Dairy-Free' },
-]
 
 type ProfileFormState = {
   display_name: string
@@ -160,7 +154,7 @@ export default function SettingsPage() {
             <fieldset>
               <legend className="text-sm font-medium text-neutral-700">Default Dietary Filters</legend>
               <div className="mt-2 space-y-2">
-                {DIETARY_OPTIONS.map(({ tag, label }) => (
+                {DIETARY_TAGS.map(({ tag, filterLabel }) => (
                   <label key={tag} className="flex items-center gap-2 text-sm text-neutral-700">
                     <input
                       type="checkbox"
@@ -168,7 +162,7 @@ export default function SettingsPage() {
                       onChange={() => { toggleDietaryFilter(tag) }}
                       className="rounded border-neutral-300 text-primary focus:ring-primary"
                     />
-                    {label}
+                    {filterLabel}
                   </label>
                 ))}
               </div>

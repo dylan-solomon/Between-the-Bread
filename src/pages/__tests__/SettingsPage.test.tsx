@@ -146,6 +146,17 @@ describe('SettingsPage', () => {
       expect(screen.getByRole('checkbox', { name: /vegan/i })).not.toBeChecked()
     })
 
+    it('offers all eight dietary filters with exclusions worded as No ...', async () => {
+      await renderSettings()
+      await waitFor(() => {
+        expect(screen.getByLabelText(/display name/i)).toHaveValue('SandwichFan')
+      })
+
+      for (const label of ['Vegan', 'Vegetarian', 'Pescatarian', 'Dairy-Free', 'Gluten-Free', 'No Pork', 'No Shellfish', 'No Peanuts']) {
+        expect(screen.getByRole('checkbox', { name: label })).toBeInTheDocument()
+      }
+    })
+
     it('populates smart mode toggle from profile', async () => {
       await renderSettings()
       await waitFor(() => {

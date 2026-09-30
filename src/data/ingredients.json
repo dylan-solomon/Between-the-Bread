@@ -102,7 +102,9 @@
         "slug": "sourdough",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -129,7 +131,9 @@
         "slug": "ciabatta",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -156,7 +160,9 @@
         "slug": "rye",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -183,7 +189,9 @@
         "slug": "whole-wheat",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -209,7 +217,8 @@
         "name": "Brioche",
         "slug": "brioche",
         "dietary_tags": [
-          "vegetarian"
+          "vegetarian",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -236,7 +245,9 @@
         "slug": "pumpernickel",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -263,7 +274,9 @@
         "slug": "focaccia",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -290,7 +303,9 @@
         "slug": "pita",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -317,7 +332,9 @@
         "slug": "baguette",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -344,7 +361,9 @@
         "slug": "marble-rye",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -371,7 +390,9 @@
         "slug": "everything-bagel",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -397,7 +418,8 @@
         "name": "Croissant",
         "slug": "croissant",
         "dietary_tags": [
-          "vegetarian"
+          "vegetarian",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -424,7 +446,9 @@
         "slug": "pretzel-roll",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -450,7 +474,8 @@
         "name": "Texas Toast",
         "slug": "texas-toast",
         "dietary_tags": [
-          "vegetarian"
+          "vegetarian",
+          "pescatarian"
         ],
         "compat_group": "southern",
         "nutrition": {
@@ -476,7 +501,8 @@
         "name": "Naan",
         "slug": "naan",
         "dietary_tags": [
-          "vegetarian"
+          "vegetarian",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -503,7 +529,9 @@
         "slug": "white-bread",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -531,7 +559,8 @@
         "dietary_tags": [
           "vegetarian",
           "vegan",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "tex_mex",
         "nutrition": {
@@ -611,7 +640,8 @@
         "name": "Ham",
         "slug": "ham",
         "dietary_tags": [
-          "dairy_free"
+          "dairy_free",
+          "contains_pork"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -637,7 +667,8 @@
         "name": "Salami",
         "slug": "salami",
         "dietary_tags": [
-          "dairy_free"
+          "dairy_free",
+          "contains_pork"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -663,7 +694,8 @@
         "name": "Prosciutto",
         "slug": "prosciutto",
         "dietary_tags": [
-          "dairy_free"
+          "dairy_free",
+          "contains_pork"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -717,7 +749,8 @@
         "slug": "bacon",
         "dietary_tags": [
           "dairy_free",
-          "gluten_free"
+          "gluten_free",
+          "contains_pork"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -769,7 +802,8 @@
         "name": "Pepperoni",
         "slug": "pepperoni",
         "dietary_tags": [
-          "dairy_free"
+          "dairy_free",
+          "contains_pork"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -796,7 +830,8 @@
         "slug": "smoked-salmon",
         "dietary_tags": [
           "dairy_free",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -823,7 +858,8 @@
         "slug": "pulled-pork",
         "dietary_tags": [
           "dairy_free",
-          "gluten_free"
+          "gluten_free",
+          "contains_pork"
         ],
         "compat_group": "southern",
         "nutrition": {
@@ -876,7 +912,8 @@
         "name": "Mortadella",
         "slug": "mortadella",
         "dietary_tags": [
-          "dairy_free"
+          "dairy_free",
+          "contains_pork"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -903,7 +940,8 @@
         "slug": "capicola",
         "dietary_tags": [
           "dairy_free",
-          "gluten_free"
+          "gluten_free",
+          "contains_pork"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -929,7 +967,8 @@
         "name": "Tuna Salad",
         "slug": "tuna-salad",
         "dietary_tags": [
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -956,7 +995,8 @@
         "slug": "egg-salad",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -984,7 +1024,8 @@
         "dietary_tags": [
           "vegetarian",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -1013,7 +1054,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "asian_fusion",
         "nutrition": {
@@ -1041,7 +1083,8 @@
         "dietary_tags": [
           "vegetarian",
           "vegan",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "asian_fusion",
         "nutrition": {
@@ -1069,7 +1112,8 @@
         "dietary_tags": [
           "vegetarian",
           "vegan",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -1098,7 +1142,8 @@
         "slug": "cheddar",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -1125,7 +1170,8 @@
         "slug": "swiss",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -1152,7 +1198,8 @@
         "slug": "provolone",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -1179,7 +1226,8 @@
         "slug": "mozzarella",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -1206,7 +1254,8 @@
         "slug": "pepper-jack",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "tex_mex",
         "nutrition": {
@@ -1233,7 +1282,8 @@
         "slug": "gouda",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1260,7 +1310,8 @@
         "slug": "brie",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1287,7 +1338,8 @@
         "slug": "gruyere",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1314,7 +1366,8 @@
         "slug": "muenster",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -1341,7 +1394,8 @@
         "slug": "havarti",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1368,7 +1422,8 @@
         "slug": "blue-cheese",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1395,7 +1450,8 @@
         "slug": "manchego",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -1422,7 +1478,8 @@
         "slug": "cream-cheese",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -1449,7 +1506,8 @@
         "slug": "burrata",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -1476,7 +1534,8 @@
         "slug": "goat-cheese",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -1503,7 +1562,8 @@
         "slug": "cheese-whip",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -1532,7 +1592,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1563,7 +1624,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1592,7 +1654,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1621,7 +1684,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1650,7 +1714,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -1679,7 +1744,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1708,7 +1774,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -1737,7 +1804,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -1766,7 +1834,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "tex_mex",
         "nutrition": {
@@ -1795,7 +1864,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -1824,7 +1894,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -1853,7 +1924,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -1880,7 +1952,8 @@
         "slug": "coleslaw",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "southern",
         "nutrition": {
@@ -1909,7 +1982,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -1938,7 +2012,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -1967,7 +2042,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -1996,7 +2072,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -2025,7 +2102,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -2051,10 +2129,10 @@
         "name": "Kimchi",
         "slug": "kimchi",
         "dietary_tags": [
-          "vegetarian",
-          "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian",
+          "contains_shellfish"
         ],
         "compat_group": "asian_fusion",
         "nutrition": {
@@ -2083,7 +2161,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -2112,7 +2191,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -2141,7 +2221,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -2170,7 +2251,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -2199,7 +2281,8 @@
         "slug": "mayo",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -2228,7 +2311,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -2257,7 +2341,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -2286,7 +2371,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -2313,7 +2399,8 @@
         "slug": "ranch",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -2340,7 +2427,8 @@
         "slug": "pesto",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -2367,7 +2455,8 @@
         "slug": "aioli",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -2396,7 +2485,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -2423,7 +2513,8 @@
         "slug": "chipotle-mayo",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "tex_mex",
         "nutrition": {
@@ -2450,7 +2541,8 @@
         "slug": "honey-mustard",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -2478,7 +2570,8 @@
         "dietary_tags": [
           "vegetarian",
           "vegan",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "southern",
         "nutrition": {
@@ -2507,7 +2600,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "asian_fusion",
         "nutrition": {
@@ -2536,7 +2630,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -2565,7 +2660,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -2592,7 +2688,8 @@
         "slug": "tzatziki",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {
@@ -2621,7 +2718,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -2648,7 +2746,8 @@
         "slug": "garlic-butter",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -2677,7 +2776,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -2704,7 +2804,8 @@
         "slug": "russian-dressing",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -2730,8 +2831,8 @@
         "name": "Green Goddess",
         "slug": "green-goddess",
         "dietary_tags": [
-          "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -2762,7 +2863,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -2789,7 +2891,9 @@
         "slug": "fried-onion-strings",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -2818,7 +2922,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "deli_classic",
         "nutrition": {
@@ -2847,7 +2952,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -2876,7 +2982,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -2905,7 +3012,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "american",
         "nutrition": {
@@ -2934,7 +3042,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "asian_fusion",
         "nutrition": {
@@ -2961,7 +3070,8 @@
         "slug": "bacon-jam",
         "dietary_tags": [
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "contains_pork"
         ],
         "compat_group": "southern",
         "nutrition": {
@@ -2989,7 +3099,8 @@
         "dietary_tags": [
           "vegetarian",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "southern",
         "nutrition": {
@@ -3016,7 +3127,8 @@
         "slug": "herb-butter",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "neutral",
         "nutrition": {
@@ -3043,7 +3155,8 @@
         "slug": "pimento-cheese-spread",
         "dietary_tags": [
           "vegetarian",
-          "gluten_free"
+          "gluten_free",
+          "pescatarian"
         ],
         "compat_group": "southern",
         "nutrition": {
@@ -3072,7 +3185,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "italian",
         "nutrition": {
@@ -3101,7 +3215,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "asian_fusion",
         "nutrition": {
@@ -3128,7 +3243,9 @@
         "slug": "crispy-shallots",
         "dietary_tags": [
           "vegetarian",
-          "vegan"
+          "vegan",
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "asian_fusion",
         "nutrition": {
@@ -3157,7 +3274,8 @@
           "vegetarian",
           "vegan",
           "gluten_free",
-          "dairy_free"
+          "dairy_free",
+          "pescatarian"
         ],
         "compat_group": "mediterranean",
         "nutrition": {

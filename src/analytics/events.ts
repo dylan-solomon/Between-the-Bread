@@ -201,6 +201,26 @@ export const captureHistorySearched = (props: { query: string; resultsCount: num
   posthog.capture('history_searched', { query: props.query, results_count: props.resultsCount, filters_applied: props.filtersApplied })
 }
 
+export const captureEncyclopediaViewed = (): void => {
+  posthog.capture('encyclopedia_viewed')
+}
+
+export const captureEncyclopediaEntryViewed = (props: { slug: string }): void => {
+  posthog.capture('encyclopedia_entry_viewed', { slug: props.slug })
+}
+
+export const captureEncyclopediaSearched = (props: { query: string; resultsCount: number }): void => {
+  posthog.capture('encyclopedia_searched', { query: props.query, results_count: props.resultsCount })
+}
+
+export const captureEncyclopediaFiltered = (props: { region: string | null; diet: string[]; sort: string }): void => {
+  posthog.capture('encyclopedia_filtered', { region: props.region, diet: props.diet, sort: props.sort })
+}
+
+export const captureEncyclopediaTryThisClicked = (props: { slug: string }): void => {
+  posthog.capture('encyclopedia_try_this_clicked', { slug: props.slug })
+}
+
 export const captureAccountSignedUp = (props: { method: string }): void => {
   posthog.capture('account_signed_up', { method: props.method })
 }

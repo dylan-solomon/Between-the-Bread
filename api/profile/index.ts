@@ -2,9 +2,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import { ok, err } from '../_lib/response.js'
 import { authenticateRequest } from '../_lib/auth.js'
+import { isDietaryTag } from '../_lib/dietaryTags.js'
 
 const VALID_COST_CONTEXTS = ['retail', 'restaurant']
-const VALID_DIETARY_TAGS = ['dairy_free', 'gluten_free', 'vegan', 'vegetarian']
 const UPDATABLE_FIELDS = [
   'display_name',
   'dietary_filters',
@@ -49,7 +49,7 @@ const validatePatchBody = (body: Record<string, unknown>): string | null => {
 
   if ('dietary_filters' in body) {
     const filters = body.dietary_filters
-    if (!Array.isArray(filters) || filters.some((f) => !VALID_DIETARY_TAGS.includes(f as string))) {
+    if (!Array.isArray(filters) || filters.some((f) => !isDietaryTag(f as string))) {
       return 'dietary_filters must be an array of valid dietary tags.'
     }
   }
