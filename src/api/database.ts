@@ -7,6 +7,7 @@ export type CanonicalIngredients = Partial<Record<string, { name: string }[]>>
 export type SandwichSummary = {
   name: string
   slug: string
+  alternative_names: string[]
   description: string | null
   origin_country: string | null
   origin_region: Region | null

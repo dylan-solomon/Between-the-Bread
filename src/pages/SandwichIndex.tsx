@@ -58,6 +58,9 @@ function SandwichCard({ sandwich }: { sandwich: SandwichSummary }) {
         )}
         <div className="flex flex-1 flex-col gap-1 p-4">
           <h2 className="font-display text-lg font-bold text-neutral-900">{sandwich.name}</h2>
+          {sandwich.alternative_names.length > 0 && (
+            <p className="text-xs italic text-neutral-500">{`Also known as: ${sandwich.alternative_names.join(', ')}`}</p>
+          )}
           {sandwich.origin_country !== null && (
             <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">{sandwich.origin_country}</p>
           )}

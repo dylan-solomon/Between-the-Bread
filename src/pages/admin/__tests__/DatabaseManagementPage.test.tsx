@@ -34,6 +34,7 @@ const reuben = {
   origin_region: 'Americas',
   canonical_ingredients: { bread: [{ name: 'Rye' }], protein: [{ name: 'Corned Beef' }, { name: 'Pastrami' }] },
   dietary_tags: [],
+  alternative_names: ['Reuben sandwich', 'Reubens'],
   image_url: null,
   avg_rating: 4.5,
   rating_count: 12,
@@ -192,6 +193,59 @@ describe('DatabaseManagementPage editing', () => {
 
     expect(screen.getByRole('button', { name: 'Edit Reuben' })).toBeInTheDocument()
     expect(mockUpdate).not.toHaveBeenCalled()
+  })
+})
+
+describe('DatabaseManagementPage alternative names', () => {
+  it('shows the entry alternative names in one comma separated box', async () => {
+    const user = userEvent.setup()
+    await renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Edit Reuben' }))
+
+    expect(screen.getByLabelText('Alternative names')).toHaveValue('Reuben sandwich, Reubens')
+  })
+
+  it('saves the alternative names as a trimmed list without blanks or repeats', async () => {
+    mockUpdate.mockResolvedValue(reuben)
+    const user = userEvent.setup()
+    await renderPage()
+    await user.click(screen.getByRole('button', { name: 'Edit Reuben' }))
+
+    await user.clear(screen.getByLabelText('Alternative names'))
+    await user.type(screen.getByLabelText('Alternative names'), 'Cheese toastie,  Cheese jaffle ,, Cheese toastie')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      'token-abc',
+      'reuben',
+      expect.objectContaining({ alternative_names: ['Cheese toastie', 'Cheese jaffle'] }),
+    )
+  })
+
+  it('saves an empty list when the box is cleared', async () => {
+    mockUpdate.mockResolvedValue(reuben)
+    const user = userEvent.setup()
+    await renderPage()
+    await user.click(screen.getByRole('button', { name: 'Edit Reuben' }))
+
+    await user.clear(screen.getByLabelText('Alternative names'))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(mockUpdate).toHaveBeenCalledWith('token-abc', 'reuben', expect.objectContaining({ alternative_names: [] }))
+  })
+
+  it('starts empty for a new entry and sends an empty list if left blank', async () => {
+    mockCreate.mockResolvedValue({ ...reuben, id: 's-9', name: 'Cubano', slug: 'cubano' })
+    const user = userEvent.setup()
+    await renderPage()
+    await user.click(screen.getByRole('button', { name: 'Add Sandwich' }))
+
+    expect(screen.getByLabelText('Alternative names')).toHaveValue('')
+    await user.type(screen.getByLabelText('Name'), 'Cubano')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(mockCreate).toHaveBeenCalledWith('token-abc', expect.objectContaining({ alternative_names: [] }))
   })
 })
 

@@ -74,6 +74,14 @@ describe('GET /api/database', () => {
     expect(bodyOf(res).meta).toMatchObject({ total_count: 57, limit: 24, offset: 0 })
   })
 
+  it('includes each entry\'s alternative names', async () => {
+    const calls = setupQuery()
+
+    await handler(makeReq(), makeRes())
+
+    expect(String(callsTo(calls, 'select')[0]?.args[0])).toContain('alternative_names')
+  })
+
   it('reads from the sandwich_database table', async () => {
     setupQuery()
     await handler(makeReq(), makeRes())

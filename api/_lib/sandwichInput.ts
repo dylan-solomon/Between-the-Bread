@@ -3,6 +3,7 @@ import { isRegion } from './regions.js'
 import { isSlug } from './slug.js'
 
 const MAX_NAME_LENGTH = 120
+const MAX_ALTERNATIVE_NAMES = 10
 
 type ParseResult =
   | { ok: true; value: Record<string, unknown> }
@@ -35,6 +36,11 @@ const isIngredientList = (value: unknown): boolean =>
 const isCanonicalIngredients = (value: unknown): boolean =>
   isPlainObject(value) && Object.values(value).every(isIngredientList)
 
+const isAlternativeNames = (value: unknown): boolean =>
+  Array.isArray(value) &&
+  value.length <= MAX_ALTERNATIVE_NAMES &&
+  value.every((name) => typeof name === 'string' && name.trim() !== '' && name.length <= MAX_NAME_LENGTH)
+
 const CHECKS: FieldCheck[] = [
   {
     field: 'name',
@@ -42,6 +48,11 @@ const CHECKS: FieldCheck[] = [
     message: `name must be 1-${String(MAX_NAME_LENGTH)} characters.`,
   },
   { field: 'slug', valid: isSlug, message: 'slug must be lowercase letters, numbers and hyphens.' },
+  {
+    field: 'alternative_names',
+    valid: isAlternativeNames,
+    message: `alternative_names must be a list of up to ${String(MAX_ALTERNATIVE_NAMES)} names of 1-${String(MAX_NAME_LENGTH)} characters.`,
+  },
   { field: 'description', valid: isNullableString, message: 'description must be text.' },
   { field: 'history', valid: isNullableString, message: 'history must be text.' },
   { field: 'origin_country', valid: isNullableString, message: 'origin_country must be text.' },
@@ -67,6 +78,7 @@ const CHECKS: FieldCheck[] = [
 const REQUIRED_ON_CREATE = ['name', 'slug']
 
 const CREATE_DEFAULTS: Record<string, unknown> = {
+  alternative_names: [],
   canonical_ingredients: {},
   dietary_tags: [],
   published: false,

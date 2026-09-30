@@ -25,6 +25,7 @@ export type AdminSandwich = {
   id: string
   name: string
   slug: string
+  alternative_names: string[]
   description: string | null
   history: string | null
   origin_country: string | null
@@ -43,6 +44,7 @@ export type SandwichInput = Pick<
   AdminSandwich,
   | 'name'
   | 'slug'
+  | 'alternative_names'
   | 'description'
   | 'history'
   | 'origin_country'

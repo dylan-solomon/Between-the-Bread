@@ -16,6 +16,7 @@ type Editing = { mode: 'create' } | { mode: 'edit'; sandwich: AdminSandwich }
 type FormState = {
   name: string
   slug: string
+  alternativeNames: string
   description: string
   history: string
   originCountry: string
@@ -48,6 +49,7 @@ const parseIngredientNames = (text: string): { name: string }[] =>
 const emptyForm: FormState = {
   name: '',
   slug: '',
+  alternativeNames: '',
   description: '',
   history: '',
   originCountry: '',
@@ -60,6 +62,7 @@ const emptyForm: FormState = {
 const formFromSandwich = (sandwich: AdminSandwich): FormState => ({
   name: sandwich.name,
   slug: sandwich.slug,
+  alternativeNames: sandwich.alternative_names.join(', '),
   description: sandwich.description ?? '',
   history: sandwich.history ?? '',
   originCountry: sandwich.origin_country ?? '',
@@ -68,6 +71,15 @@ const formFromSandwich = (sandwich: AdminSandwich): FormState => ({
   imageUrl: sandwich.image_url ?? '',
   ingredientText: ingredientsToText(sandwich.canonical_ingredients),
 })
+
+const parseAlternativeNames = (text: string): string[] => [
+  ...new Set(
+    text
+      .split(',')
+      .map((name) => name.trim())
+      .filter((name) => name !== ''),
+  ),
+]
 
 const blankToNull = (value: string): string | null => (value.trim() === '' ? null : value.trim())
 
@@ -121,6 +133,7 @@ function SandwichForm({ editing, categories, saving, onSubmit, onCancel }: Sandw
     onSubmit({
       name: form.name.trim(),
       slug: form.slug.trim(),
+      alternative_names: parseAlternativeNames(form.alternativeNames),
       description: blankToNull(form.description),
       history: blankToNull(form.history),
       origin_country: blankToNull(form.originCountry),
@@ -152,6 +165,21 @@ function SandwichForm({ editing, categories, saving, onSubmit, onCancel }: Sandw
           className={inputClass}
         />
       </label>
+
+      <div>
+        <label className="block text-sm font-medium text-neutral-700">
+          Alternative names
+          <input
+            value={form.alternativeNames}
+            onChange={(e) => { patch({ alternativeNames: e.target.value }) }}
+            aria-describedby="alternative-names-help"
+            className={inputClass}
+          />
+        </label>
+        <p id="alternative-names-help" className="mt-1 text-xs text-neutral-500">
+          Other names this sandwich is known by, separated by commas. Searching for any of them finds this entry.
+        </p>
+      </div>
 
       <label className="block text-sm font-medium text-neutral-700">
         Description
