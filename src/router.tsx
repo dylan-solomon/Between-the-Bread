@@ -13,6 +13,7 @@ const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
 const HistoryPage = lazy(() => import('@/pages/HistoryPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
+const SandwichIndex = lazy(() => import('@/pages/SandwichIndex'))
 const SandwichDetail = lazy(() => import('@/pages/SandwichDetail'))
 const SharedSandwich = lazy(() => import('@/pages/SharedSandwich'))
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'))
@@ -44,6 +45,7 @@ export const routes: RouteObject[] = [
       { path: '/terms', element: withSuspense(TermsPage) },
       { path: '/account/settings', element: withSuspense(SettingsPage) },
       { path: '/account/history', element: withSuspense(HistoryPage) },
+      { path: '/sandwiches', element: withSuspense(SandwichIndex) },
       { path: '/sandwiches/:slug', element: withSuspense(SandwichDetail) },
       { path: '/s/:hash', element: withSuspense(SharedSandwich) },
       {
