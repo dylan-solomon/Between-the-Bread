@@ -88,6 +88,11 @@ describe('Header', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument()
   })
 
+  it('links to the sandwich encyclopedia regardless of login state', () => {
+    renderHeader()
+    expect(screen.getByRole('link', { name: 'Sandwiches' })).toHaveAttribute('href', '/sandwiches')
+  })
+
   describe('when guest', () => {
     it('renders a Log in link', async () => {
       renderHeader()
