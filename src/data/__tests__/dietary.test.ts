@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { filterByDiet } from '@/utils/dietary'
 import { getIngredientsByCategory } from '@/data/ingredients'
+import { makeIngredient } from '@/test/factories'
 
 describe('filterByDiet', () => {
   it('returns all ingredients when no tags are active', () => {
@@ -16,8 +17,8 @@ describe('filterByDiet', () => {
 
   it('filters to ingredients matching ALL active tags (intersection, not union)', () => {
     const toppings = getIngredientsByCategory('toppings')
-    // All 21 vegan toppings are also gluten_free — intersection is 21
-    expect(filterByDiet(toppings, ['vegan', 'gluten_free'])).toHaveLength(21)
+    // All 20 vegan toppings are also gluten_free — intersection is 20 (kimchi is made with fish sauce, so not vegan)
+    expect(filterByDiet(toppings, ['vegan', 'gluten_free'])).toHaveLength(20)
   })
 
   it('returns empty array when no ingredients match all active tags', () => {
@@ -34,5 +35,35 @@ describe('filterByDiet', () => {
     const bread = getIngredientsByCategory('bread')
     const filtered = filterByDiet(bread, ['vegan'])
     expect(filtered.every((i) => i.dietary_tags.includes('vegan'))).toBe(true)
+  })
+
+  describe('avoid tags', () => {
+    const ham = makeIngredient({ name: 'Ham', slug: 'ham', dietary_tags: ['contains_pork', 'dairy_free'] })
+    const turkey = makeIngredient({ name: 'Turkey', slug: 'turkey', dietary_tags: ['dairy_free'] })
+    const salmon = makeIngredient({ name: 'Salmon', slug: 'salmon', dietary_tags: ['pescatarian', 'dairy_free'] })
+
+    it('removes ingredients that carry an avoided tag', () => {
+      expect(filterByDiet([ham, turkey, salmon], ['contains_pork']).map((i) => i.slug)).toEqual(['turkey', 'salmon'])
+    })
+
+    it('keeps ingredients that never mention the avoided tag', () => {
+      expect(filterByDiet([turkey], ['contains_shellfish'])).toEqual([turkey])
+    })
+
+    it('combines must-have and avoid tags', () => {
+      expect(filterByDiet([ham, turkey, salmon], ['dairy_free', 'contains_pork']).map((i) => i.slug)).toEqual([
+        'turkey',
+        'salmon',
+      ])
+      expect(filterByDiet([ham, turkey, salmon], ['pescatarian', 'contains_pork']).map((i) => i.slug)).toEqual(['salmon'])
+    })
+
+    it('applies several avoid tags together', () => {
+      const shrimp = makeIngredient({ name: 'Shrimp', slug: 'shrimp', dietary_tags: ['pescatarian', 'contains_shellfish'] })
+
+      expect(
+        filterByDiet([ham, turkey, shrimp], ['contains_pork', 'contains_shellfish']).map((i) => i.slug),
+      ).toEqual(['turkey'])
+    })
   })
 })

@@ -93,7 +93,7 @@ describe('IngredientsPage', () => {
     render(<IngredientsPage />)
     await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
 
-    await userEvent.click(screen.getByRole('checkbox', { name: /gluten_free/i }))
+    await userEvent.click(screen.getByRole('checkbox', { name: /Gluten-Free/i }))
 
     await waitFor(() => {
       expect(mockUpdateIngredient).toHaveBeenCalledWith('token-abc', 'ing-1', { dietary_tags: ['vegetarian', 'vegan', 'gluten_free'] })
@@ -118,5 +118,26 @@ describe('IngredientsPage', () => {
       name: 'Havarti', slug: 'havarti', category_id: 'cat-1',
     }))
     expect(toast.success).toHaveBeenCalled()
+  })
+
+  it('offers every supported dietary tag by its label', async () => {
+    render(<IngredientsPage />)
+    await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+
+    for (const label of ['Vegan', 'Vegetarian', 'Pescatarian', 'Dairy-Free', 'Gluten-Free', 'Contains Pork', 'Contains Shellfish', 'Contains Peanuts']) {
+      expect(screen.getByRole('checkbox', { name: `${label}: Sourdough` })).toBeInTheDocument()
+    }
+  })
+
+  it('adds a contains tag to an ingredient', async () => {
+    mockUpdateIngredient.mockResolvedValue({ ...ingredient1, dietary_tags: ['vegetarian', 'vegan', 'contains_pork'] })
+    render(<IngredientsPage />)
+    await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Contains Pork: Sourdough' }))
+
+    await waitFor(() => {
+      expect(mockUpdateIngredient).toHaveBeenCalledWith('token-abc', 'ing-1', { dietary_tags: ['vegetarian', 'vegan', 'contains_pork'] })
+    })
   })
 })

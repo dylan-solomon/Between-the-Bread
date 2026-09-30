@@ -130,6 +130,17 @@ describe('PATCH /api/profile', () => {
     expect(res._status).toBe(400)
   })
 
+  it.each(['pescatarian', 'contains_pork', 'contains_shellfish', 'contains_peanuts'])(
+    'accepts %s as a dietary filter',
+    async (tag) => {
+      mockUpdateEq.mockResolvedValue({ error: null })
+      const res = makeRes()
+      await handler(makeReq({ method: 'PATCH', body: { dietary_filters: [tag] } }), res)
+      expect(res._status).toBe(200)
+      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ dietary_filters: [tag] }))
+    },
+  )
+
   it('returns 400 when dietary_filters contains invalid tag', async () => {
     const res = makeRes()
     await handler(makeReq({ method: 'PATCH', body: { dietary_filters: ['keto'] } }), res)

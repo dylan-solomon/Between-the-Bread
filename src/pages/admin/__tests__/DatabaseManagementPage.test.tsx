@@ -195,6 +195,35 @@ describe('DatabaseManagementPage editing', () => {
   })
 })
 
+describe('DatabaseManagementPage dietary tags', () => {
+  it('offers every supported dietary tag by its label', async () => {
+    const user = userEvent.setup()
+    await renderPage()
+    await user.click(screen.getByRole('button', { name: 'Add Sandwich' }))
+
+    for (const label of ['Vegan', 'Vegetarian', 'Pescatarian', 'Dairy-Free', 'Gluten-Free', 'Contains Pork', 'Contains Shellfish', 'Contains Peanuts']) {
+      expect(screen.getByRole('checkbox', { name: label })).toBeInTheDocument()
+    }
+  })
+
+  it('saves the selected dietary tags', async () => {
+    mockUpdate.mockResolvedValue(reuben)
+    const user = userEvent.setup()
+    await renderPage()
+    await user.click(screen.getByRole('button', { name: 'Edit Reuben' }))
+
+    await user.click(screen.getByRole('checkbox', { name: 'Contains Shellfish' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Pescatarian' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      'token-abc',
+      'reuben',
+      expect.objectContaining({ dietary_tags: ['contains_shellfish', 'pescatarian'] }),
+    )
+  })
+})
+
 describe('DatabaseManagementPage creating', () => {
   it('suggests a slug from the name', async () => {
     const user = userEvent.setup()

@@ -6,10 +6,10 @@ import { useIngredients } from '@/hooks/useIngredients'
 import { createSandwich, deleteSandwich, fetchAdminSandwiches, updateSandwich } from '@/api/admin'
 import type { AdminSandwich, CanonicalIngredients, SandwichInput } from '@/api/admin'
 import MarkdownText from '@/components/MarkdownText'
+import { DIETARY_TAGS } from '@/data/dietaryTags'
 import { REGIONS } from '@/data/regions'
 import type { Region } from '@/data/regions'
 
-const DIETARY_TAGS = ['dairy_free', 'gluten_free', 'vegan', 'vegetarian'] as const
 
 type Editing = { mode: 'create' } | { mode: 'edit'; sandwich: AdminSandwich }
 
@@ -219,10 +219,10 @@ function SandwichForm({ editing, categories, saving, onSubmit, onCancel }: Sandw
       <fieldset>
         <legend className="text-sm font-medium text-neutral-700">Dietary tags</legend>
         <div className="mt-1 flex flex-wrap gap-3">
-          {DIETARY_TAGS.map((tag) => (
+          {DIETARY_TAGS.map(({ tag, label }) => (
             <label key={tag} className="flex items-center gap-1 text-sm text-neutral-600">
               <input type="checkbox" checked={form.dietaryTags.includes(tag)} onChange={() => { toggleTag(tag) }} />
-              {tag}
+              {label}
             </label>
           ))}
         </div>

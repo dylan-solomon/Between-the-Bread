@@ -110,6 +110,20 @@ describe('GET /api/ingredients', () => {
     expect(body.meta.filters_applied).toEqual(['vegan'])
   })
 
+  it('removes ingredients carrying an avoided tag when ?diet= names a contains tag', async () => {
+    const turkey = { ...stubIngredient, id: 'ing-1', name: 'Turkey', slug: 'turkey', dietary_tags: ['dairy_free'] }
+    const ham = { ...stubIngredient, id: 'ing-2', name: 'Ham', slug: 'ham', dietary_tags: ['dairy_free', 'contains_pork'] }
+    setupMock([stubCategory], [turkey, ham])
+
+    const { default: handler } = await import('../ingredients')
+    const res = makeRes()
+    await handler(makeReq('GET', { diet: 'contains_pork' }), res)
+
+    const jsonCall = (res.json as ReturnType<typeof vi.fn>).mock.calls[0] as [{ data: { categories: Array<{ ingredients: Array<{ slug: string }> }> } }]
+    const slugs = (jsonCall[0].data.categories[0]?.ingredients ?? []).map((i) => i.slug)
+    expect(slugs).toEqual(['turkey'])
+  })
+
   it('returns 405 for non-GET requests', async () => {
     const { default: handler } = await import('../ingredients')
     const res = makeRes()

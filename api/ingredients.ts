@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { supabase } from './_lib/supabase.js'
 import { ok, err } from './_lib/response.js'
+import { matchesDiet } from './_lib/dietaryTags.js'
 
 type DbCategory = {
   id: string
@@ -76,7 +77,7 @@ export default async function handler(
   const allIngredients = ingResult.data as unknown as DbIngredient[]
 
   const filtered = dietFilter.length > 0
-    ? allIngredients.filter((i) => dietFilter.every((tag) => i.dietary_tags.includes(tag)))
+    ? allIngredients.filter((i) => matchesDiet(i.dietary_tags, dietFilter))
     : allIngredients
 
   const byCategory = new Map<string, ApiIngredient[]>()

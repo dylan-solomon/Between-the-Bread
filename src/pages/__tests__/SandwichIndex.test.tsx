@@ -195,7 +195,7 @@ describe('SandwichIndex search and filters', () => {
     expect(screen.getByRole('searchbox', { name: 'Search sandwiches' })).toHaveValue('ham')
     expect(screen.getByRole('combobox', { name: 'Region' })).toHaveValue('Europe')
     expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveValue('rating')
-    expect(screen.getByRole('checkbox', { name: 'vegan' })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Vegan' })).toBeChecked()
   })
 
   it('ignores unknown regions and sorts in the url', async () => {
@@ -231,10 +231,43 @@ describe('SandwichIndex search and filters', () => {
     renderAt()
     await screen.findByText('Reuben')
 
-    await user.click(screen.getByRole('checkbox', { name: 'vegan' }))
-    await user.click(screen.getByRole('checkbox', { name: 'gluten free' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Vegan' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Gluten-Free' }))
 
     await waitFor(() => { expect(lastQuery()).toMatchObject({ diet: ['vegan', 'gluten_free'] }) })
+  })
+
+  it('filters out entries containing an avoided ingredient', async () => {
+    const user = userEvent.setup()
+    renderAt()
+    await screen.findByText('Reuben')
+
+    await user.click(screen.getByRole('checkbox', { name: 'No Pork' }))
+
+    await waitFor(() => { expect(lastQuery()).toMatchObject({ diet: ['contains_pork'] }) })
+  })
+
+  it('offers all eight dietary filters', async () => {
+    renderAt()
+    await screen.findByText('Reuben')
+
+    expect(screen.getAllByRole('checkbox').map((c) => c.closest('label')?.textContent)).toEqual([
+      'Vegan',
+      'Vegetarian',
+      'Pescatarian',
+      'Dairy-Free',
+      'Gluten-Free',
+      'No Pork',
+      'No Shellfish',
+      'No Peanuts',
+    ])
+  })
+
+  it('reminds users that tags do not cover brand variation or cross-contamination', async () => {
+    renderAt()
+    await screen.findByText('Reuben')
+
+    expect(screen.getByText(/cross-contamination/i)).toBeInTheDocument()
   })
 
   it('clears filters from the empty state', async () => {
@@ -307,7 +340,7 @@ describe('SandwichIndex analytics', () => {
     renderAt('/sandwiches?region=Europe')
     await screen.findByText('Reuben')
 
-    await user.click(screen.getByRole('checkbox', { name: 'vegan' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Vegan' }))
 
     expect(mockFiltered).toHaveBeenCalledWith({ region: 'Europe', diet: ['vegan'], sort: 'name' })
   })

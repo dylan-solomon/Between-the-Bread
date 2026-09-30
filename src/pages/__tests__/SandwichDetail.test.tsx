@@ -148,7 +148,31 @@ describe('SandwichDetail', () => {
     renderAt()
     await screen.findByTestId('card-page')
 
-    expect(screen.getByText('gluten free')).toBeInTheDocument()
+    expect(screen.getByText('Gluten-Free')).toBeInTheDocument()
+  })
+
+  it('shows contains tags by their full label', async () => {
+    mockFetchSandwich.mockResolvedValue({ ...reuben, dietary_tags: ['contains_pork', 'contains_shellfish'] })
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(screen.getByText('Contains Pork')).toBeInTheDocument()
+    expect(screen.getByText('Contains Shellfish')).toBeInTheDocument()
+  })
+
+  it('reminds readers that tags do not cover brand variation or cross-contamination', async () => {
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(screen.getByText(/cross-contamination/i)).toBeInTheDocument()
+  })
+
+  it('does not show the reminder when the entry has no dietary tags', async () => {
+    mockFetchSandwich.mockResolvedValue({ ...reuben, dietary_tags: [] })
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(screen.queryByText(/cross-contamination/i)).not.toBeInTheDocument()
   })
 
   it('shows the entry image when there is one', async () => {

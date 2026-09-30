@@ -5,11 +5,11 @@ import { toast } from 'sonner'
 import { captureEncyclopediaFiltered, captureEncyclopediaSearched, captureEncyclopediaViewed } from '@/analytics/events'
 import { fetchSandwiches } from '@/api/database'
 import type { SandwichSort, SandwichSummary } from '@/api/database'
+import { DIETARY_DISCLAIMER, DIETARY_TAGS } from '@/data/dietaryTags'
 import { REGIONS } from '@/data/regions'
 import type { Region } from '@/data/regions'
 
 const PAGE_SIZE = 24
-const DIETARY_TAGS = ['dairy_free', 'gluten_free', 'vegan', 'vegetarian'] as const
 const SORT_OPTIONS: { value: SandwichSort; label: string }[] = [
   { value: 'name', label: 'A–Z' },
   { value: 'rating', label: 'Highest rated' },
@@ -43,8 +43,6 @@ const readFilters = (params: URLSearchParams): Filters => {
 }
 
 const hasActiveFilters = ({ q, region, diet }: Filters): boolean => q !== '' || region !== undefined || diet.length > 0
-
-const formatTag = (tag: string): string => tag.replace(/_/g, ' ')
 
 function SandwichCard({ sandwich }: { sandwich: SandwichSummary }) {
   return (
@@ -195,14 +193,15 @@ export default function SandwichIndex() {
 
         <fieldset className="flex flex-wrap gap-3">
           <legend className="sr-only">Dietary</legend>
-          {DIETARY_TAGS.map((tag) => (
+          {DIETARY_TAGS.map(({ tag, filterLabel }) => (
             <label key={tag} className="flex items-center gap-1 text-sm text-neutral-700">
               <input type="checkbox" checked={filters.diet.includes(tag)} onChange={() => { toggleDiet(tag) }} />
-              {formatTag(tag)}
+              {filterLabel}
             </label>
           ))}
         </fieldset>
       </div>
+      <p className="mt-2 text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
 
       <div className="mt-8">
         {status === 'loading' && (

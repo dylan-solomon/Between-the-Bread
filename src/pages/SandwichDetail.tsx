@@ -8,6 +8,7 @@ import MarkdownText from '@/components/MarkdownText'
 import SandwichVisual from '@/components/SandwichVisual'
 import SandwichCardPage from '@/components/sandwich-page/SandwichCardPage'
 import TryThisSandwich from '@/components/sandwich-page/TryThisSandwich'
+import { DIETARY_DISCLAIMER, getDietaryTag, isDietaryTag } from '@/data/dietaryTags'
 import { useIngredients } from '@/hooks/useIngredients'
 import type { CategorySlug, Ingredient, SandwichComposition } from '@/types'
 
@@ -85,13 +86,24 @@ function Info({ entry, categoryNames }: { entry: SandwichEntry; categoryNames: M
       )}
 
       {entry.dietary_tags.length > 0 && (
-        <ul className="flex flex-wrap gap-2">
-          {entry.dietary_tags.map((tag) => (
-            <li key={tag} className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600">
-              {tag.replace(/_/g, ' ')}
-            </li>
-          ))}
-        </ul>
+        <div>
+          <ul className="flex flex-wrap gap-2">
+            {entry.dietary_tags.filter(isDietaryTag).map((tag) => {
+              const { label, kind } = getDietaryTag(tag)
+              return (
+                <li
+                  key={tag}
+                  className={`rounded-full px-3 py-1 text-xs ${
+                    kind === 'avoid' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-100 text-neutral-600'
+                  }`}
+                >
+                  {label}
+                </li>
+              )
+            })}
+          </ul>
+          <p className="mt-2 text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
+        </div>
       )}
     </div>
   )
