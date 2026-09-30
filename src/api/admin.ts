@@ -1,4 +1,5 @@
 import type { CompatGroup } from '@/types'
+import type { Region } from '@/data/regions'
 
 export type ConfigEntry = { key: string; value: unknown }
 
@@ -17,6 +18,39 @@ export type AdminIngredient = {
   created_at: string
   updated_at: string
 }
+
+export type CanonicalIngredients = Record<string, { name: string }[]>
+
+export type AdminSandwich = {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  history: string | null
+  origin_country: string | null
+  origin_region: Region | null
+  canonical_ingredients: CanonicalIngredients
+  dietary_tags: string[]
+  image_url: string | null
+  avg_rating: number | null
+  rating_count: number
+  published: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type SandwichInput = Pick<
+  AdminSandwich,
+  | 'name'
+  | 'slug'
+  | 'description'
+  | 'history'
+  | 'origin_country'
+  | 'origin_region'
+  | 'canonical_ingredients'
+  | 'dietary_tags'
+  | 'image_url'
+> & { published?: boolean }
 
 export type ModerationComment = {
   id: string
@@ -109,3 +143,16 @@ export const moderateItem = (
 
 export const fetchDashboardMetrics = (token: string): Promise<DashboardMetrics> =>
   request(token, '/api/admin/dashboard')
+
+export const fetchAdminSandwiches = (token: string): Promise<AdminSandwich[]> =>
+  request(token, '/api/admin/database')
+
+export const createSandwich = (token: string, body: SandwichInput): Promise<AdminSandwich> =>
+  request(token, '/api/admin/database', { method: 'POST', body: JSON.stringify(body) })
+
+export const updateSandwich = (
+  token: string,
+  slug: string,
+  updates: Partial<SandwichInput>,
+): Promise<AdminSandwich> =>
+  request(token, `/api/admin/database/${slug}`, { method: 'PATCH', body: JSON.stringify(updates) })

@@ -1,0 +1,216 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+
+const mockGetUser = vi.fn()
+const mockFrom = vi.fn()
+
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: () => ({
+    auth: { getUser: mockGetUser },
+    from: mockFrom,
+  }),
+}))
+
+import handler from '../[slug].js'
+
+type Result = { data: unknown; error: unknown }
+
+const makeReq = (overrides: Partial<VercelRequest> = {}): VercelRequest =>
+  ({
+    method: 'PATCH',
+    headers: { authorization: 'Bearer valid-token' },
+    body: {},
+    query: { slug: 'reuben' },
+    ...overrides,
+  }) as unknown as VercelRequest
+
+const makeRes = (): VercelResponse & { _status: number; _json: unknown } => {
+  const res = {
+    _status: 0,
+    _json: null as unknown,
+    status(code: number) { res._status = code; return res },
+    json(body: unknown) { res._json = body; return res },
+  }
+  return res as unknown as VercelResponse & { _status: number; _json: unknown }
+}
+
+const validUser = { id: 'admin-1', email: 'admin@example.com' }
+const profileBranch = (isAdmin: boolean) => ({
+  select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { is_admin: isAdmin }, error: null }) }) }),
+})
+
+const stubRow = { id: 's1', name: 'Reuben', slug: 'reuben', published: true }
+
+const setupSandwichTable = (result: Result) => {
+  const updates: Record<string, unknown>[] = []
+  const filters: unknown[][] = []
+  mockFrom.mockImplementation((table: string) => {
+    if (table === 'profiles') return profileBranch(true)
+    const builder: Record<string, unknown> = {}
+    builder.update = (payload: Record<string, unknown>) => {
+      updates.push(payload)
+      return builder
+    }
+    builder.eq = (...args: unknown[]) => {
+      filters.push(args)
+      return builder
+    }
+    builder.select = () => builder
+    builder.single = () => Promise.resolve(result)
+    return builder
+  })
+  return { updates, filters }
+}
+
+beforeEach(() => {
+  vi.resetAllMocks()
+  vi.stubEnv('SUPABASE_URL', 'https://test.supabase.co')
+  vi.stubEnv('SUPABASE_ANON_KEY', 'test-key')
+  mockGetUser.mockResolvedValue({ data: { user: validUser }, error: null })
+})
+
+describe('PATCH /api/admin/database/:slug', () => {
+  it('updates the entry identified by the url slug', async () => {
+    const { updates, filters } = setupSandwichTable({ data: stubRow, error: null })
+    const res = makeRes()
+
+    await handler(makeReq({ body: { description: 'New description.' } }), res)
+
+    expect(res._status).toBe(200)
+    expect((res._json as { data: unknown }).data).toEqual(stubRow)
+    expect(updates[0]).toMatchObject({ description: 'New description.' })
+    expect(filters).toContainEqual(['slug', 'reuben'])
+  })
+
+  it('publishes and unpublishes through the published flag', async () => {
+    const { updates } = setupSandwichTable({ data: stubRow, error: null })
+
+    await handler(makeReq({ body: { published: true } }), makeRes())
+
+    expect(updates[0]).toMatchObject({ published: true })
+  })
+
+  it('records when the entry was last updated', async () => {
+    const { updates } = setupSandwichTable({ data: stubRow, error: null })
+
+    await handler(makeReq({ body: { name: 'Reuben Sandwich' } }), makeRes())
+
+    expect(typeof updates[0]?.updated_at).toBe('string')
+  })
+
+  it('ignores fields that are not editable', async () => {
+    const { updates } = setupSandwichTable({ data: stubRow, error: null })
+
+    await handler(makeReq({ body: { name: 'Reuben', id: 'other', avg_rating: 5, rating_count: 99 } }), makeRes())
+
+    expect(updates[0]).not.toHaveProperty('id')
+    expect(updates[0]).not.toHaveProperty('avg_rating')
+    expect(updates[0]).not.toHaveProperty('rating_count')
+  })
+
+  it('returns 400 when nothing editable is provided', async () => {
+    setupSandwichTable({ data: stubRow, error: null })
+    const res = makeRes()
+
+    await handler(makeReq({ body: { avg_rating: 5 } }), res)
+
+    expect(res._status).toBe(400)
+  })
+
+  it.each([
+    ['an empty name', { name: '' }],
+    ['a malformed slug', { slug: 'Not A Slug' }],
+    ['an unknown region', { origin_region: 'Atlantis' }],
+    ['canonical ingredients that are not an object', { canonical_ingredients: 'rye' }],
+    ['a non-boolean published flag', { published: 1 }],
+    ['an unsafe image url', { image_url: 'javascript:alert(1)' }],
+  ])('rejects %s with 400', async (_label, body) => {
+    setupSandwichTable({ data: stubRow, error: null })
+    const res = makeRes()
+
+    await handler(makeReq({ body }), res)
+
+    expect(res._status).toBe(400)
+  })
+
+  it('allows clearing optional fields', async () => {
+    const { updates } = setupSandwichTable({ data: stubRow, error: null })
+    const res = makeRes()
+
+    await handler(makeReq({ body: { image_url: null, origin_region: null } }), res)
+
+    expect(res._status).toBe(200)
+    expect(updates[0]).toMatchObject({ image_url: null, origin_region: null })
+  })
+
+  it('returns 404 when the entry does not exist', async () => {
+    setupSandwichTable({ data: null, error: { code: 'PGRST116', message: 'no rows' } })
+    const res = makeRes()
+
+    await handler(makeReq({ body: { name: 'X' } }), res)
+
+    expect(res._status).toBe(404)
+  })
+
+  it('returns 409 when changing to a slug that is taken', async () => {
+    setupSandwichTable({ data: null, error: { code: '23505', message: 'duplicate key' } })
+    const res = makeRes()
+
+    await handler(makeReq({ body: { slug: 'taken' } }), res)
+
+    expect(res._status).toBe(409)
+  })
+
+  it('returns 500 on other database errors', async () => {
+    setupSandwichTable({ data: null, error: { message: 'db down' } })
+    const res = makeRes()
+
+    await handler(makeReq({ body: { name: 'X' } }), res)
+
+    expect(res._status).toBe(500)
+  })
+})
+
+describe('DELETE /api/admin/database/:slug', () => {
+  it('soft deletes by unpublishing instead of removing the row', async () => {
+    const { updates, filters } = setupSandwichTable({ data: { ...stubRow, published: false }, error: null })
+    const res = makeRes()
+
+    await handler(makeReq({ method: 'DELETE', body: undefined }), res)
+
+    expect(res._status).toBe(200)
+    expect(updates[0]).toMatchObject({ published: false })
+    expect(filters).toContainEqual(['slug', 'reuben'])
+  })
+
+  it('returns 404 when the entry does not exist', async () => {
+    setupSandwichTable({ data: null, error: { code: 'PGRST116', message: 'no rows' } })
+    const res = makeRes()
+
+    await handler(makeReq({ method: 'DELETE', body: undefined }), res)
+
+    expect(res._status).toBe(404)
+  })
+})
+
+describe('access control', () => {
+  it('returns 403 when the user is not an admin', async () => {
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'profiles') return profileBranch(false)
+      throw new Error('should not query sandwich_database')
+    })
+    const res = makeRes()
+
+    await handler(makeReq({ body: { name: 'X' } }), res)
+
+    expect(res._status).toBe(403)
+  })
+
+  it('returns 405 for unsupported methods', async () => {
+    const res = makeRes()
+
+    await handler(makeReq({ method: 'POST' }), res)
+
+    expect(res._status).toBe(405)
+  })
+})
