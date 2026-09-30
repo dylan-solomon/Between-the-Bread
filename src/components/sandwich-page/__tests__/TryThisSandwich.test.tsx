@@ -75,4 +75,21 @@ describe('TryThisSandwich', () => {
     expect(stored.composition.protein).toBeUndefined()
     expect(mockNavigate).toHaveBeenCalledWith('/')
   })
+
+  it('calls onTry when the button is clicked', async () => {
+    const onTry = vi.fn()
+    renderWithRouter(<TryThisSandwich composition={{}} exact onTry={onTry} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Try This Sandwich' }))
+
+    expect(onTry).toHaveBeenCalledTimes(1)
+  })
+
+  it('works without an onTry handler', async () => {
+    renderWithRouter(<TryThisSandwich composition={{}} exact />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Try This Sandwich' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/')
+  })
 })

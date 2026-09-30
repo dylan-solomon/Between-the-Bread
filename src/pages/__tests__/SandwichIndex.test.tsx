@@ -5,9 +5,19 @@ import { MemoryRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { toast } from 'sonner'
 
-const { mockFetchSandwiches } = vi.hoisted(() => ({ mockFetchSandwiches: vi.fn() }))
+const { mockFetchSandwiches, mockViewed, mockSearched, mockFiltered } = vi.hoisted(() => ({
+  mockFetchSandwiches: vi.fn(),
+  mockViewed: vi.fn(),
+  mockSearched: vi.fn(),
+  mockFiltered: vi.fn(),
+}))
 
 vi.mock('@/api/database', () => ({ fetchSandwiches: mockFetchSandwiches }))
+vi.mock('@/analytics/events', () => ({
+  captureEncyclopediaViewed: mockViewed,
+  captureEncyclopediaSearched: mockSearched,
+  captureEncyclopediaFiltered: mockFiltered,
+}))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import SandwichIndex from '@/pages/SandwichIndex'
@@ -238,5 +248,84 @@ describe('SandwichIndex search and filters', () => {
     expect(await screen.findByText('Reuben')).toBeInTheDocument()
     expect(lastQuery().region).toBeUndefined()
     expect(screen.getByRole('combobox', { name: 'Region' })).toHaveValue('')
+  })
+})
+
+describe('SandwichIndex analytics', () => {
+  it('records one index view per visit', async () => {
+    const user = userEvent.setup()
+    renderAt()
+    await screen.findByText('Reuben')
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Region' }), 'Asia')
+    await screen.findByText('Reuben')
+
+    expect(mockViewed).toHaveBeenCalledTimes(1)
+  })
+
+  it('records a search with its query and result count', async () => {
+    mockFetchSandwiches.mockResolvedValue({ items: [makeSandwich()], totalCount: 4 })
+    renderAt('/sandwiches?q=ham')
+    await screen.findByText('Reuben')
+
+    expect(mockSearched).toHaveBeenCalledWith({ query: 'ham', resultsCount: 4 })
+  })
+
+  it('does not record a search when there is no query', async () => {
+    renderAt()
+    await screen.findByText('Reuben')
+
+    expect(mockSearched).not.toHaveBeenCalled()
+  })
+
+  it('does not record a search again when loading more results', async () => {
+    mockFetchSandwiches
+      .mockResolvedValueOnce({ items: [makeSandwich()], totalCount: 2 })
+      .mockResolvedValueOnce({ items: [banhMi], totalCount: 2 })
+    const user = userEvent.setup()
+    renderAt('/sandwiches?q=ham')
+    await screen.findByText('Reuben')
+
+    await user.click(screen.getByRole('button', { name: 'Load more' }))
+    await screen.findByText('Banh Mi')
+
+    expect(mockSearched).toHaveBeenCalledTimes(1)
+  })
+
+  it('records region changes with the resulting filter values', async () => {
+    const user = userEvent.setup()
+    renderAt()
+    await screen.findByText('Reuben')
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Region' }), 'Asia')
+
+    expect(mockFiltered).toHaveBeenCalledWith({ region: 'Asia', diet: [], sort: 'name' })
+  })
+
+  it('records dietary changes with the resulting filter values', async () => {
+    const user = userEvent.setup()
+    renderAt('/sandwiches?region=Europe')
+    await screen.findByText('Reuben')
+
+    await user.click(screen.getByRole('checkbox', { name: 'vegan' }))
+
+    expect(mockFiltered).toHaveBeenCalledWith({ region: 'Europe', diet: ['vegan'], sort: 'name' })
+  })
+
+  it('records sort changes with the resulting filter values', async () => {
+    const user = userEvent.setup()
+    renderAt()
+    await screen.findByText('Reuben')
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Sort by' }), 'rating')
+
+    expect(mockFiltered).toHaveBeenCalledWith({ region: null, diet: [], sort: 'rating' })
+  })
+
+  it('does not record filters that were already in the url when the page opened', async () => {
+    renderAt('/sandwiches?region=Europe&sort=rating')
+    await screen.findByText('Reuben')
+
+    expect(mockFiltered).not.toHaveBeenCalled()
   })
 })

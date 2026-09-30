@@ -8,16 +8,18 @@ type CanonicalIngredient = { name: string; slug?: string }
 type Props = {
   composition: Partial<Record<CategorySlug, CanonicalIngredient[]>>
   exact: boolean
+  onTry?: () => void
 }
 
 const findByName = (pool: Ingredient[], name: string): Ingredient | undefined =>
   pool.find((ingredient) => ingredient.name.toLowerCase() === name.toLowerCase())
 
-export default function TryThisSandwich({ composition, exact }: Props) {
+export default function TryThisSandwich({ composition, exact, onTry }: Props) {
   const navigate = useNavigate()
   const { pools } = useIngredients()
 
   const handleClick = () => {
+    onTry?.()
     const resolved: Partial<Record<CategorySlug, { slug: string; name: string }[]>> = {}
 
     for (const [category, ingredients] of Object.entries(composition) as [CategorySlug, CanonicalIngredient[]][]) {

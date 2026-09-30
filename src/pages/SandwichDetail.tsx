@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
+import { captureEncyclopediaEntryViewed, captureEncyclopediaTryThisClicked } from '@/analytics/events'
 import { fetchSandwich } from '@/api/database'
 import type { CanonicalIngredients, SandwichEntry } from '@/api/database'
 import MarkdownText from '@/components/MarkdownText'
@@ -108,7 +109,14 @@ export default function SandwichDetail() {
     }
     setState({ status: 'loading' })
     fetchSandwich(slug)
-      .then((entry) => { setState(entry === null ? { status: 'not-found' } : { status: 'success', entry }) })
+      .then((entry) => {
+        if (entry === null) {
+          setState({ status: 'not-found' })
+          return
+        }
+        setState({ status: 'success', entry })
+        captureEncyclopediaEntryViewed({ slug: entry.slug })
+      })
       .catch(() => { setState({ status: 'error' }) })
   }, [slug])
 
@@ -165,7 +173,13 @@ export default function SandwichDetail() {
         ratingCount={entry.rating_count}
         heroVisual={<Hero entry={entry} pools={pools} />}
         infoSection={<Info entry={entry} categoryNames={categoryNames} />}
-        actionBar={<TryThisSandwich composition={knownCategories(entry.canonical_ingredients)} exact={false} />}
+        actionBar={
+          <TryThisSandwich
+            composition={knownCategories(entry.canonical_ingredients)}
+            exact={false}
+            onTry={() => { captureEncyclopediaTryThisClicked({ slug: entry.slug }) }}
+          />
+        }
       />
     </>
   )

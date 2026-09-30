@@ -1,17 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { makeCategories, makeIngredient } from '@/test/factories'
 
-const { mockFetchSandwich, mockUseIngredients } = vi.hoisted(() => ({
+const { mockFetchSandwich, mockUseIngredients, mockEntryViewed, mockTryThisClicked } = vi.hoisted(() => ({
   mockFetchSandwich: vi.fn(),
   mockUseIngredients: vi.fn(),
+  mockEntryViewed: vi.fn(),
+  mockTryThisClicked: vi.fn(),
 }))
 
 vi.mock('@/api/database', () => ({ fetchSandwich: mockFetchSandwich }))
 vi.mock('@/hooks/useIngredients', () => ({ useIngredients: mockUseIngredients }))
+vi.mock('@/analytics/events', () => ({
+  captureEncyclopediaEntryViewed: mockEntryViewed,
+  captureEncyclopediaTryThisClicked: mockTryThisClicked,
+}))
 vi.mock('@/components/sandwich-page/SandwichCardPage', () => ({
   default: (props: {
     targetType: string
@@ -34,8 +41,8 @@ vi.mock('@/components/sandwich-page/SandwichCardPage', () => ({
   ),
 }))
 vi.mock('@/components/sandwich-page/TryThisSandwich', () => ({
-  default: (props: { composition: Record<string, { name: string }[]>; exact: boolean }) => (
-    <button type="button" data-exact={String(props.exact)} data-composition={JSON.stringify(props.composition)}>
+  default: (props: { composition: Record<string, { name: string }[]>; exact: boolean; onTry?: () => void }) => (
+    <button type="button" onClick={props.onTry} data-exact={String(props.exact)} data-composition={JSON.stringify(props.composition)}>
       Try This Sandwich
     </button>
   ),
@@ -195,5 +202,30 @@ describe('SandwichDetail', () => {
     renderAt()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong')
+  })
+
+  it('records an entry view once the entry has loaded', async () => {
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(mockEntryViewed).toHaveBeenCalledTimes(1)
+    expect(mockEntryViewed).toHaveBeenCalledWith({ slug: 'reuben' })
+  })
+
+  it('does not record an entry view for a missing entry', async () => {
+    mockFetchSandwich.mockResolvedValue(null)
+    renderAt('nope')
+    await screen.findByRole('heading', { name: 'Sandwich not found' })
+
+    expect(mockEntryViewed).not.toHaveBeenCalled()
+  })
+
+  it('records when Try This Sandwich is clicked', async () => {
+    const user = userEvent.setup()
+    renderAt()
+
+    await user.click(await screen.findByRole('button', { name: 'Try This Sandwich' }))
+
+    expect(mockTryThisClicked).toHaveBeenCalledWith({ slug: 'reuben' })
   })
 })
