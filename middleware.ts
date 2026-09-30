@@ -22,9 +22,21 @@ const escapeHtml = (value: string): string =>
 const metaTag = (property: string, content: string): string =>
   `<meta property="${property}" content="${escapeHtml(content)}" />`
 
+const twitterTag = (name: string, content: string): string =>
+  `<meta name="${name}" content="${escapeHtml(content)}" />`
+
+const twitterTags = (props: { title: string; description: string | null; image: string | null }): string[] => [
+  twitterTag('twitter:card', props.image === null ? 'summary' : 'summary_large_image'),
+  twitterTag('twitter:title', props.title),
+  ...(props.description === null ? [] : [twitterTag('twitter:description', props.description)]),
+  ...(props.image === null ? [] : [twitterTag('twitter:image', props.image)]),
+]
+
+const SHELL_SHARE_TAGS = /<title>[^<]*<\/title>\s*|<meta\s+(?:property="og:[^"]*"|name="twitter:[^"]*")[^>]*>\s*/g
+
 const respondWithTags = async (url: URL, tags: string[]): Promise<Response> => {
   const htmlRes = await fetch(new URL('/', url).toString())
-  const html = await htmlRes.text()
+  const html = (await htmlRes.text()).replace(SHELL_SHARE_TAGS, '')
   const injected = html.replace('<head>', `<head>\n    ${tags.join('\n    ')}`)
 
   return new Response(injected, {
@@ -37,15 +49,17 @@ const shareTags = async (url: URL, hash: string): Promise<string[] | null> => {
   if (!apiRes.ok) return null
 
   const { data } = (await apiRes.json()) as ShareApiResponse
+  const image = `${url.origin}/api/og/sandwich/${hash}`
 
   return [
     `<title>${escapeHtml(data.name)} | Between the Bread</title>`,
     metaTag('og:title', data.name),
     metaTag('og:url', `${url.origin}/s/${hash}`),
     metaTag('og:type', 'website'),
-    metaTag('og:image', `${url.origin}/api/og/sandwich/${hash}`),
+    metaTag('og:image', image),
     metaTag('og:image:width', '1200'),
     metaTag('og:image:height', '630'),
+    ...twitterTags({ title: data.name, description: null, image }),
   ]
 }
 
@@ -62,6 +76,7 @@ const sandwichTags = async (url: URL, slug: string): Promise<string[] | null> =>
     ...(data.image_url === null ? [] : [metaTag('og:image', data.image_url)]),
     metaTag('og:url', `${url.origin}/sandwiches/${slug}`),
     metaTag('og:type', 'article'),
+    ...twitterTags({ title: data.name, description: data.description, image: data.image_url }),
   ]
 }
 
