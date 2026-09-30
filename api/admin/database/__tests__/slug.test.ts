@@ -3,11 +3,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const mockGetUser = vi.fn()
 const mockFrom = vi.fn()
+const mockStorageFrom = vi.fn()
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     auth: { getUser: mockGetUser },
     from: mockFrom,
+    storage: { from: mockStorageFrom },
   }),
 }))
 
@@ -41,11 +43,35 @@ const profileBranch = (isAdmin: boolean) => ({
 
 const stubRow = { id: 's1', name: 'Reuben', slug: 'reuben', published: true }
 
-const setupSandwichTable = (result: Result) => {
+type TableOptions = { lookup?: Result; deleteResult?: Result; photos?: Result; removeResult?: Result }
+
+const setupSandwichTable = (result: Result, options: TableOptions = {}) => {
   const updates: Record<string, unknown>[] = []
   const filters: unknown[][] = []
+  const deletes: unknown[][] = []
+  const photoFilters: unknown[][] = []
+  const events: string[] = []
+  const removed: { bucket: string; paths: string[] }[] = []
+  mockStorageFrom.mockImplementation((bucket: string) => ({
+    remove: (paths: string[]) => {
+      events.push('remove-files')
+      removed.push({ bucket, paths })
+      return Promise.resolve(options.removeResult ?? { data: [], error: null })
+    },
+  }))
   mockFrom.mockImplementation((table: string) => {
     if (table === 'profiles') return profileBranch(true)
+    if (table === 'photos') {
+      const photosBuilder: Record<string, unknown> = {}
+      photosBuilder.select = () => photosBuilder
+      photosBuilder.eq = (...args: unknown[]) => {
+        photoFilters.push(args)
+        return photosBuilder
+      }
+      photosBuilder.then = (resolve: (value: Result) => unknown) =>
+        Promise.resolve(options.photos ?? { data: [], error: null }).then(resolve)
+      return photosBuilder
+    }
     const builder: Record<string, unknown> = {}
     builder.update = (payload: Record<string, unknown>) => {
       updates.push(payload)
@@ -57,9 +83,19 @@ const setupSandwichTable = (result: Result) => {
     }
     builder.select = () => builder
     builder.single = () => Promise.resolve(result)
+    builder.maybeSingle = () => Promise.resolve(options.lookup ?? result)
+    builder.delete = () => {
+      const deleteBuilder: Record<string, unknown> = {}
+      deleteBuilder.eq = (...args: unknown[]) => {
+        events.push('delete-row')
+        deletes.push(args)
+        return Promise.resolve(options.deleteResult ?? { data: null, error: null })
+      }
+      return deleteBuilder
+    }
     return builder
   })
-  return { updates, filters }
+  return { updates, filters, deletes, photoFilters, removed, events }
 }
 
 beforeEach(() => {
@@ -190,6 +226,141 @@ describe('DELETE /api/admin/database/:slug', () => {
     await handler(makeReq({ method: 'DELETE', body: undefined }), res)
 
     expect(res._status).toBe(404)
+  })
+})
+
+describe('DELETE /api/admin/database/:slug?permanent=true', () => {
+  const permanentDelete = () => makeReq({ method: 'DELETE', body: undefined, query: { slug: 'reuben', permanent: 'true' } })
+
+  it('permanently deletes an unpublished entry', async () => {
+    const { deletes, updates } = setupSandwichTable(
+      { data: null, error: null },
+      { lookup: { data: { id: 's1', published: false }, error: null } },
+    )
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(200)
+    expect(deletes).toEqual([['slug', 'reuben']])
+    expect(updates).toHaveLength(0)
+  })
+
+  it('refuses to delete a published entry', async () => {
+    const { deletes } = setupSandwichTable(
+      { data: null, error: null },
+      { lookup: { data: { id: 's1', published: true }, error: null } },
+    )
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(409)
+    expect(deletes).toHaveLength(0)
+  })
+
+  it('returns 404 when the entry does not exist', async () => {
+    const { deletes } = setupSandwichTable({ data: null, error: null }, { lookup: { data: null, error: null } })
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(404)
+    expect(deletes).toHaveLength(0)
+  })
+
+  it('returns 500 when the lookup fails', async () => {
+    setupSandwichTable({ data: null, error: null }, { lookup: { data: null, error: { message: 'db down' } } })
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(500)
+  })
+
+  it('returns 500 when the delete fails', async () => {
+    setupSandwichTable(
+      { data: null, error: null },
+      { lookup: { data: { id: 's1', published: false }, error: null }, deleteResult: { data: null, error: { message: 'db down' } } },
+    )
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(500)
+  })
+
+  it('removes the sandwich photo files from storage before deleting the row', async () => {
+    const { removed, events, photoFilters } = setupSandwichTable(
+      { data: null, error: null },
+      {
+        lookup: { data: { id: 's1', published: false }, error: null },
+        photos: { data: [{ storage_path: 'u1/a.jpg' }, { storage_path: 'u2/b.png' }], error: null },
+      },
+    )
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(200)
+    expect(removed).toEqual([{ bucket: 'user-photos', paths: ['u1/a.jpg', 'u2/b.png'] }])
+    expect(events).toEqual(['remove-files', 'delete-row'])
+    expect(photoFilters).toContainEqual(['target_type', 'database'])
+    expect(photoFilters).toContainEqual(['target_id', 's1'])
+  })
+
+  it('does not touch storage when the sandwich has no photos', async () => {
+    const { removed } = setupSandwichTable(
+      { data: null, error: null },
+      { lookup: { data: { id: 's1', published: false }, error: null } },
+    )
+
+    await handler(permanentDelete(), makeRes())
+
+    expect(removed).toHaveLength(0)
+  })
+
+  it('keeps the entry when the photo files cannot be removed', async () => {
+    const { deletes } = setupSandwichTable(
+      { data: null, error: null },
+      {
+        lookup: { data: { id: 's1', published: false }, error: null },
+        photos: { data: [{ storage_path: 'u1/a.jpg' }], error: null },
+        removeResult: { data: null, error: { message: 'storage down' } },
+      },
+    )
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(500)
+    expect(deletes).toHaveLength(0)
+  })
+
+  it('keeps the entry when its photos cannot be listed', async () => {
+    const { deletes, removed } = setupSandwichTable(
+      { data: null, error: null },
+      {
+        lookup: { data: { id: 's1', published: false }, error: null },
+        photos: { data: null, error: { message: 'db down' } },
+      },
+    )
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(500)
+    expect(deletes).toHaveLength(0)
+    expect(removed).toHaveLength(0)
+  })
+
+  it('still only unpublishes when permanent is not requested', async () => {
+    const { deletes, updates } = setupSandwichTable({ data: { ...stubRow, published: false }, error: null })
+
+    await handler(makeReq({ method: 'DELETE', body: undefined }), makeRes())
+
+    expect(deletes).toHaveLength(0)
+    expect(updates[0]).toMatchObject({ published: false })
   })
 })
 

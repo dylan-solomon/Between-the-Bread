@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { useIngredients } from '@/hooks/useIngredients'
-import { createSandwich, fetchAdminSandwiches, updateSandwich } from '@/api/admin'
+import { createSandwich, deleteSandwich, fetchAdminSandwiches, updateSandwich } from '@/api/admin'
 import type { AdminSandwich, CanonicalIngredients, SandwichInput } from '@/api/admin'
 import MarkdownText from '@/components/MarkdownText'
 import { REGIONS } from '@/data/regions'
@@ -291,6 +291,21 @@ export default function DatabaseManagementPage() {
     }
   }
 
+  const handleDelete = async (sandwich: AdminSandwich) => {
+    if (session === null) return
+    const confirmed = window.confirm(
+      `Permanently delete "${sandwich.name}"? This also removes its ratings, comments and photos and cannot be undone.`,
+    )
+    if (!confirmed) return
+    try {
+      await deleteSandwich(session.access_token, sandwich.slug)
+      setSandwiches((prev) => prev.filter((s) => s.id !== sandwich.id))
+      toast.success('Sandwich deleted.')
+    } catch {
+      toast.error('Failed to delete sandwich.')
+    }
+  }
+
   const handleSubmit = async (input: SandwichInput) => {
     if (session === null || editing === null) return
     setSaving(true)
@@ -375,6 +390,16 @@ export default function DatabaseManagementPage() {
                   >
                     Edit
                   </button>
+                  {!sandwich.published && (
+                    <button
+                      type="button"
+                      aria-label={`Delete ${sandwich.name}`}
+                      onClick={() => { void handleDelete(sandwich) }}
+                      className="ml-3 text-sm text-red-600 underline"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
