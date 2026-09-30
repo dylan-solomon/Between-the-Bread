@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { supabase } from '../_lib/supabase.js'
 import { ok, err } from '../_lib/response.js'
+import { isSlug } from '../_lib/slug.js'
 
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const DETAIL_COLUMNS =
   'id, name, slug, description, history, origin_country, origin_region, canonical_ingredients, dietary_tags, image_url, avg_rating, rating_count'
 
@@ -20,7 +20,7 @@ export default async function handler(
   }
 
   const slug = typeof req.query.slug === 'string' ? req.query.slug : ''
-  if (!SLUG_PATTERN.test(slug)) {
+  if (!isSlug(slug)) {
     notFound(res)
     return
   }
