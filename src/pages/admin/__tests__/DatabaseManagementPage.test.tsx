@@ -1,14 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-const { mockUseAuth, mockUseIngredients, mockFetch, mockCreate, mockUpdate } = vi.hoisted(() => ({
+const { mockUseAuth, mockUseIngredients, mockFetch, mockCreate, mockUpdate, mockDelete } = vi.hoisted(() => ({
   mockUseAuth: vi.fn(),
   mockUseIngredients: vi.fn(),
   mockFetch: vi.fn(),
   mockCreate: vi.fn(),
   mockUpdate: vi.fn(),
+  mockDelete: vi.fn(),
 }))
 
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
@@ -17,6 +18,7 @@ vi.mock('@/api/admin', () => ({
   fetchAdminSandwiches: mockFetch,
   createSandwich: mockCreate,
   updateSandwich: mockUpdate,
+  deleteSandwich: mockDelete,
 }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
@@ -232,5 +234,65 @@ describe('DatabaseManagementPage creating', () => {
 
     expect(toast.error).toHaveBeenCalledWith('Name and slug are required.')
     expect(mockCreate).not.toHaveBeenCalled()
+  })
+})
+
+describe('DatabaseManagementPage deleting', () => {
+  afterEach(() => { vi.unstubAllGlobals() })
+
+  it('only offers delete for unpublished entries', async () => {
+    await renderPage()
+
+    expect(screen.getByRole('button', { name: 'Delete Reuben' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete Banh Mi' })).not.toBeInTheDocument()
+  })
+
+  it('deletes an entry after the admin confirms', async () => {
+    vi.stubGlobal('confirm', vi.fn().mockReturnValue(true))
+    mockDelete.mockResolvedValue({ slug: 'reuben', deleted: true })
+    const user = userEvent.setup()
+    await renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Delete Reuben' }))
+
+    expect(mockDelete).toHaveBeenCalledWith('token-abc', 'reuben')
+    await waitFor(() => { expect(screen.queryByText('Reuben')).not.toBeInTheDocument() })
+    expect(screen.getByText('Banh Mi')).toBeInTheDocument()
+    expect(toast.success).toHaveBeenCalledWith('Sandwich deleted.')
+  })
+
+  it('names the entry and warns about lost ratings, comments and photos in the confirmation', async () => {
+    const confirm = vi.fn().mockReturnValue(false)
+    vi.stubGlobal('confirm', confirm)
+    const user = userEvent.setup()
+    await renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Delete Reuben' }))
+
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Reuben'))
+    expect(confirm).toHaveBeenCalledWith(expect.stringMatching(/ratings, comments and photos/))
+  })
+
+  it('keeps the entry when the admin cancels', async () => {
+    vi.stubGlobal('confirm', vi.fn().mockReturnValue(false))
+    const user = userEvent.setup()
+    await renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Delete Reuben' }))
+
+    expect(mockDelete).not.toHaveBeenCalled()
+    expect(screen.getByText('Reuben')).toBeInTheDocument()
+  })
+
+  it('keeps the entry and shows an error when deleting fails', async () => {
+    vi.stubGlobal('confirm', vi.fn().mockReturnValue(true))
+    mockDelete.mockRejectedValue(new Error('boom'))
+    const user = userEvent.setup()
+    await renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Delete Reuben' }))
+
+    await waitFor(() => { expect(toast.error).toHaveBeenCalledWith('Failed to delete sandwich.') })
+    expect(screen.getByText('Reuben')).toBeInTheDocument()
   })
 })

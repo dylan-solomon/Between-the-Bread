@@ -40,6 +40,42 @@ const updateBySlug = async (
   res.status(500).json(err('INTERNAL_ERROR', 'Failed to update sandwich.', 500))
 }
 
+const deletePermanently = async (
+  res: VercelResponse,
+  auth: AdminAuthResult,
+  slug: string,
+): Promise<void> => {
+  const lookup = await auth.supabase
+    .from('sandwich_database')
+    .select('published')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (lookup.error !== null) {
+    res.status(500).json(err('INTERNAL_ERROR', 'Failed to delete sandwich.', 500))
+    return
+  }
+
+  if (lookup.data === null) {
+    res.status(404).json(err('SANDWICH_NOT_FOUND', 'Sandwich not found.', 404))
+    return
+  }
+
+  if ((lookup.data as { published: boolean }).published) {
+    res.status(409).json(err('SANDWICH_PUBLISHED', 'Unpublish the sandwich before deleting it permanently.', 409))
+    return
+  }
+
+  const { error } = await auth.supabase.from('sandwich_database').delete().eq('slug', slug)
+
+  if (error !== null) {
+    res.status(500).json(err('INTERNAL_ERROR', 'Failed to delete sandwich.', 500))
+    return
+  }
+
+  res.status(200).json(ok({ slug, deleted: true }))
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
@@ -55,6 +91,10 @@ export default async function handler(
   const slug = typeof req.query.slug === 'string' ? req.query.slug : ''
 
   if (req.method === 'DELETE') {
+    if (req.query.permanent === 'true') {
+      await deletePermanently(res, auth, slug)
+      return
+    }
     await updateBySlug(res, auth, slug, { published: false })
     return
   }

@@ -156,3 +156,6 @@ export const updateSandwich = (
   updates: Partial<SandwichInput>,
 ): Promise<AdminSandwich> =>
   request(token, `/api/admin/database/${slug}`, { method: 'PATCH', body: JSON.stringify(updates) })
+
+export const deleteSandwich = (token: string, slug: string): Promise<{ slug: string; deleted: boolean }> =>
+  request(token, `/api/admin/database/${slug}?permanent=true`, { method: 'DELETE' })

@@ -41,9 +41,10 @@ const profileBranch = (isAdmin: boolean) => ({
 
 const stubRow = { id: 's1', name: 'Reuben', slug: 'reuben', published: true }
 
-const setupSandwichTable = (result: Result) => {
+const setupSandwichTable = (result: Result, options: { lookup?: Result; deleteResult?: Result } = {}) => {
   const updates: Record<string, unknown>[] = []
   const filters: unknown[][] = []
+  const deletes: unknown[][] = []
   mockFrom.mockImplementation((table: string) => {
     if (table === 'profiles') return profileBranch(true)
     const builder: Record<string, unknown> = {}
@@ -57,9 +58,18 @@ const setupSandwichTable = (result: Result) => {
     }
     builder.select = () => builder
     builder.single = () => Promise.resolve(result)
+    builder.maybeSingle = () => Promise.resolve(options.lookup ?? result)
+    builder.delete = () => {
+      const deleteBuilder: Record<string, unknown> = {}
+      deleteBuilder.eq = (...args: unknown[]) => {
+        deletes.push(args)
+        return Promise.resolve(options.deleteResult ?? { data: null, error: null })
+      }
+      return deleteBuilder
+    }
     return builder
   })
-  return { updates, filters }
+  return { updates, filters, deletes }
 }
 
 beforeEach(() => {
@@ -190,6 +200,77 @@ describe('DELETE /api/admin/database/:slug', () => {
     await handler(makeReq({ method: 'DELETE', body: undefined }), res)
 
     expect(res._status).toBe(404)
+  })
+})
+
+describe('DELETE /api/admin/database/:slug?permanent=true', () => {
+  const permanentDelete = () => makeReq({ method: 'DELETE', body: undefined, query: { slug: 'reuben', permanent: 'true' } })
+
+  it('permanently deletes an unpublished entry', async () => {
+    const { deletes, updates } = setupSandwichTable(
+      { data: null, error: null },
+      { lookup: { data: { published: false }, error: null } },
+    )
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(200)
+    expect(deletes).toEqual([['slug', 'reuben']])
+    expect(updates).toHaveLength(0)
+  })
+
+  it('refuses to delete a published entry', async () => {
+    const { deletes } = setupSandwichTable(
+      { data: null, error: null },
+      { lookup: { data: { published: true }, error: null } },
+    )
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(409)
+    expect(deletes).toHaveLength(0)
+  })
+
+  it('returns 404 when the entry does not exist', async () => {
+    const { deletes } = setupSandwichTable({ data: null, error: null }, { lookup: { data: null, error: null } })
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(404)
+    expect(deletes).toHaveLength(0)
+  })
+
+  it('returns 500 when the lookup fails', async () => {
+    setupSandwichTable({ data: null, error: null }, { lookup: { data: null, error: { message: 'db down' } } })
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(500)
+  })
+
+  it('returns 500 when the delete fails', async () => {
+    setupSandwichTable(
+      { data: null, error: null },
+      { lookup: { data: { published: false }, error: null }, deleteResult: { data: null, error: { message: 'db down' } } },
+    )
+    const res = makeRes()
+
+    await handler(permanentDelete(), res)
+
+    expect(res._status).toBe(500)
+  })
+
+  it('still only unpublishes when permanent is not requested', async () => {
+    const { deletes, updates } = setupSandwichTable({ data: { ...stubRow, published: false }, error: null })
+
+    await handler(makeReq({ method: 'DELETE', body: undefined }), makeRes())
+
+    expect(deletes).toHaveLength(0)
+    expect(updates[0]).toMatchObject({ published: false })
   })
 })
 
