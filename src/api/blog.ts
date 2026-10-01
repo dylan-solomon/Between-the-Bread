@@ -16,6 +16,22 @@ export type BlogPostSummary = {
   categories: BlogCategorySummary[]
 }
 
+export type RelatedSandwich = {
+  name: string
+  slug: string
+  image_url: string | null
+  description: string | null
+}
+
+export type BlogPost = BlogPostSummary & {
+  id: string
+  body: string
+  meta_description: string | null
+  updated_at: string
+  related_sandwiches: RelatedSandwich[]
+  more_posts: BlogPostSummary[]
+}
+
 export type BlogPostQuery = {
   category?: string
   limit?: number
@@ -49,4 +65,12 @@ export const fetchPublicBlogCategories = async (): Promise<BlogCategory[]> => {
   if (!response.ok) throw new Error(`Failed to fetch blog categories: ${String(response.status)}`)
 
   return ((await response.json()) as { data: BlogCategory[] }).data
+}
+
+export const fetchBlogPost = async (slug: string): Promise<BlogPost | null> => {
+  const response = await fetch(endpoint(`/api/blog/${encodeURIComponent(slug)}`).toString())
+  if (response.status === 404) return null
+  if (!response.ok) throw new Error(`Failed to fetch post: ${String(response.status)}`)
+
+  return ((await response.json()) as { data: BlogPost }).data
 }

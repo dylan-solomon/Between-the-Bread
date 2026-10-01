@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchBlogPosts, fetchPublicBlogCategories } from '@/api/blog'
+import { fetchBlogPost, fetchBlogPosts, fetchPublicBlogCategories } from '@/api/blog'
 
 const respondWith = (body: unknown, init: { ok?: boolean; status?: number } = {}) => {
   vi.mocked(fetch).mockResolvedValue({
@@ -70,5 +70,26 @@ describe('fetchPublicBlogCategories', () => {
     respondWith({}, { ok: false, status: 503 })
 
     await expect(fetchPublicBlogCategories()).rejects.toThrow('503')
+  })
+})
+
+describe('fetchBlogPost', () => {
+  it('returns the post for a slug', async () => {
+    respondWith({ data: { slug: 'vegan-builds', title: 'Vegan builds' } })
+
+    await expect(fetchBlogPost('vegan-builds')).resolves.toEqual({ slug: 'vegan-builds', title: 'Vegan builds' })
+    expect(requestedUrl().pathname).toBe('/api/blog/vegan-builds')
+  })
+
+  it('returns null when there is no such post', async () => {
+    respondWith({}, { ok: false, status: 404 })
+
+    await expect(fetchBlogPost('missing')).resolves.toBeNull()
+  })
+
+  it('fails when the server does', async () => {
+    respondWith({}, { ok: false, status: 500 })
+
+    await expect(fetchBlogPost('vegan-builds')).rejects.toThrow('500')
   })
 })

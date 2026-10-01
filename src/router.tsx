@@ -15,6 +15,7 @@ const HistoryPage = lazy(() => import('@/pages/HistoryPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const SandwichIndex = lazy(() => import('@/pages/SandwichIndex'))
 const BlogIndex = lazy(() => import('@/pages/BlogIndex'))
+const BlogPost = lazy(() => import('@/pages/BlogPost'))
 const BlogCategory = lazy(() => import('@/pages/BlogCategory'))
 const SandwichDetail = lazy(() => import('@/pages/SandwichDetail'))
 const SharedSandwich = lazy(() => import('@/pages/SharedSandwich'))
@@ -53,6 +54,7 @@ export const routes: RouteObject[] = [
       { path: '/sandwiches/:slug', element: withSuspense(SandwichDetail) },
       { path: '/blog', element: withSuspense(BlogIndex) },
       { path: '/blog/category/:slug', element: withSuspense(BlogCategory) },
+      { path: '/blog/:slug', element: withSuspense(BlogPost) },
       { path: '/s/:hash', element: withSuspense(SharedSandwich) },
       {
         path: '/admin',
