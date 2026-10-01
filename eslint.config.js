@@ -41,6 +41,18 @@ export default tseslint.config([
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked],
+    files: ['scripts/**/*.ts'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.node,
+      parserOptions: {
+        project: ['./tsconfig.scripts.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked],
     files: ['api/og/**/*.ts', 'api/__tests__/og.*.test.ts'],
     languageOptions: {
       ecmaVersion: 2022,

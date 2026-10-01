@@ -197,6 +197,19 @@ describe('HomePage', () => {
       expect(await screen.findByRole('heading', { level: 2 })).toBeInTheDocument()
     })
 
+    it('loads a sandwich that has no protein, toppings or condiments', async () => {
+      sessionStorage.setItem('btb_load_sandwich', JSON.stringify({
+        composition: {
+          bread: [{ slug: 'item-0', name: 'item-0' }],
+          cheese: [{ slug: 'item-0', name: 'item-0' }],
+        },
+      }))
+      renderPage()
+
+      expect(await screen.findByRole('heading', { level: 2 })).toBeInTheDocument()
+      expect(screen.queryByText(/roll the dice to build your sandwich/i)).not.toBeInTheDocument()
+    })
+
     describe('with an ingredient that is not enabled', () => {
       const loadHiddenBread = () => {
         sessionStorage.setItem('btb_load_sandwich', JSON.stringify({

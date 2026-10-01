@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { useIngredients } from '@/hooks/useIngredients'
@@ -7,6 +7,9 @@ import type { AdminIngredient } from '@/api/admin'
 import { DIETARY_TAGS } from '@/data/dietaryTags'
 import IngredientDetailsDialog from '@/pages/admin/IngredientDetailsDialog'
 import { hasCompleteData } from '@/utils/ingredientData'
+import { nextSort, sortRows } from '@/utils/tableSort'
+import type { SortState } from '@/utils/tableSort'
+import SortableHeader from '@/pages/admin/SortableHeader'
 
 const COMPAT_GROUPS = ['american', 'asian_fusion', 'deli_classic', 'italian', 'mediterranean', 'neutral', 'southern', 'tex_mex'] as const
 
@@ -99,6 +102,10 @@ type NewIngredientForm = {
   category_id: string
 }
 
+type IngredientSortKey = 'name' | 'category' | 'enabled' | 'compat'
+
+const inputClass = 'rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm'
+
 const INCOMPLETE_MESSAGE = 'Add nutrition and cost data before enabling this ingredient.'
 
 const isIncompleteIngredient = (error: unknown): boolean =>
@@ -114,6 +121,11 @@ export default function IngredientsPage() {
   const [creating, setCreating] = useState(false)
   const [detailsFor, setDetailsFor] = useState<AdminIngredient | null>(null)
   const [savingDetails, setSavingDetails] = useState(false)
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [dataFilter, setDataFilter] = useState('')
+  const [sort, setSort] = useState<SortState<IngredientSortKey>>({ key: 'name', direction: 'asc' })
 
   useEffect(() => {
     if (session === null) return
@@ -135,6 +147,34 @@ export default function IngredientsPage() {
       toast.error(isIncompleteIngredient(error) ? INCOMPLETE_MESSAGE : 'Failed to save ingredient.')
     }
   }
+
+  const filtersActive = search !== '' || categoryFilter !== '' || statusFilter !== '' || dataFilter !== ''
+
+  const clearFilters = () => {
+    setSearch('')
+    setCategoryFilter('')
+    setStatusFilter('')
+    setDataFilter('')
+  }
+
+  const visible = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    const filtered = ingredients.filter(
+      (ingredient) =>
+        (term === '' || ingredient.name.toLowerCase().includes(term)) &&
+        (categoryFilter === '' || ingredient.category_id === categoryFilter) &&
+        (statusFilter === '' || ingredient.enabled === (statusFilter === 'enabled')) &&
+        (dataFilter === '' || !hasCompleteData(ingredient)),
+    )
+    const categoryNames = new Map(categories.map((c) => [c.id, c.name]))
+    const byName = sortRows(filtered, { key: 'name', direction: 'asc' }, { name: (i) => i.name })
+    return sortRows(byName, sort, {
+      name: (i) => i.name,
+      category: (i) => categoryNames.get(i.category_id) ?? 'Unknown',
+      enabled: (i) => i.enabled,
+      compat: (i) => i.compat_group,
+    })
+  }, [ingredients, search, categoryFilter, statusFilter, dataFilter, sort, categories])
 
   const handleSaveDetails = async (data: { nutrition: Record<string, number>; estimated_cost: Record<string, number> }) => {
     if (session === null || detailsFor === null) return
@@ -187,20 +227,56 @@ export default function IngredientsPage() {
       {loading && <p className="mt-4 text-sm text-neutral-500">Loading...</p>}
 
       {!loading && (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <input
+            type="search"
+            aria-label="Search ingredients"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value) }}
+            placeholder="Search by name"
+            className={`${inputClass} w-56`}
+          />
+          <select aria-label="Filter by category" value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value) }} className={inputClass}>
+            <option value="">All categories</option>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <select aria-label="Filter by status" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value) }} className={inputClass}>
+            <option value="">All statuses</option>
+            <option value="enabled">Enabled</option>
+            <option value="disabled">Disabled</option>
+          </select>
+          <select aria-label="Filter by data" value={dataFilter} onChange={(e) => { setDataFilter(e.target.value) }} className={inputClass}>
+            <option value="">All data</option>
+            <option value="missing">Missing data</option>
+          </select>
+          {filtersActive && (
+            <button type="button" onClick={clearFilters} className="text-sm text-primary underline">
+              Clear filters
+            </button>
+          )}
+          <p className="text-sm text-neutral-500">{`Showing ${String(visible.length)} of ${String(ingredients.length)} ingredients`}</p>
+        </div>
+      )}
+
+      {!loading && ingredients.length > 0 && visible.length === 0 && (
+        <p className="mt-4 text-sm text-neutral-600">No ingredients match these filters.</p>
+      )}
+
+      {!loading && (
         <div className="mt-4 overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-neutral-300 text-left text-xs text-neutral-500">
-                <th className="p-2">Name</th>
-                <th className="p-2">Category</th>
-                <th className="p-2">Enabled</th>
-                <th className="p-2">Compat Group</th>
+                <SortableHeader label="Name" sortKey="name" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} />
+                <SortableHeader label="Category" sortKey="category" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} />
+                <SortableHeader label="Enabled" sortKey="enabled" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} />
+                <SortableHeader label="Compat Group" sortKey="compat" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} />
                 <th className="p-2">Dietary Tags</th>
                 <th className="p-2">Nutrition &amp; Cost</th>
               </tr>
             </thead>
             <tbody>
-              {ingredients.map((ingredient) => (
+              {visible.map((ingredient) => (
                 <IngredientRow
                   key={ingredient.id}
                   ingredient={ingredient}

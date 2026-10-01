@@ -98,10 +98,39 @@ describe('resolveComposition', () => {
     expect(result?.protein).toEqual([turkey, ham])
   })
 
-  it('returns null when a required category is missing from stored composition', () => {
+  it('leaves categories empty when a sandwich has nothing in them', () => {
     const stored = {
       bread: [{ slug: 'sourdough', name: 'Sourdough' }],
+      cheese: [{ slug: 'swiss', name: 'Swiss' }],
+      protein: [],
+    }
+
+    const result = resolveComposition(stored, pools)
+
+    expect(result).toEqual({
+      bread: [sourdough],
+      protein: [],
+      cheese: [swiss],
+      toppings: [],
+      condiments: [],
+    })
+  })
+
+  it('returns null when the sandwich has no bread', () => {
+    const stored = {
       protein: [{ slug: 'turkey', name: 'Turkey' }],
+      cheese: [{ slug: 'swiss', name: 'Swiss' }],
+    }
+
+    const result = resolveComposition(stored, pools)
+
+    expect(result).toBeNull()
+  })
+
+  it('returns null when an optional category has an unresolvable slug', () => {
+    const stored = {
+      bread: [{ slug: 'sourdough', name: 'Sourdough' }],
+      protein: [{ slug: 'nonexistent', name: 'Nonexistent' }],
     }
 
     const result = resolveComposition(stored, pools)

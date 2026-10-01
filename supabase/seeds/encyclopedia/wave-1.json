@@ -1,0 +1,416 @@
+[
+  {
+    "name": "Grilled Cheese",
+    "slug": "grilled-cheese",
+    "alternative_names": [
+      "Toasted cheese sandwich",
+      "Cheese toastie",
+      "Cheese jaffle"
+    ],
+    "description": "Cheese melted between two slices of bread that are browned in butter or mayonnaise.",
+    "history": "A grilled cheese is a cheese sandwich cooked in a pan, on a griddle, or in a pie iron until the bread browns and the cheese melts. The outside of the bread is usually spread with butter or mayonnaise, and despite the name the sandwich is rarely made by grilling. Cheddar and American cheese are the most common fillings, though provolone and gouda are also used.\n\nAn 1861 English recipe book, Mrs. Beeton's Book of Household Management, describes brown bread and butter sandwiches filled with cheese and put in an oven until the bread toasted. The open-faced cheese dream became popular in the United States during the Great Depression, and U.S. government cookbooks describe Navy cooks grilling \"American cheese filling sandwiches\" during World War II. It can also be cooked in a pie iron or sandwich toaster, which seals the edges of the sandwich. In the United Kingdom it is usually called a cheese toastie, and in Australia a cheese jaffle, after the jaffle iron patented there in 1949 by Dr. Ernest Eric Smithers of Bondi. Breville's Snack'n'Sandwich Toaster, introduced in 1974, became so popular in Australia that the brand name is sometimes used for the sandwich itself, while in Britain a 2005 survey found that 45% of adults owned a sandwich toaster but did not use it.",
+    "origin_country": null,
+    "origin_region": "Global",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "American"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Butter"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "vegetarian",
+      "pescatarian"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "1",
+      "wikipedia": "Grilled cheese"
+    }
+  },
+  {
+    "name": "Patty Melt",
+    "slug": "patty-melt",
+    "alternative_names": [],
+    "description": "A beef patty with melted Swiss cheese and caramelized onions on griddled rye bread.",
+    "history": "A patty melt is a grilled hamburger: a ground beef patty with melted cheese, traditionally Swiss, and caramelized onions between two slices of griddled bread, typically caraway rye or marbled rye. It is usually made without condiments. Hamburger patties served between slices of bread instead of a bun date to the mid-1800s, but it is unclear exactly when the patty melt was invented, most likely in the mid-20th century.\n\nLos Angeles restaurateur Tiny Naylor is sometimes credited with inventing it, and it was on the menu at Tiny Naylor's in the early 1950s. Even if he did not invent it, his restaurants helped popularize the sandwich. It is a fixture of diners, coffee shops, and lunch counters, and is little known outside the United States.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Rye"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Ground beef patty"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Swiss"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Caramelized Onions"
+        }
+      ]
+    },
+    "dietary_tags": [],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "1",
+      "wikipedia": "Patty melt"
+    }
+  },
+  {
+    "name": "Tuna Melt",
+    "slug": "tuna-melt",
+    "alternative_names": [],
+    "description": "Tuna salad and melted cheese on toasted bread, served hot.",
+    "history": "A tuna melt is a melt sandwich made with tuna salad, canned tuna mixed with mayonnaise and often pickles, tomato, or onion, topped with melted cheese on toasted bread. It grew out of the tuna fish sandwich, which was already served in American homes in the 19th century and grew steadily more popular in the early 20th century as canned tuna, mayonnaise, and sliced bread became widely available.\n\nThe New York Times printed a recipe for the melted-cheese version in 1951 under the name \"tuna sandwich au gratin.\" Along with the patty melt, the tuna melt is a staple of the traditional American diner.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Tuna Salad"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "American"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "pescatarian"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "1",
+      "wikipedia": "Tuna fish sandwich"
+    }
+  },
+  {
+    "name": "Croque Monsieur",
+    "slug": "croque-monsieur",
+    "alternative_names": [],
+    "description": "A French hot ham and cheese sandwich on pain de mie, topped with grated cheese and baked or fried; some brasseries add béchamel.",
+    "history": "A croque monsieur is a hot ham and cheese sandwich. The name combines croquer, \"to crunch,\" with monsieur, \"mister.\" It is traditionally made with baked or boiled ham and sliced cheese between slices of pain de mie, topped with grated cheese, then baked or fried so the cheese melts into a crust. Gruyère is traditional, though Comté or Emmental are sometimes used, and some brasseries add béchamel sauce.\n\nReferences to the sandwich appear before the end of the 19th century. An 1891 article in La Revue Athlétique describes friends making croque-monsieurs with toast, butter, Gruyère, ham, and a little cayenne pepper.",
+    "origin_country": "France",
+    "origin_region": "Europe",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Pain de mie"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Ham"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Gruyere"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "1",
+      "wikipedia": "Croque monsieur"
+    }
+  },
+  {
+    "name": "Croque Madame",
+    "slug": "croque-madame",
+    "alternative_names": [
+      "Croque-à-cheval"
+    ],
+    "description": "A croque monsieur topped with a fried or poached egg.",
+    "history": "A croque madame is a croque monsieur served with a poached or lightly fried egg on top. In parts of Normandy it is known as a croque-à-cheval. According to the Petit Robert dictionary, the name dates to around 1960.\n\nChef Jacques Pépin maintains that a croque madame is made with chicken in place of ham. A lighter vegetarian version, made with ordinary melting cheese, chives, cucumber, and lettuce, is called a croque-mademoiselle.",
+    "origin_country": "France",
+    "origin_region": "Europe",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Pain de mie"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Ham"
+        },
+        {
+          "name": "Fried Egg"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Gruyere"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "1",
+      "wikipedia": "Croque monsieur"
+    }
+  },
+  {
+    "name": "Monte Cristo",
+    "slug": "monte-cristo",
+    "alternative_names": [],
+    "description": "A ham and cheese sandwich dipped in beaten egg and pan-fried, often dusted with powdered sugar and served with jam or syrup.",
+    "history": "A Monte Cristo is a ham and cheese sandwich dipped in beaten egg and pan-fried, a variation on the French croque monsieur. The first documented reference to a Monte Cristo sandwich is in a 1923 American restaurant industry publication, despite the common claim that it was developed in Southern California in the 1960s.\n\nFrom the 1930s to the 1960s, American cookbooks commonly carried recipes for similar sandwiches under names such as \"French sandwich,\" \"toasted ham sandwich,\" and \"French toasted cheese sandwich.\" It was especially popular in Southern California and became more widely known after the Blue Bayou Restaurant at Disneyland began serving it. Sweeter versions are dusted with powdered sugar and served with maple syrup or preserves, and regional variations may add sliced turkey or caramelized onions.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Ham"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Swiss"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Powdered sugar"
+        },
+        {
+          "name": "Maple syrup"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "1",
+      "wikipedia": "Monte Cristo sandwich"
+    }
+  },
+  {
+    "name": "Reuben",
+    "slug": "reuben",
+    "alternative_names": [],
+    "description": "Corned beef, Swiss cheese, sauerkraut, and Russian or Thousand Island dressing on grilled rye.",
+    "history": "The Reuben is an American grilled sandwich of corned beef, Swiss cheese, sauerkraut, and Russian or Thousand Island dressing on rye. Its origins are disputed.\n\nOne story credits Reuben Kulakofsky, a Lithuanian-born Omaha grocer who asked for a corned beef and sauerkraut sandwich at a weekly poker game held at the Blackstone Hotel from around 1920 to 1935. The hotel owner's son, working in the kitchen, is said to have added Swiss cheese and Thousand Island dressing on rye. The hotel put it on its lunch menu, and its fame spread when a former Blackstone employee won a national sandwich idea contest with the recipe. Another account credits Arnold Reuben of Reuben's Delicatessen in New York City, who according to an interview with Craig Claiborne created the \"Reuben Special\" around 1914.\n\nBecause it combines meat and dairy, the Reuben is not kosher, though it is common at kosher-style delicatessens.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Rye"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Corned Beef"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Swiss"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Sauerkraut"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Russian Dressing"
+        }
+      ]
+    },
+    "dietary_tags": [],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "1",
+      "wikipedia": "Reuben sandwich"
+    }
+  },
+  {
+    "name": "Rachel",
+    "slug": "rachel",
+    "alternative_names": [
+      "Georgia Reuben",
+      "California Reuben"
+    ],
+    "description": "A Reuben variation with turkey or pastrami in place of the corned beef and coleslaw in place of the sauerkraut.",
+    "history": "The Rachel is a variation of the Reuben that substitutes pastrami or turkey for the corned beef and coleslaw for the sauerkraut. Its exact origin is unclear, but the name may come from the 1871 song \"Reuben and Rachel.\"\n\nIn some parts of the United States, especially Michigan, the turkey version is known as a \"Georgia Reuben\" or \"California Reuben\" and may use barbecue sauce or French dressing in place of Russian dressing. A related sandwich, the Dinty Moore, swaps the sauerkraut for coleslaw and is particularly popular around Detroit.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Rye"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Turkey"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Swiss"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Coleslaw"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Russian Dressing"
+        }
+      ]
+    },
+    "dietary_tags": [],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "1",
+      "wikipedia": "Reuben sandwich"
+    }
+  },
+  {
+    "name": "Cubano",
+    "slug": "cubano",
+    "alternative_names": [
+      "Cuban sandwich",
+      "Cuban mix",
+      "Mixto",
+      "Cuban pressed sandwich"
+    ],
+    "description": "Roast pork, ham, Swiss, pickles, and mustard pressed on Cuban bread.",
+    "history": "The Cuban sandwich is made with roast pork, ham, Swiss cheese, dill pickles, and yellow mustard on Cuban bread, pressed in a plancha until the bread is crisp and the cheese has begun to melt. It likely originated before 1900 in cafés serving Cuban workers in Tampa or Key West, two Florida cigar-industry centers, though its exact origin is murky. Some believe it was already a lunch staple for cigar and sugar workers in Cuba by the 1860s, and historian Loy Glenn Westfall called it \"born in Cuba and educated in Key West.\" The earliest recorded mentions of a distinct Cuban sandwich come from workers' cafés in Ybor City around 1900.\n\nAfter Fidel Castro's 1959 rise to power, an influx of Cuban exiles made the sandwich common in Miami as well. Tampa's version traditionally includes Genoa salami, likely because of the city's Italian immigrants, while South Florida's usually leaves it out, the center of a friendly Tampa-Miami rivalry. In 2012 the Tampa City Council named the \"Historic Tampa Cuban Sandwich\" the city's signature sandwich.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Cuban bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Roast pork"
+        },
+        {
+          "name": "Ham"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Swiss"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Pickles"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mustard"
+        },
+        {
+          "name": "Butter"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "1",
+      "wikipedia": "Cuban sandwich"
+    }
+  },
+  {
+    "name": "Mozzarella in Carrozza",
+    "slug": "mozzarella-in-carrozza",
+    "alternative_names": [
+      "Carrozza"
+    ],
+    "description": "A mozzarella sandwich coated in egg and flour and fried.",
+    "history": "Mozzarella in carrozza, \"mozzarella in a carriage,\" is a fried cheese sandwich in Italian cuisine. A mozzarella sandwich is coated in egg and flour and fried, usually in olive oil, until crisp. It is often served as an antipasto.\n\nIt is a popular street food in Campania, where it is typically made with buffalo mozzarella, and a popular dish in Italian-American restaurants in New York City, where it is usually deep fried. Some versions add ham, anchovies, eggplant, green tomatoes, or basil.",
+    "origin_country": "Italy",
+    "origin_region": "Europe",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Mozzarella"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "vegetarian",
+      "pescatarian"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "1",
+      "wikipedia": "Carrozza (sandwich)"
+    }
+  }
+]

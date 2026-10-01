@@ -52,7 +52,7 @@ describe('IngredientsPage', () => {
   it('renders ingredient rows with name and category', async () => {
     render(<IngredientsPage />)
     await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
-    expect(screen.getByText('Bread')).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getByText('Bread')).toBeInTheDocument()
   })
 
   it('saves a name edit on blur', async () => {
@@ -83,7 +83,7 @@ describe('IngredientsPage', () => {
     render(<IngredientsPage />)
     await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
 
-    await userEvent.selectOptions(screen.getByLabelText(/compat group/i), 'italian')
+    await userEvent.selectOptions(screen.getByLabelText(/^compat group:/i), 'italian')
 
     await waitFor(() => { expect(mockUpdateIngredient).toHaveBeenCalledWith('token-abc', 'ing-1', { compat_group: 'italian' }) })
   })
@@ -368,6 +368,151 @@ describe('IngredientsPage', () => {
 
       await waitFor(() => { expect(screen.getByRole('checkbox', { name: 'Enabled: Butter' })).toBeEnabled() })
       expect(within(rowOf('Butter')).queryByText('Missing data')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('sorting and filtering', () => {
+    const cheddar = { ...ingredient1, id: 'ing-3', category_id: 'cat-2', name: 'Cheddar', slug: 'cheddar', compat_group: 'american' }
+    const ham = { ...ingredient1, id: 'ing-4', category_id: 'cat-3', name: 'Ham', slug: 'ham', compat_group: 'deli_classic' }
+    const butter = { ...ingredient1, id: 'ing-2', category_id: 'cat-4', name: 'Butter', slug: 'butter', compat_group: 'neutral', enabled: false, nutrition: null, estimated_cost: null }
+
+    const names = (): string[] => screen.getAllByLabelText(/^Name: /).map((input) => (input as HTMLInputElement).value)
+
+    const renderList = async () => {
+      mockUseIngredients.mockReturnValue({
+        categories: [
+          { id: 'cat-1', name: 'Bread', slug: 'bread' },
+          { id: 'cat-2', name: 'Cheese', slug: 'cheese' },
+          { id: 'cat-3', name: 'Protein', slug: 'protein' },
+          { id: 'cat-4', name: 'Condiments', slug: 'condiments' },
+        ],
+        pools: {}, loading: false, error: null,
+      })
+      mockFetchAdminIngredients.mockResolvedValue([ham, ingredient1, butter, cheddar])
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+    }
+
+    it('lists ingredients by name to start with', async () => {
+      await renderList()
+
+      expect(names()).toEqual(['Butter', 'Cheddar', 'Ham', 'Sourdough'])
+      expect(screen.getByText('Showing 4 of 4 ingredients')).toBeInTheDocument()
+    })
+
+    it('searches by name without regard to case', async () => {
+      await renderList()
+
+      await userEvent.type(screen.getByRole('searchbox', { name: 'Search ingredients' }), 'CH')
+
+      expect(names()).toEqual(['Cheddar'])
+      expect(screen.getByText('Showing 1 of 4 ingredients')).toBeInTheDocument()
+    })
+
+    it('filters by category', async () => {
+      await renderList()
+
+      await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Filter by category' }), 'Protein')
+
+      expect(names()).toEqual(['Ham'])
+    })
+
+    it('filters by whether the ingredient is enabled', async () => {
+      await renderList()
+      const status = screen.getByRole('combobox', { name: 'Filter by status' })
+
+      await userEvent.selectOptions(status, 'Disabled')
+      expect(names()).toEqual(['Butter'])
+
+      await userEvent.selectOptions(status, 'Enabled')
+      expect(names()).toEqual(['Cheddar', 'Ham', 'Sourdough'])
+    })
+
+    it('filters to ingredients with missing nutrition or cost data', async () => {
+      await renderList()
+
+      await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Filter by data' }), 'Missing data')
+
+      expect(names()).toEqual(['Butter'])
+    })
+
+    it('combines the search and the filters', async () => {
+      await renderList()
+
+      await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Filter by status' }), 'Enabled')
+      await userEvent.type(screen.getByRole('searchbox', { name: 'Search ingredients' }), 'o')
+
+      expect(names()).toEqual(['Sourdough'])
+    })
+
+    it('says so when nothing matches and offers to clear the filters', async () => {
+      await renderList()
+
+      await userEvent.type(screen.getByRole('searchbox', { name: 'Search ingredients' }), 'zzz')
+      expect(screen.getByText('No ingredients match these filters.')).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+
+      expect(names()).toHaveLength(4)
+      expect(screen.getByRole('searchbox', { name: 'Search ingredients' })).toHaveValue('')
+    })
+
+    it('only offers to clear filters when some are set', async () => {
+      await renderList()
+
+      expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument()
+    })
+
+    it('sorts by category and reverses on a second click', async () => {
+      await renderList()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sort by Category' }))
+      expect(names()).toEqual(['Sourdough', 'Cheddar', 'Butter', 'Ham'])
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sort by Category' }))
+      expect(names()).toEqual(['Ham', 'Butter', 'Cheddar', 'Sourdough'])
+    })
+
+    it('sorts by enabled, keeping name order within each group', async () => {
+      await renderList()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sort by Enabled' }))
+      expect(names()).toEqual(['Butter', 'Cheddar', 'Ham', 'Sourdough'])
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sort by Enabled' }))
+      expect(names()).toEqual(['Cheddar', 'Ham', 'Sourdough', 'Butter'])
+    })
+
+    it('sorts by compat group, keeping name order within each group', async () => {
+      await renderList()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sort by Compat Group' }))
+
+      expect(names()).toEqual(['Cheddar', 'Ham', 'Butter', 'Sourdough'])
+    })
+
+    it('shows which column the list is sorted by', async () => {
+      await renderList()
+      const header = (label: string) => screen.getByRole('columnheader', { name: new RegExp(label) })
+
+      expect(header('Name')).toHaveAttribute('aria-sort', 'ascending')
+      expect(header('Category')).toHaveAttribute('aria-sort', 'none')
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sort by Category' }))
+      expect(header('Category')).toHaveAttribute('aria-sort', 'ascending')
+      expect(header('Name')).toHaveAttribute('aria-sort', 'none')
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sort by Category' }))
+      expect(header('Category')).toHaveAttribute('aria-sort', 'descending')
+    })
+
+    it('applies the sort to filtered results', async () => {
+      await renderList()
+
+      await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Filter by status' }), 'Enabled')
+      await userEvent.click(screen.getByRole('button', { name: 'Sort by Category' }))
+
+      expect(names()).toEqual(['Sourdough', 'Cheddar', 'Ham'])
     })
   })
 })

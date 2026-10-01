@@ -3,3 +3,32 @@
 @import '@fontsource-variable/dm-sans';
 @import 'tailwindcss';
 @import './tokens.css';
+
+/*
+ * Tailwind v4 no longer gives buttons a pointer cursor. Restore it for every
+ * control that can be activated, and show that disabled controls cannot be.
+ * Utility classes (for example disabled:cursor-default) still override these.
+ */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='tab']:not([aria-disabled='true']),
+  [role='switch']:not(:disabled),
+  input[type='checkbox']:not(:disabled),
+  input[type='radio']:not(:disabled),
+  input[type='range']:not(:disabled),
+  select:not(:disabled),
+  summary,
+  label:has(input[type='checkbox']:not(:disabled)),
+  label:has(input[type='radio']:not(:disabled)) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input[type='checkbox']:disabled,
+  input[type='radio']:disabled,
+  select:disabled,
+  label:has(input:disabled) {
+    cursor: not-allowed;
+  }
+}
