@@ -3,7 +3,7 @@ import { ok, err } from '../../_lib/response.js'
 import { authenticateAdminRequest } from '../../_lib/adminAuth.js'
 import type { AdminAuthResult } from '../../_lib/adminAuth.js'
 import { resolveCategoryIds } from '../../_lib/blogCategoryLookup.js'
-import { ADMIN_POST_COLUMNS, isPostRow, toAdminPost } from '../../_lib/blogPostColumns.js'
+import { ADMIN_POST_COLUMNS, isPostRow, withCategories } from '../../_lib/blogPostColumns.js'
 import { parseBlogPostInput } from '../../_lib/blogPostInput.js'
 
 const DUPLICATE_KEY = '23505'
@@ -105,7 +105,7 @@ const handlePatch = async (
     return
   }
 
-  res.status(200).json(ok(toAdminPost(data)))
+  res.status(200).json(ok(withCategories(data)))
 }
 
 const unpublish = async (res: VercelResponse, auth: AdminAuthResult, slug: string): Promise<void> => {
@@ -125,7 +125,7 @@ const unpublish = async (res: VercelResponse, auth: AdminAuthResult, slug: strin
     return
   }
 
-  res.status(200).json(ok(isPostRow(data) ? toAdminPost(data) : data))
+  res.status(200).json(ok(isPostRow(data) ? withCategories(data) : data))
 }
 
 const deletePermanently = async (res: VercelResponse, auth: AdminAuthResult, slug: string): Promise<void> => {

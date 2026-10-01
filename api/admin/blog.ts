@@ -3,7 +3,7 @@ import { ok, err } from '../_lib/response.js'
 import { authenticateAdminRequest } from '../_lib/adminAuth.js'
 import type { AdminAuthResult } from '../_lib/adminAuth.js'
 import { resolveCategoryIds } from '../_lib/blogCategoryLookup.js'
-import { ADMIN_POST_COLUMNS, isPostRow, toAdminPost } from '../_lib/blogPostColumns.js'
+import { ADMIN_POST_COLUMNS, isPostRow, withCategories } from '../_lib/blogPostColumns.js'
 import { parseBlogPostInput } from '../_lib/blogPostInput.js'
 
 const DUPLICATE_KEY = '23505'
@@ -20,7 +20,7 @@ const handleGet = async (res: VercelResponse, auth: AdminAuthResult): Promise<vo
     return
   }
 
-  res.status(200).json(ok((data as unknown[]).filter(isPostRow).map(toAdminPost)))
+  res.status(200).json(ok((data as unknown[]).filter(isPostRow).map(withCategories)))
 }
 
 const handlePost = async (req: VercelRequest, res: VercelResponse, auth: AdminAuthResult): Promise<void> => {
@@ -92,7 +92,7 @@ const handlePost = async (req: VercelRequest, res: VercelResponse, auth: AdminAu
     return
   }
 
-  res.status(201).json(ok(toAdminPost(data)))
+  res.status(201).json(ok(withCategories(data)))
 }
 
 export default async function handler(

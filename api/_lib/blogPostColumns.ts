@@ -10,7 +10,7 @@ type PostRow = {
 export const isPostRow = (value: unknown): value is PostRow =>
   typeof value === 'object' && value !== null
 
-export const toAdminPost = (row: PostRow): Record<string, unknown> => {
+export const withCategories = (row: PostRow): Record<string, unknown> => {
   const { blog_post_categories: links = [], ...post } = row
   const categories = links
     .map((link) => link.blog_categories)

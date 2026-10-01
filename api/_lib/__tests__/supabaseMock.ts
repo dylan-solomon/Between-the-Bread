@@ -1,7 +1,7 @@
 import { expect } from 'vitest'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-export type Result = { data: unknown; error: unknown }
+export type Result = { data: unknown; error: unknown; count?: number | null }
 export type Call = { method: string; args: unknown[] }
 
 export const makeReq = (overrides: Partial<VercelRequest> = {}): VercelRequest =>
@@ -13,14 +13,18 @@ export const makeReq = (overrides: Partial<VercelRequest> = {}): VercelRequest =
     ...overrides,
   }) as unknown as VercelRequest
 
-export const makeRes = (): VercelResponse & { _status: number; _json: unknown } => {
+export type MockRes = VercelResponse & { _status: number; _json: unknown; _headers: Record<string, string> }
+
+export const makeRes = (): MockRes => {
   const res = {
     _status: 0,
     _json: null as unknown,
+    _headers: {} as Record<string, string>,
     status(code: number) { res._status = code; return res },
     json(body: unknown) { res._json = body; return res },
+    setHeader(name: string, value: string) { res._headers[name] = value; return res },
   }
-  return res as unknown as VercelResponse & { _status: number; _json: unknown }
+  return res as unknown as MockRes
 }
 
 export const profileBranch = (isAdmin: boolean) => ({
@@ -58,6 +62,9 @@ export const callsOf = (calls: Call[], method: string): Call[] => calls.filter((
 
 export const errorOf = (res: { _json: unknown }): { code: string; message: string } =>
   (res._json as { error: { code: string; message: string } }).error
+
+export const metaOf = (res: { _json: unknown }): Record<string, unknown> =>
+  (res._json as { meta: Record<string, unknown> }).meta
 
 export const dataOf = (res: { _json: unknown }): unknown => (res._json as { data: unknown }).data
 
