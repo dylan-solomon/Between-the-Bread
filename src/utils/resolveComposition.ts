@@ -28,8 +28,8 @@ export const resolveComposition = (
   const result: Partial<SandwichComposition> = {}
 
   for (const category of BASE_CATEGORIES) {
-    const items = stored[category]
-    if (items === undefined || items.length === 0) return null
+    const items = stored[category] ?? []
+    if (items.length === 0 && category === 'bread') return null
 
     const resolved: Ingredient[] = []
     for (const item of items) {
