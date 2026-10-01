@@ -18,11 +18,21 @@ export type SandwichSummary = {
   canonical_ingredients: CanonicalIngredients
 }
 
+export type BlogPostPreview = {
+  slug: string
+  title: string
+  excerpt: string
+  cover_image_url: string | null
+  published_at: string
+  reading_time_minutes: number
+}
+
 export type SandwichEntry = SandwichSummary & {
   id: string
   history: string | null
   comment_count: number
   photo_count: number
+  blog_posts: BlogPostPreview[]
 }
 
 export type SandwichQuery = {
