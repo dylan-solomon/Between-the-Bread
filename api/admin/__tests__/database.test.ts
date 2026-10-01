@@ -56,11 +56,15 @@ const validBody = {
 const setupSandwichTable = (result: Result) => {
   const inserted: unknown[] = []
   const tables: string[] = []
+  const selects: string[] = []
   mockFrom.mockImplementation((table: string) => {
     if (table === 'profiles') return profileBranch(true)
     tables.push(table)
     const builder: Record<string, unknown> = {}
-    builder.select = () => builder
+    builder.select = (columns?: string) => {
+      if (columns !== undefined) selects.push(columns)
+      return builder
+    }
     builder.order = () => Promise.resolve(result)
     builder.insert = (payload: unknown) => {
       inserted.push(payload)
@@ -69,7 +73,7 @@ const setupSandwichTable = (result: Result) => {
     builder.single = () => Promise.resolve(result)
     return builder
   })
-  return { inserted, tables }
+  return { inserted, tables, selects }
 }
 
 beforeEach(() => {
@@ -89,6 +93,14 @@ describe('GET /api/admin/database', () => {
     expect(res._status).toBe(200)
     expect((res._json as { data: unknown[] }).data).toEqual([stubRow])
     expect(tables).toEqual(['sandwich_database'])
+  })
+
+  it('reads the alternative names of each entry', async () => {
+    const { selects } = setupSandwichTable({ data: [stubRow], error: null })
+
+    await handler(makeReq(), makeRes())
+
+    expect(selects[0]).toContain('alternative_names')
   })
 
   it('returns 500 when the query fails', async () => {
@@ -156,6 +168,16 @@ describe('POST /api/admin/database', () => {
     expect(inserted[0]).toMatchObject({ dietary_tags: tags })
   })
 
+  it('saves alternative names', async () => {
+    const { inserted } = setupSandwichTable({ data: stubRow, error: null })
+    const res = makeRes()
+
+    await handler(post({ ...validBody, alternative_names: ['Cheese toastie', 'Cheese jaffle'] }), res)
+
+    expect(res._status).toBe(201)
+    expect(inserted[0]).toMatchObject({ alternative_names: ['Cheese toastie', 'Cheese jaffle'] })
+  })
+
   it('accepts a minimal entry with only a name and slug', async () => {
     const { inserted } = setupSandwichTable({ data: stubRow, error: null })
     const res = makeRes()
@@ -163,7 +185,7 @@ describe('POST /api/admin/database', () => {
     await handler(post({ name: 'Reuben', slug: 'reuben' }), res)
 
     expect(res._status).toBe(201)
-    expect(inserted[0]).toMatchObject({ canonical_ingredients: {}, dietary_tags: [] })
+    expect(inserted[0]).toMatchObject({ canonical_ingredients: {}, dietary_tags: [], alternative_names: [] })
   })
 
   it.each([
@@ -174,6 +196,10 @@ describe('POST /api/admin/database', () => {
     ['canonical ingredients that are not an object', { ...validBody, canonical_ingredients: ['Rye'] }],
     ['dietary tags that are not strings', { ...validBody, dietary_tags: [1, 2] }],
     ['an unsupported dietary tag', { ...validBody, dietary_tags: ['vegan', 'keto'] }],
+    ['alternative names that are not a list', { ...validBody, alternative_names: 'Toastie' }],
+    ['alternative names that are not text', { ...validBody, alternative_names: ['Toastie', 3] }],
+    ['a blank alternative name', { ...validBody, alternative_names: ['Toastie', '  '] }],
+    ['an overlong alternative name', { ...validBody, alternative_names: ['x'.repeat(121)] }],
     ['an image url that is not http(s)', { ...validBody, image_url: 'javascript:alert(1)' }],
     ['a non-boolean published flag', { ...validBody, published: 'yes' }],
   ])('rejects %s with 400', async (_label, body) => {

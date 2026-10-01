@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ok, err } from '../_lib/response.js'
 import { authenticateAdminRequest } from '../_lib/adminAuth.js'
 import type { AdminAuthResult } from '../_lib/adminAuth.js'
+import { hasCompleteCost, hasCompleteNutrition } from '../_lib/ingredientData.js'
 
 const handleGet = async (res: VercelResponse, auth: AdminAuthResult): Promise<void> => {
   const { data, error } = await auth.supabase.from('ingredients').select('*').order('name')
@@ -31,6 +32,22 @@ const handlePost = async (req: VercelRequest, res: VercelResponse, auth: AdminAu
     return
   }
 
+  if (body.nutrition !== undefined && body.nutrition !== null && !hasCompleteNutrition(body.nutrition)) {
+    res.status(400).json(err('INVALID_NUTRITION', 'Nutrition needs a number of zero or more for every field.', 400))
+    return
+  }
+
+  if (body.estimated_cost !== undefined && body.estimated_cost !== null && !hasCompleteCost(body.estimated_cost)) {
+    res.status(400).json(err('INVALID_COST', 'Cost needs a number of zero or more for every field, with each low no higher than its high.', 400))
+    return
+  }
+
+  const enabled = body.enabled === true
+  if (enabled && !(hasCompleteNutrition(body.nutrition) && hasCompleteCost(body.estimated_cost))) {
+    res.status(400).json(err('INCOMPLETE_INGREDIENT', 'Add nutrition and cost data before enabling this ingredient.', 400))
+    return
+  }
+
   const { data, error } = await auth.supabase
     .from('ingredients')
     .insert({
@@ -43,7 +60,7 @@ const handlePost = async (req: VercelRequest, res: VercelResponse, auth: AdminAu
       nutrition: body.nutrition ?? null,
       image_asset: typeof body.image_asset === 'string' ? body.image_asset : null,
       is_trigger: body.is_trigger === true,
-      enabled: body.enabled !== false,
+      enabled,
     })
     .select('id, category_id, name, slug, dietary_tags, compat_group, estimated_cost, nutrition, image_asset, is_trigger, enabled, created_at, updated_at')
     .single()

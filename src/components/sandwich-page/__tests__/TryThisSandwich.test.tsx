@@ -27,7 +27,7 @@ const readStoredComposition = (): StoredComposition =>
 beforeEach(() => {
   vi.clearAllMocks()
   sessionStorage.clear()
-  mockUseIngredients.mockReturnValue({ pools: {}, categories: [], loading: false, error: null })
+  mockUseIngredients.mockReturnValue({ pools: {}, lookupPools: {}, categories: [], loading: false, error: null })
 })
 
 describe('TryThisSandwich', () => {
@@ -52,11 +52,13 @@ describe('TryThisSandwich', () => {
   })
 
   it('fuzzy-matches canonical names against the ingredient pool when exact is false', async () => {
+    const pools = {
+      bread: [{ slug: 'rye', name: 'Rye', dietary_tags: [], compat_group: 'deli_classic', nutrition: {}, image_asset: '', is_trigger: false, enabled: true, estimated_cost: {} }],
+      protein: [{ slug: 'corned-beef', name: 'Corned Beef', dietary_tags: [], compat_group: 'deli_classic', nutrition: {}, image_asset: '', is_trigger: false, enabled: true, estimated_cost: {} }],
+    }
     mockUseIngredients.mockReturnValue({
-      pools: {
-        bread: [{ slug: 'rye', name: 'Rye', dietary_tags: [], compat_group: 'deli_classic', nutrition: {}, image_asset: '', is_trigger: false, enabled: true, estimated_cost: {} }],
-        protein: [{ slug: 'corned-beef', name: 'Corned Beef', dietary_tags: [], compat_group: 'deli_classic', nutrition: {}, image_asset: '', is_trigger: false, enabled: true, estimated_cost: {} }],
-      },
+      pools,
+      lookupPools: pools,
       categories: [],
       loading: false,
       error: null,
@@ -91,5 +93,37 @@ describe('TryThisSandwich', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Try This Sandwich' }))
 
     expect(mockNavigate).toHaveBeenCalledWith('/')
+  })
+
+  it('finds ingredients that are not enabled by name, so encyclopedia sandwiches can use them', async () => {
+    mockUseIngredients.mockReturnValue({
+      pools: { bread: [{ name: 'Rye', slug: 'rye' }] },
+      lookupPools: { bread: [{ name: 'Rye', slug: 'rye' }, { name: 'Pain de mie', slug: 'pain-de-mie' }], condiments: [{ name: 'Butter', slug: 'butter' }] },
+      categories: [],
+      loading: false,
+      error: null,
+    })
+    renderWithRouter(<TryThisSandwich composition={{ bread: [{ name: 'Pain de mie' }], condiments: [{ name: 'Butter' }] }} exact={false} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Try This Sandwich' }))
+
+    const stored = readStoredComposition()
+    expect(stored.composition.bread).toEqual([{ slug: 'pain-de-mie', name: 'Pain de mie' }])
+    expect(stored.composition.condiments).toEqual([{ slug: 'butter', name: 'Butter' }])
+  })
+
+  it('prefers an enabled ingredient over a hidden one with the same name', async () => {
+    mockUseIngredients.mockReturnValue({
+      pools: { bread: [{ name: 'Rye', slug: 'rye' }] },
+      lookupPools: { bread: [{ name: 'Rye', slug: 'rye' }, { name: 'Rye', slug: 'rye-hidden' }] },
+      categories: [],
+      loading: false,
+      error: null,
+    })
+    renderWithRouter(<TryThisSandwich composition={{ bread: [{ name: 'Rye' }] }} exact={false} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Try This Sandwich' }))
+
+    expect(readStoredComposition().composition.bread).toEqual([{ slug: 'rye', name: 'Rye' }])
   })
 })

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
@@ -120,6 +120,36 @@ describe('IngredientsPage', () => {
     expect(toast.success).toHaveBeenCalled()
   })
 
+  it('creates new ingredients disabled and says why', async () => {
+    mockCreateIngredient.mockResolvedValue({ ...ingredient1, id: 'ing-2', name: 'Havarti', slug: 'havarti', enabled: false })
+    render(<IngredientsPage />)
+    await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+    await userEvent.click(screen.getByRole('button', { name: /add ingredient/i }))
+
+    expect(screen.queryByRole('checkbox', { name: 'Enabled' })).not.toBeInTheDocument()
+    expect(screen.getByText(/start disabled/i)).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText(/^name$/i), 'Havarti')
+    await userEvent.type(screen.getByLabelText(/^slug$/i), 'havarti')
+    await userEvent.selectOptions(screen.getByLabelText(/^category$/i), 'cat-1')
+    await userEvent.click(screen.getByRole('button', { name: /create/i }))
+
+    await waitFor(() => {
+      expect(mockCreateIngredient).toHaveBeenCalledWith('token-abc', expect.objectContaining({ enabled: false }))
+    })
+  })
+
+  it('explains that nutrition and cost are needed when an ingredient cannot be enabled', async () => {
+    mockUpdateIngredient.mockRejectedValue(Object.assign(new Error('bad request'), { code: 'INCOMPLETE_INGREDIENT' }))
+    render(<IngredientsPage />)
+    await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /enabled: sourdough/i }))
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Add nutrition and cost data before enabling this ingredient.')
+    })
+  })
+
   it('offers every supported dietary tag by its label', async () => {
     render(<IngredientsPage />)
     await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
@@ -138,6 +168,206 @@ describe('IngredientsPage', () => {
 
     await waitFor(() => {
       expect(mockUpdateIngredient).toHaveBeenCalledWith('token-abc', 'ing-1', { dietary_tags: ['vegetarian', 'vegan', 'contains_pork'] })
+    })
+  })
+
+  describe('nutrition and cost', () => {
+    const butter = { ...ingredient1, id: 'ing-2', name: 'Butter', slug: 'butter', enabled: false, nutrition: null, estimated_cost: null }
+
+    const openDetails = async (name = 'Sourdough') => {
+      await userEvent.click(screen.getByRole('button', { name: `Edit nutrition and cost: ${name}` }))
+      return screen.getByRole('dialog', { name: `Nutrition and cost: ${name}` })
+    }
+
+    const fill = async (label: string, value: string) => {
+      const input = screen.getByLabelText(label)
+      await userEvent.clear(input)
+      await userEvent.type(input, value)
+    }
+
+    const fillEverything = async () => {
+      await fill('Calories', '100')
+      await fill('Protein (g)', '0')
+      await fill('Fat (g)', '11')
+      await fill('Carbs (g)', '0')
+      await fill('Fiber (g)', '0')
+      await fill('Sodium (mg)', '80')
+      await fill('Sugar (g)', '0')
+      await fill('Retail low ($)', '0.05')
+      await fill('Retail high ($)', '0.2')
+      await fill('Restaurant low ($)', '0.15')
+      await fill('Restaurant high ($)', '0.6')
+    }
+
+    const rowOf = (name: string) => screen.getByDisplayValue(name).closest('tr') as HTMLElement
+
+    it('shows the current values in the dialog', async () => {
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+
+      await openDetails()
+
+      expect(screen.getByLabelText('Calories')).toHaveValue(120)
+      expect(screen.getByLabelText('Protein (g)')).toHaveValue(4)
+      expect(screen.getByLabelText('Fat (g)')).toHaveValue(0.5)
+      expect(screen.getByLabelText('Sodium (mg)')).toHaveValue(210)
+      expect(screen.getByLabelText('Retail low ($)')).toHaveValue(0.3)
+      expect(screen.getByLabelText('Restaurant high ($)')).toHaveValue(3.6)
+    })
+
+    it('explains what one serving is', async () => {
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+
+      await openDetails()
+
+      expect(screen.getByText(/values are per serving/i)).toBeInTheDocument()
+    })
+
+    it('saves edited values as numbers and closes the dialog', async () => {
+      mockUpdateIngredient.mockResolvedValue({ ...ingredient1, nutrition: { ...ingredient1.nutrition, calories: 130 } })
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+      await openDetails()
+
+      await fill('Calories', '130')
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(mockUpdateIngredient).toHaveBeenCalledWith('token-abc', 'ing-1', {
+          nutrition: { calories: 130, protein_g: 4, fat_g: 0.5, carbs_g: 24, fiber_g: 1, sodium_mg: 210, sugar_g: 1 },
+          estimated_cost: { retail_low: 0.3, retail_high: 1.2, restaurant_low: 0.9, restaurant_high: 3.6 },
+        })
+      })
+      await waitFor(() => { expect(screen.queryByRole('dialog')).not.toBeInTheDocument() })
+      expect(toast.success).toHaveBeenCalledWith('Nutrition and cost saved.')
+    })
+
+    it('starts blank for an ingredient with no data and accepts zeros', async () => {
+      mockFetchAdminIngredients.mockResolvedValue([ingredient1, butter])
+      mockUpdateIngredient.mockResolvedValue({
+        ...butter,
+        nutrition: { calories: 100, protein_g: 0, fat_g: 11, carbs_g: 0, fiber_g: 0, sodium_mg: 80, sugar_g: 0 },
+        estimated_cost: { retail_low: 0.05, retail_high: 0.2, restaurant_low: 0.15, restaurant_high: 0.6 },
+      })
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Butter')).toBeInTheDocument() })
+      await openDetails('Butter')
+
+      expect(screen.getByLabelText('Calories')).toHaveValue(null)
+      await fillEverything()
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => {
+        expect(mockUpdateIngredient).toHaveBeenCalledWith('token-abc', 'ing-2', {
+          nutrition: { calories: 100, protein_g: 0, fat_g: 11, carbs_g: 0, fiber_g: 0, sodium_mg: 80, sugar_g: 0 },
+          estimated_cost: { retail_low: 0.05, retail_high: 0.2, restaurant_low: 0.15, restaurant_high: 0.6 },
+        })
+      })
+    })
+
+    it('refuses to save while a field is blank', async () => {
+      mockFetchAdminIngredients.mockResolvedValue([ingredient1, butter])
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Butter')).toBeInTheDocument() })
+      await openDetails('Butter')
+
+      await fill('Calories', '100')
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+      expect(toast.error).toHaveBeenCalledWith('Enter a number of zero or more for every nutrition and cost field.')
+      expect(mockUpdateIngredient).not.toHaveBeenCalled()
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    it('refuses to save a negative value', async () => {
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+      await openDetails()
+
+      fireEvent.change(screen.getByLabelText('Sodium (mg)'), { target: { value: '-5' } })
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+      expect(toast.error).toHaveBeenCalledWith('Enter a number of zero or more for every nutrition and cost field.')
+      expect(mockUpdateIngredient).not.toHaveBeenCalled()
+    })
+
+    it('refuses a low cost that is above its high cost', async () => {
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+      await openDetails()
+
+      await fill('Retail low ($)', '5')
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+      expect(toast.error).toHaveBeenCalledWith('Each low cost must be no higher than its high cost.')
+      expect(mockUpdateIngredient).not.toHaveBeenCalled()
+    })
+
+    it('keeps the dialog open and says so when the save fails', async () => {
+      mockUpdateIngredient.mockRejectedValue(new Error('boom'))
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+      await openDetails()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => { expect(toast.error).toHaveBeenCalledWith('Failed to save nutrition and cost.') })
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    it('closes without saving when cancelled', async () => {
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+      await openDetails()
+
+      await fill('Calories', '999')
+      await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(mockUpdateIngredient).not.toHaveBeenCalled()
+    })
+
+    it('flags ingredients with missing data and stops them being enabled', async () => {
+      mockFetchAdminIngredients.mockResolvedValue([ingredient1, butter])
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Butter')).toBeInTheDocument() })
+
+      expect(within(rowOf('Butter')).getByText('Missing data')).toBeInTheDocument()
+      expect(screen.getByRole('checkbox', { name: 'Enabled: Butter' })).toBeDisabled()
+    })
+
+    it('does not flag or restrict ingredients that have their data', async () => {
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+
+      expect(within(rowOf('Sourdough')).queryByText('Missing data')).not.toBeInTheDocument()
+      expect(screen.getByRole('checkbox', { name: 'Enabled: Sourdough' })).toBeEnabled()
+    })
+
+    it('still lets an enabled ingredient with missing data be disabled', async () => {
+      mockFetchAdminIngredients.mockResolvedValue([{ ...butter, enabled: true }])
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Butter')).toBeInTheDocument() })
+
+      expect(screen.getByRole('checkbox', { name: 'Enabled: Butter' })).toBeEnabled()
+    })
+
+    it('lets the ingredient be enabled once its data has been added', async () => {
+      mockFetchAdminIngredients.mockResolvedValue([ingredient1, butter])
+      mockUpdateIngredient.mockResolvedValue({
+        ...butter,
+        nutrition: { calories: 100, protein_g: 0, fat_g: 11, carbs_g: 0, fiber_g: 0, sodium_mg: 80, sugar_g: 0 },
+        estimated_cost: { retail_low: 0.05, retail_high: 0.2, restaurant_low: 0.15, restaurant_high: 0.6 },
+      })
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Butter')).toBeInTheDocument() })
+      await openDetails('Butter')
+      await fillEverything()
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+      await waitFor(() => { expect(screen.getByRole('checkbox', { name: 'Enabled: Butter' })).toBeEnabled() })
+      expect(within(rowOf('Butter')).queryByText('Missing data')).not.toBeInTheDocument()
     })
   })
 })

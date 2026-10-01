@@ -16,7 +16,7 @@ const makeApiIngredient = (overrides: Partial<Ingredient> = {}): Ingredient => (
   ...overrides,
 })
 
-const makeApiResponse = (overrides: Partial<Record<CategorySlug, Ingredient[]>> = {}) => ({
+const makeApiResponse = (overrides: Partial<Record<CategorySlug, Ingredient[]>> = {}, hidden: Ingredient[] | 'omit' = []) => ({
   data: {
     categories: [
       {
@@ -32,6 +32,7 @@ const makeApiResponse = (overrides: Partial<Record<CategorySlug, Ingredient[]>> 
         has_double_toggle: false,
         is_bonus: false,
         ingredients: overrides.bread ?? [makeApiIngredient()],
+        ...(hidden === 'omit' ? {} : { hidden_ingredients: hidden }),
       },
     ],
   },
@@ -114,5 +115,47 @@ describe('fetchIngredients', () => {
     const { pools } = await fetchIngredients()
     expect(pools.protein).toEqual([])
     expect(pools.cheese).toEqual([])
+  })
+
+  describe('hidden ingredients', () => {
+    const hiddenIngredient = makeApiIngredient({ id: 'hidden-1', name: 'Pain de mie', slug: 'pain-de-mie', enabled: false })
+
+    const stubFetch = (hidden: Ingredient[] | 'omit') =>
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(makeApiResponse({}, hidden)),
+      }))
+
+    it('keeps hidden ingredients out of the randomizer pools', async () => {
+      stubFetch([hiddenIngredient])
+
+      const { pools } = await fetchIngredients()
+
+      expect(pools.bread.map((i) => i.slug)).toEqual(['sourdough'])
+    })
+
+    it('adds hidden ingredients after the published ones in the lookup pools', async () => {
+      stubFetch([hiddenIngredient])
+
+      const { lookupPools } = await fetchIngredients()
+
+      expect(lookupPools.bread.map((i) => i.slug)).toEqual(['sourdough', 'pain-de-mie'])
+    })
+
+    it('gives every category a lookup pool even when it has no ingredients', async () => {
+      stubFetch([hiddenIngredient])
+
+      const { lookupPools } = await fetchIngredients()
+
+      expect(lookupPools.protein).toEqual([])
+    })
+
+    it('works when the server sends no hidden ingredients', async () => {
+      stubFetch('omit')
+
+      const { pools, lookupPools } = await fetchIngredients()
+
+      expect(lookupPools.bread).toEqual(pools.bread)
+    })
   })
 })

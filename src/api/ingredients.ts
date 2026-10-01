@@ -13,6 +13,7 @@ type ApiCategory = {
   has_double_toggle: boolean
   is_bonus: boolean
   ingredients: Ingredient[]
+  hidden_ingredients?: Ingredient[]
 }
 
 type ApiResponse = {
@@ -22,6 +23,7 @@ type ApiResponse = {
 
 type FetchIngredientsResult = {
   pools: Record<CategorySlug, Ingredient[]>
+  lookupPools: Record<CategorySlug, Ingredient[]>
   categories: Category[]
   costDataLastUpdated: string
 }
@@ -51,6 +53,11 @@ export const fetchIngredients = async (diet?: string[]): Promise<FetchIngredient
     empty,
   )
 
+  const lookupPools = data.categories.reduce(
+    (acc, cat) => ({ ...acc, [cat.slug]: [...cat.ingredients, ...(cat.hidden_ingredients ?? [])] }),
+    empty,
+  )
+
   const categories: Category[] = data.categories.map((cat) => ({
     id: cat.id,
     name: cat.name,
@@ -65,5 +72,5 @@ export const fetchIngredients = async (diet?: string[]): Promise<FetchIngredient
     is_bonus: cat.is_bonus,
   }))
 
-  return { pools, categories, costDataLastUpdated: meta.cost_data_last_updated }
+  return { pools, lookupPools, categories, costDataLastUpdated: meta.cost_data_last_updated }
 }

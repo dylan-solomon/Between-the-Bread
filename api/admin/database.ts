@@ -2,17 +2,15 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ok, err } from '../_lib/response.js'
 import { authenticateAdminRequest } from '../_lib/adminAuth.js'
 import type { AdminAuthResult } from '../_lib/adminAuth.js'
+import { ADMIN_SANDWICH_COLUMNS } from '../_lib/sandwichColumns.js'
 import { parseSandwichInput } from '../_lib/sandwichInput.js'
-
-const ADMIN_COLUMNS =
-  'id, name, slug, description, history, origin_country, origin_region, canonical_ingredients, dietary_tags, image_url, avg_rating, rating_count, published, created_at, updated_at'
 
 const DUPLICATE_KEY = '23505'
 
 const handleGet = async (res: VercelResponse, auth: AdminAuthResult): Promise<void> => {
   const { data, error } = await auth.supabase
     .from('sandwich_database')
-    .select(ADMIN_COLUMNS)
+    .select(ADMIN_SANDWICH_COLUMNS)
     .order('name')
 
   if (error !== null) {
@@ -33,7 +31,7 @@ const handlePost = async (req: VercelRequest, res: VercelResponse, auth: AdminAu
   const { data, error } = await auth.supabase
     .from('sandwich_database')
     .insert(parsed.value)
-    .select(ADMIN_COLUMNS)
+    .select(ADMIN_SANDWICH_COLUMNS)
     .single()
 
   if (error !== null) {

@@ -31,13 +31,16 @@ const setupTables = ({
   comments = { count: 3, error: null } as Result,
   photos = { count: 2, error: null } as Result,
 } = {}) => {
-  const seen: { table: string; eq: unknown[][] }[] = []
+  const seen: { table: string; eq: unknown[][]; select: string[] }[] = []
   mockFrom.mockImplementation((table: string) => {
-    const record = { table, eq: [] as unknown[][] }
+    const record = { table, eq: [] as unknown[][], select: [] as string[] }
     seen.push(record)
     const result = table === 'sandwich_database' ? sandwich : table === 'comments' ? comments : photos
     const builder: Record<string, unknown> = {}
-    builder.select = () => builder
+    builder.select = (columns?: string) => {
+      if (columns !== undefined) record.select.push(columns)
+      return builder
+    }
     builder.eq = (...args: unknown[]) => {
       record.eq.push(args)
       return builder
@@ -72,6 +75,14 @@ describe('GET /api/database/:slug', () => {
 
     expect(statusOf(res)).toBe(200)
     expect(bodyOf(res).data).toEqual({ ...stubSandwich, comment_count: 3, photo_count: 2 })
+  })
+
+  it('includes the entry\'s alternative names', async () => {
+    const seen = setupTables()
+
+    await handler(makeReq(), makeRes())
+
+    expect(seen.find((s) => s.table === 'sandwich_database')?.select[0]).toContain('alternative_names')
   })
 
   it('looks the entry up by slug', async () => {

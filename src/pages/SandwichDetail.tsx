@@ -66,6 +66,9 @@ function Info({ entry, categoryNames }: { entry: SandwichEntry; categoryNames: M
   return (
     <div className="space-y-6">
       {origin !== '' && <p className="text-sm font-medium uppercase tracking-wide text-neutral-500">{origin}</p>}
+      {entry.alternative_names.length > 0 && (
+        <p className="text-sm italic text-neutral-600">{`Also known as: ${entry.alternative_names.join(', ')}`}</p>
+      )}
       {entry.description !== null && <p className="text-lg text-neutral-800">{entry.description}</p>}
       {entry.history !== null && <MarkdownText>{entry.history}</MarkdownText>}
 
@@ -111,7 +114,7 @@ function Info({ entry, categoryNames }: { entry: SandwichEntry; categoryNames: M
 
 export default function SandwichDetail() {
   const { slug } = useParams<{ slug: string }>()
-  const { categories, pools } = useIngredients()
+  const { categories, lookupPools } = useIngredients()
   const [state, setState] = useState<State>({ status: 'loading' })
 
   useEffect(() => {
@@ -183,7 +186,7 @@ export default function SandwichDetail() {
         name={entry.name}
         avgRating={entry.avg_rating}
         ratingCount={entry.rating_count}
-        heroVisual={<Hero entry={entry} pools={pools} />}
+        heroVisual={<Hero entry={entry} pools={lookupPools} />}
         infoSection={<Info entry={entry} categoryNames={categoryNames} />}
         actionBar={
           <TryThisSandwich

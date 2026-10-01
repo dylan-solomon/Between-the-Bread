@@ -61,7 +61,7 @@ describe('ingredient dietary tags', () => {
   describe('reviewed ingredients', () => {
     it('tags the pork products as containing pork', () => {
       expect(withTag('contains_pork').sort()).toEqual(
-        ['bacon', 'bacon-jam', 'capicola', 'ham', 'mortadella', 'pepperoni', 'prosciutto', 'pulled-pork', 'salami'].sort(),
+        ['bacon', 'bacon-jam', 'capicola', 'cuban-bread', 'ham', 'mortadella', 'pepperoni', 'prosciutto', 'pulled-pork', 'roast-pork', 'salami'].sort(),
       )
     })
 

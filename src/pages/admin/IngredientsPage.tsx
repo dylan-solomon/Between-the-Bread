@@ -5,6 +5,8 @@ import { useIngredients } from '@/hooks/useIngredients'
 import { fetchAdminIngredients, updateIngredient, createIngredient } from '@/api/admin'
 import type { AdminIngredient } from '@/api/admin'
 import { DIETARY_TAGS } from '@/data/dietaryTags'
+import IngredientDetailsDialog from '@/pages/admin/IngredientDetailsDialog'
+import { hasCompleteData } from '@/utils/ingredientData'
 
 const COMPAT_GROUPS = ['american', 'asian_fusion', 'deli_classic', 'italian', 'mediterranean', 'neutral', 'southern', 'tex_mex'] as const
 
@@ -12,10 +14,12 @@ type RowProps = {
   ingredient: AdminIngredient
   categoryName: string
   onSave: (id: string, patch: Partial<AdminIngredient>) => void
+  onEditDetails: (ingredient: AdminIngredient) => void
 }
 
-function IngredientRow({ ingredient, categoryName, onSave }: RowProps) {
+function IngredientRow({ ingredient, categoryName, onSave, onEditDetails }: RowProps) {
   const [name, setName] = useState(ingredient.name)
+  const complete = hasCompleteData(ingredient)
 
   useEffect(() => { setName(ingredient.name) }, [ingredient.name])
 
@@ -43,6 +47,8 @@ function IngredientRow({ ingredient, categoryName, onSave }: RowProps) {
           type="checkbox"
           aria-label={`Enabled: ${ingredient.name}`}
           checked={ingredient.enabled}
+          disabled={!ingredient.enabled && !complete}
+          title={!ingredient.enabled && !complete ? 'Add nutrition and cost data before enabling' : undefined}
           onChange={(e) => { onSave(ingredient.id, { enabled: e.target.checked }) }}
         />
       </td>
@@ -72,6 +78,17 @@ function IngredientRow({ ingredient, categoryName, onSave }: RowProps) {
           ))}
         </div>
       </td>
+      <td className="p-2">
+        <button
+          type="button"
+          aria-label={`Edit nutrition and cost: ${ingredient.name}`}
+          onClick={() => { onEditDetails(ingredient) }}
+          className="text-xs text-primary underline"
+        >
+          Nutrition &amp; cost
+        </button>
+        {!complete && <p className="mt-1 text-xs font-medium text-amber-700">Missing data</p>}
+      </td>
     </tr>
   )
 }
@@ -82,6 +99,11 @@ type NewIngredientForm = {
   category_id: string
 }
 
+const INCOMPLETE_MESSAGE = 'Add nutrition and cost data before enabling this ingredient.'
+
+const isIncompleteIngredient = (error: unknown): boolean =>
+  typeof error === 'object' && error !== null && 'code' in error && error.code === 'INCOMPLETE_INGREDIENT'
+
 export default function IngredientsPage() {
   const { session } = useAuth()
   const { categories } = useIngredients()
@@ -90,6 +112,8 @@ export default function IngredientsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [newIngredient, setNewIngredient] = useState<NewIngredientForm>({ name: '', slug: '', category_id: '' })
   const [creating, setCreating] = useState(false)
+  const [detailsFor, setDetailsFor] = useState<AdminIngredient | null>(null)
+  const [savingDetails, setSavingDetails] = useState(false)
 
   useEffect(() => {
     if (session === null) return
@@ -107,8 +131,23 @@ export default function IngredientsPage() {
     try {
       const updated = await updateIngredient(session.access_token, id, patch)
       setIngredients((prev) => prev.map((i) => (i.id === id ? updated : i)))
+    } catch (error) {
+      toast.error(isIncompleteIngredient(error) ? INCOMPLETE_MESSAGE : 'Failed to save ingredient.')
+    }
+  }
+
+  const handleSaveDetails = async (data: { nutrition: Record<string, number>; estimated_cost: Record<string, number> }) => {
+    if (session === null || detailsFor === null) return
+    setSavingDetails(true)
+    try {
+      const updated = await updateIngredient(session.access_token, detailsFor.id, data)
+      setIngredients((prev) => prev.map((i) => (i.id === detailsFor.id ? updated : i)))
+      setDetailsFor(null)
+      toast.success('Nutrition and cost saved.')
     } catch {
-      toast.error('Failed to save ingredient.')
+      toast.error('Failed to save nutrition and cost.')
+    } finally {
+      setSavingDetails(false)
     }
   }
 
@@ -120,7 +159,7 @@ export default function IngredientsPage() {
     }
     setCreating(true)
     try {
-      const created = await createIngredient(session.access_token, newIngredient)
+      const created = await createIngredient(session.access_token, { ...newIngredient, enabled: false })
       setIngredients((prev) => [...prev, created])
       setShowAddModal(false)
       setNewIngredient({ name: '', slug: '', category_id: '' })
@@ -157,6 +196,7 @@ export default function IngredientsPage() {
                 <th className="p-2">Enabled</th>
                 <th className="p-2">Compat Group</th>
                 <th className="p-2">Dietary Tags</th>
+                <th className="p-2">Nutrition &amp; Cost</th>
               </tr>
             </thead>
             <tbody>
@@ -166,6 +206,7 @@ export default function IngredientsPage() {
                   ingredient={ingredient}
                   categoryName={categoryName(ingredient.category_id)}
                   onSave={(id, patch) => { void handleSave(id, patch) }}
+                  onEditDetails={setDetailsFor}
                 />
               ))}
             </tbody>
@@ -173,10 +214,22 @@ export default function IngredientsPage() {
         </div>
       )}
 
+      {detailsFor !== null && (
+        <IngredientDetailsDialog
+          ingredient={detailsFor}
+          saving={savingDetails}
+          onSave={(data) => { void handleSaveDetails(data) }}
+          onCancel={() => { setDetailsFor(null) }}
+        />
+      )}
+
       {showAddModal && (
         <div role="dialog" aria-modal="true" aria-label="Add Ingredient" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-sm rounded-md bg-white p-5">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Add Ingredient</h2>
+            <p className="mt-1 text-xs text-neutral-500">
+              New ingredients start disabled. Once nutrition and cost data have been added, tick Enabled in the list to put the ingredient in the randomizer.
+            </p>
 
             <div className="mt-4 space-y-3">
               <label className="block text-sm text-neutral-700">

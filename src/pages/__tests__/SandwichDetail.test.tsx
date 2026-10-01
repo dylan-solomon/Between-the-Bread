@@ -65,6 +65,7 @@ const reuben = {
   origin_region: 'Americas',
   canonical_ingredients: { bread: [{ name: 'Rye' }], protein: [{ name: 'Corned Beef' }] },
   dietary_tags: ['gluten_free'],
+  alternative_names: ['Reuben sandwich', 'Reubens'],
   image_url: null,
   avg_rating: 4.5,
   rating_count: 12,
@@ -92,6 +93,10 @@ beforeEach(() => {
     pools: {
       bread: [makeIngredient({ name: 'Rye', slug: 'rye' })],
       protein: [makeIngredient({ name: 'Corned Beef', slug: 'corned-beef' })],
+    },
+    lookupPools: {
+      bread: [makeIngredient({ name: 'Rye', slug: 'rye' })],
+      protein: [makeIngredient({ name: 'Corned Beef', slug: 'corned-beef' }), makeIngredient({ name: 'Roast pork', slug: 'roast-pork', enabled: false })],
     },
     loading: false,
     error: null,
@@ -132,6 +137,30 @@ describe('SandwichDetail', () => {
     expect(screen.getByText(/United States/)).toBeInTheDocument()
     expect(screen.getByText(/Americas/)).toBeInTheDocument()
     expect(screen.getByText('story').tagName).toBe('STRONG')
+  })
+
+  it('shows the other names the sandwich is known by', async () => {
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(screen.getByText('Also known as: Reuben sandwich, Reubens')).toBeInTheDocument()
+  })
+
+  it('shows the other names before the description', async () => {
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    const alsoKnownAs = screen.getByText(/Also known as/)
+    const description = screen.getByText('Corned beef and sauerkraut on rye.')
+    expect(alsoKnownAs.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('leaves out the other names line when there are none', async () => {
+    mockFetchSandwich.mockResolvedValue({ ...reuben, alternative_names: [] })
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(screen.queryByText(/Also known as/)).not.toBeInTheDocument()
   })
 
   it('lists the canonical ingredients under their category names', async () => {
@@ -189,6 +218,13 @@ describe('SandwichDetail', () => {
     const visual = await screen.findByTestId('visual')
     expect(visual).toHaveTextContent('Rye')
     expect(visual).toHaveTextContent('Corned Beef')
+  })
+
+  it('draws ingredients that are not enabled in the randomizer too', async () => {
+    mockFetchSandwich.mockResolvedValue({ ...reuben, canonical_ingredients: { bread: [{ name: 'Rye' }], protein: [{ name: 'Roast pork' }] } })
+    renderAt()
+
+    expect(await screen.findByTestId('visual')).toHaveTextContent('Roast pork')
   })
 
   it('offers Try This Sandwich using the canonical ingredients', async () => {

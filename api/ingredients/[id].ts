@@ -34,6 +34,7 @@ export default async function handler(
     .from('ingredients')
     .select('id, name, slug, dietary_tags, compat_group, estimated_cost, nutrition, image_asset, is_trigger, categories(id, name, slug)')
     .eq('id', id)
+    .eq('enabled', true)
     .single()
 
   if (error !== null) {

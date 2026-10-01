@@ -32,6 +32,7 @@ const makeSandwich = (overrides: Record<string, unknown> = {}) => ({
   avg_rating: 4.5,
   rating_count: 12,
   dietary_tags: [],
+  alternative_names: [],
   canonical_ingredients: {},
   ...overrides,
 })
@@ -79,6 +80,22 @@ describe('SandwichIndex results', () => {
     expect(link).toHaveTextContent('Corned beef and sauerkraut on rye.')
     expect(link).toHaveTextContent('4.5')
     expect(link).toHaveTextContent('12')
+  })
+
+  it('shows the other names on a card so a match on an alias makes sense', async () => {
+    mockFetchSandwiches.mockResolvedValue({
+      items: [makeSandwich({ name: 'Grilled Cheese', slug: 'grilled-cheese', alternative_names: ['Cheese toastie', 'Cheese jaffle'] })],
+      totalCount: 1,
+    })
+    renderAt('/sandwiches?q=toastie')
+
+    expect(await screen.findByRole('link', { name: /Grilled Cheese/ })).toHaveTextContent('Also known as: Cheese toastie, Cheese jaffle')
+  })
+
+  it('leaves out the other names line on cards without any', async () => {
+    renderAt()
+
+    expect(await screen.findByRole('link', { name: /Reuben/ })).not.toHaveTextContent('Also known as')
   })
 
   it('shows unrated sandwiches as not yet rated', async () => {

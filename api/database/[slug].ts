@@ -4,7 +4,7 @@ import { ok, err } from '../_lib/response.js'
 import { isSlug } from '../_lib/slug.js'
 
 const DETAIL_COLUMNS =
-  'id, name, slug, description, history, origin_country, origin_region, canonical_ingredients, dietary_tags, image_url, avg_rating, rating_count'
+  'id, name, slug, alternative_names, description, history, origin_country, origin_region, canonical_ingredients, dietary_tags, image_url, avg_rating, rating_count'
 
 const notFound = (res: VercelResponse): void => {
   res.status(404).json(err('SANDWICH_NOT_FOUND', 'Sandwich not found.', 404))

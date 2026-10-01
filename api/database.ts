@@ -7,7 +7,7 @@ import { isAvoidTag, isDietaryTag } from './_lib/dietaryTags.js'
 const DEFAULT_LIMIT = 24
 const MAX_LIMIT = 50
 const LIST_COLUMNS =
-  'name, slug, description, origin_country, origin_region, image_url, avg_rating, rating_count, dietary_tags, canonical_ingredients'
+  'name, slug, alternative_names, description, origin_country, origin_region, image_url, avg_rating, rating_count, dietary_tags, canonical_ingredients'
 
 const SORTS = ['name', 'rating', 'newest'] as const
 type Sort = (typeof SORTS)[number]

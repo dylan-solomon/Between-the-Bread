@@ -6,7 +6,7 @@ import { makeIngredient } from '@/test/factories'
 describe('filterByDiet', () => {
   it('returns all ingredients when no tags are active', () => {
     const bread = getIngredientsByCategory('bread')
-    expect(filterByDiet(bread, [])).toHaveLength(17)
+    expect(filterByDiet(bread, [])).toHaveLength(19)
   })
 
   it('filters to ingredients matching a single tag', () => {

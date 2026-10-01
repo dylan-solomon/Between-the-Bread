@@ -42,7 +42,7 @@ import type { CostContext } from '@/utils/cost'
 const EMPTY_POOLS: Partial<Record<CategorySlug, Ingredient[]>> = {}
 
 export default function HomePage() {
-  const { pools, categories, costDataLastUpdated, loading } = useIngredients()
+  const { pools, lookupPools, categories, costDataLastUpdated, loading } = useIngredients()
   const { matrix } = useCompatMatrix()
   const { profile } = useProfile()
   const { user, session: authSession } = useAuth()
@@ -66,7 +66,7 @@ export default function HomePage() {
     try {
       const parsed = JSON.parse(raw) as { composition?: Record<string, unknown[]>; savedId?: string; rating?: number }
       if (parsed.composition !== undefined) {
-        const resolved = resolveComposition(parsed.composition, pools)
+        const resolved = resolveComposition(parsed.composition, lookupPools)
         if (resolved !== null) {
           session.loadComposition(resolved)
           if (typeof parsed.savedId === 'string') setSavedId(parsed.savedId)
@@ -76,7 +76,7 @@ export default function HomePage() {
     } catch {
       // Invalid data — silently ignore
     }
-  }, [loading, pools, session])
+  }, [loading, lookupPools, session])
 
   useEffect(() => {
     if (profile === null || profileApplied.current) return

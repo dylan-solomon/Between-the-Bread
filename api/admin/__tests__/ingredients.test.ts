@@ -94,6 +94,72 @@ describe('POST /api/admin/ingredients', () => {
 
   const validBody = { category_id: 'cat-1', name: 'Havarti', slug: 'havarti' }
 
+  const completeData = {
+    nutrition: { calories: 100, protein_g: 5, fat_g: 3, carbs_g: 10, fiber_g: 1, sodium_mg: 100, sugar_g: 2 },
+    estimated_cost: { retail_low: 0.5, retail_high: 1, restaurant_low: 1, restaurant_high: 2 },
+  }
+
+  it('creates new ingredients disabled unless the request says otherwise', async () => {
+    const { mockInsert, mockSingle } = setupInsertChain()
+    mockSingle.mockResolvedValue({ data: { id: 'new-1', ...validBody }, error: null })
+
+    await handler(makeReq({ method: 'POST', body: validBody }), makeRes())
+
+    expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ enabled: false }))
+  })
+
+  it('creates an enabled ingredient when it comes with complete nutrition and cost', async () => {
+    const { mockInsert, mockSingle } = setupInsertChain()
+    mockSingle.mockResolvedValue({ data: { id: 'new-1', ...validBody }, error: null })
+    const res = makeRes()
+
+    await handler(makeReq({ method: 'POST', body: { ...validBody, ...completeData, enabled: true } }), res)
+
+    expect(res._status).toBe(201)
+    expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ enabled: true }))
+  })
+
+  it.each([
+    ['no nutrition or cost', {}, 'INCOMPLETE_INGREDIENT'],
+    ['no cost', { nutrition: completeData.nutrition }, 'INCOMPLETE_INGREDIENT'],
+    ['no nutrition', { estimated_cost: completeData.estimated_cost }, 'INCOMPLETE_INGREDIENT'],
+    ['incomplete nutrition', { ...completeData, nutrition: { calories: 100 } }, 'INVALID_NUTRITION'],
+  ])('refuses to create an enabled ingredient with %s', async (_label, extra, expectedCode) => {
+    const { mockInsert } = setupInsertChain()
+    const res = makeRes()
+
+    await handler(makeReq({ method: 'POST', body: { ...validBody, ...extra, enabled: true } }), res)
+
+    expect(res._status).toBe(400)
+    expect((res._json as { error: { code: string } }).error.code).toBe(expectedCode)
+    expect(mockInsert).not.toHaveBeenCalled()
+  })
+
+  it('rejects nutrition that is incomplete even when the ingredient stays disabled', async () => {
+    const { mockInsert } = setupInsertChain()
+    const res = makeRes()
+
+    await handler(makeReq({ method: 'POST', body: { ...validBody, nutrition: { calories: 100 } } }), res)
+
+    expect(res._status).toBe(400)
+    expect((res._json as { error: { code: string } }).error.code).toBe('INVALID_NUTRITION')
+    expect(mockInsert).not.toHaveBeenCalled()
+  })
+
+  it('rejects a cost whose low is above its high', async () => {
+    const { mockInsert } = setupInsertChain()
+    const res = makeRes()
+
+    await handler(
+      makeReq({ method: 'POST', body: { ...validBody, estimated_cost: { retail_low: 3, retail_high: 1, restaurant_low: 1, restaurant_high: 2 } } }),
+      res,
+    )
+
+    expect(res._status).toBe(400)
+    expect((res._json as { error: { code: string } }).error.code).toBe('INVALID_COST')
+    expect(mockInsert).not.toHaveBeenCalled()
+  })
+
   it('creates a new ingredient with sensible defaults', async () => {
     const { mockInsert, mockSingle } = setupInsertChain()
     mockSingle.mockResolvedValue({ data: { id: 'new-1', ...validBody }, error: null })
@@ -107,7 +173,7 @@ describe('POST /api/admin/ingredients', () => {
       slug: 'havarti',
       dietary_tags: [],
       is_trigger: false,
-      enabled: true,
+      enabled: false,
     }))
     expect(res._status).toBe(201)
   })

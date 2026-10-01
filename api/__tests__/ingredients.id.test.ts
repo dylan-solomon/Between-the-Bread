@@ -29,17 +29,23 @@ const stubIngredientRow = {
   categories: { id: 'cat-uuid', name: 'Bread', slug: 'bread' },
 }
 
+const makeQuery = (result: { data: unknown; error: unknown }) => {
+  const filters: unknown[][] = []
+  const builder: Record<string, unknown> = {}
+  builder.select = () => builder
+  builder.eq = (...args: unknown[]) => {
+    filters.push(args)
+    return builder
+  }
+  builder.single = () => Promise.resolve(result)
+  return { builder, filters }
+}
+
 beforeEach(() => { mockFrom.mockReset() })
 
 describe('GET /api/ingredients/:id', () => {
   it('returns 200 with the ingredient and its category when found', async () => {
-    mockFrom.mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          single: () => Promise.resolve({ data: stubIngredientRow, error: null }),
-        }),
-      }),
-    })
+    mockFrom.mockReturnValue(makeQuery({ data: stubIngredientRow, error: null }).builder)
 
     const { default: handler } = await import('../ingredients/[id]')
     const res = makeRes()
@@ -56,14 +62,19 @@ describe('GET /api/ingredients/:id', () => {
     expect(ingredient).not.toHaveProperty('categories')
   })
 
+  it('only returns ingredients that are enabled, so hidden ones stay out of the public lookup', async () => {
+    const { builder, filters } = makeQuery({ data: stubIngredientRow, error: null })
+    mockFrom.mockReturnValue(builder)
+
+    const { default: handler } = await import('../ingredients/[id]')
+    await handler(makeReq('GET', 'test-uuid'), makeRes())
+
+    expect(filters).toContainEqual(['id', 'test-uuid'])
+    expect(filters).toContainEqual(['enabled', true])
+  })
+
   it('returns 404 when ingredient is not found', async () => {
-    mockFrom.mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          single: () => Promise.resolve({ data: null, error: { code: 'PGRST116', message: 'No rows found' } }),
-        }),
-      }),
-    })
+    mockFrom.mockReturnValue(makeQuery({ data: null, error: { code: 'PGRST116', message: 'No rows found' } }).builder)
 
     const { default: handler } = await import('../ingredients/[id]')
     const res = makeRes()

@@ -51,6 +51,7 @@ const setupSandwichTable = (result: Result, options: TableOptions = {}) => {
   const deletes: unknown[][] = []
   const photoFilters: unknown[][] = []
   const events: string[] = []
+  const selects: string[] = []
   const removed: { bucket: string; paths: string[] }[] = []
   mockStorageFrom.mockImplementation((bucket: string) => ({
     remove: (paths: string[]) => {
@@ -81,7 +82,10 @@ const setupSandwichTable = (result: Result, options: TableOptions = {}) => {
       filters.push(args)
       return builder
     }
-    builder.select = () => builder
+    builder.select = (columns?: string) => {
+      if (columns !== undefined) selects.push(columns)
+      return builder
+    }
     builder.single = () => Promise.resolve(result)
     builder.maybeSingle = () => Promise.resolve(options.lookup ?? result)
     builder.delete = () => {
@@ -95,7 +99,7 @@ const setupSandwichTable = (result: Result, options: TableOptions = {}) => {
     }
     return builder
   })
-  return { updates, filters, deletes, photoFilters, removed, events }
+  return { updates, filters, deletes, photoFilters, removed, events, selects }
 }
 
 beforeEach(() => {
@@ -134,6 +138,32 @@ describe('PATCH /api/admin/database/:slug', () => {
     expect(typeof updates[0]?.updated_at).toBe('string')
   })
 
+  it('updates alternative names', async () => {
+    const { updates } = setupSandwichTable({ data: stubRow, error: null })
+    const res = makeRes()
+
+    await handler(makeReq({ body: { alternative_names: ['Cheese toastie'] } }), res)
+
+    expect(res._status).toBe(200)
+    expect(updates[0]).toMatchObject({ alternative_names: ['Cheese toastie'] })
+  })
+
+  it('allows clearing all alternative names', async () => {
+    const { updates } = setupSandwichTable({ data: stubRow, error: null })
+
+    await handler(makeReq({ body: { alternative_names: [] } }), makeRes())
+
+    expect(updates[0]).toMatchObject({ alternative_names: [] })
+  })
+
+  it('returns the alternative names of the saved entry', async () => {
+    const { selects } = setupSandwichTable({ data: stubRow, error: null })
+
+    await handler(makeReq({ body: { name: 'X' } }), makeRes())
+
+    expect(selects.some((columns) => columns.includes('alternative_names'))).toBe(true)
+  })
+
   it('ignores fields that are not editable', async () => {
     const { updates } = setupSandwichTable({ data: stubRow, error: null })
 
@@ -160,6 +190,8 @@ describe('PATCH /api/admin/database/:slug', () => {
     ['canonical ingredients that are not an object', { canonical_ingredients: 'rye' }],
     ['a non-boolean published flag', { published: 1 }],
     ['an unsafe image url', { image_url: 'javascript:alert(1)' }],
+    ['alternative names that are not a list', { alternative_names: 'Toastie' }],
+    ['a blank alternative name', { alternative_names: [''] }],
   ])('rejects %s with 400', async (_label, body) => {
     setupSandwichTable({ data: stubRow, error: null })
     const res = makeRes()
