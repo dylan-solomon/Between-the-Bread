@@ -18,6 +18,7 @@ export default function BlogIndex() {
         <meta property="og:title" content={TITLE} />
         <meta property="og:description" content={DESCRIPTION} />
         <link rel="canonical" href={`${SITE_URL}/blog`} />
+        <link rel="alternate" type="application/rss+xml" title="Between the Bread Blog" href={`${SITE_URL}/blog/rss.xml`} />
       </Helmet>
 
       <h1 className="font-display text-3xl font-bold text-neutral-900">Blog</h1>

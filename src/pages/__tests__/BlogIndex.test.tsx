@@ -67,6 +67,17 @@ describe('BlogIndex', () => {
     })
   })
 
+  it('lets feed readers discover the RSS feed', async () => {
+    renderPage()
+
+    await waitFor(() => {
+      expect(document.head.querySelector('link[rel="alternate"][type="application/rss+xml"]')).toHaveAttribute(
+        'href',
+        'https://betweenbread.co/blog/rss.xml',
+      )
+    })
+  })
+
   it('lists the posts across all categories', async () => {
     renderPage()
 

@@ -235,6 +235,50 @@ describe('BlogPost page details', () => {
   })
 })
 
+describe('BlogPost structured data', () => {
+  const structuredData = (): Record<string, unknown> | null => {
+    const script = document.head.querySelector('script[type="application/ld+json"]')
+    return script === null ? null : (JSON.parse(script.textContent) as Record<string, unknown>)
+  }
+
+  it('describes the post to search engines as a blog posting', async () => {
+    renderAt()
+
+    await waitFor(() => { expect(structuredData()).not.toBeNull() })
+    expect(structuredData()).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: 'Vegan builds',
+      description: 'Five builds that skip the meat.',
+      image: 'https://cdn.example.com/cover.jpg',
+      datePublished: '2026-10-01T12:00:00.000Z',
+      dateModified: '2026-10-02T12:00:00.000Z',
+      author: { '@type': 'Person', name: 'Dylan' },
+      publisher: { '@type': 'Organization', name: 'Between the Bread' },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://betweenbread.co/blog/vegan-builds' },
+    })
+  })
+
+  it('leaves out the image when the post has no cover image', async () => {
+    mockFetchPost.mockResolvedValue(makePost({ cover_image_url: null }))
+    renderAt()
+
+    await waitFor(() => { expect(structuredData()).not.toBeNull() })
+    expect(structuredData()).not.toHaveProperty('image')
+  })
+
+  it('cannot be broken out of by text in the post', async () => {
+    mockFetchPost.mockResolvedValue(makePost({ title: 'Evil </script><script>alert(1)</script>' }))
+    renderAt()
+
+    await waitFor(() => { expect(structuredData()).not.toBeNull() })
+    const script = document.head.querySelector('script[type="application/ld+json"]')
+    expect(script?.textContent).not.toContain('</script')
+    expect(document.head.querySelectorAll('script[type="application/ld+json"]')).toHaveLength(1)
+    expect(structuredData()?.headline).toBe('Evil </script><script>alert(1)</script>')
+  })
+})
+
 describe('BlogPost problems', () => {
   it('says so when the post does not exist', async () => {
     mockFetchPost.mockResolvedValue(null)

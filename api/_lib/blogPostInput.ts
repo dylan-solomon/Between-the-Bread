@@ -9,7 +9,7 @@ const MAX_META_DESCRIPTION_LENGTH = 200
 const MAX_AUTHOR_NAME_LENGTH = 80
 const MAX_RELATED_SANDWICHES = 10
 const MAX_CATEGORIES = 10
-const RESERVED_SLUGS: readonly string[] = ['categories', 'category']
+const RESERVED_SLUGS: readonly string[] = ['categories', 'category', 'rss']
 const ISO_DATE_START = /^\d{4}-\d{2}-\d{2}/
 
 type ParseResult =

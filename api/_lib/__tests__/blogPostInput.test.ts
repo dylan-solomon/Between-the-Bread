@@ -67,6 +67,7 @@ describe('parseBlogPostInput on create', () => {
     ['an invalid slug', { title: 'Hi', slug: 'Not A Slug' }, 'slug must be lowercase letters, numbers and hyphens.'],
     ['the reserved slug categories', { title: 'Hi', slug: 'categories' }, 'That slug is reserved.'],
     ['the reserved slug category', { title: 'Hi', slug: 'category' }, 'That slug is reserved.'],
+    ['the reserved slug rss', { title: 'Hi', slug: 'rss' }, 'That slug is reserved.'],
     ['a long excerpt', { title: 'Hi', excerpt: 'x'.repeat(301) }, 'excerpt must be text of up to 300 characters.'],
     ['a body that is not text', { title: 'Hi', body: 5 }, 'body must be text of up to 100000 characters.'],
     ['an image that is not http(s)', { title: 'Hi', cover_image_url: 'javascript:alert(1)' }, 'cover_image_url must be an http(s) URL.'],

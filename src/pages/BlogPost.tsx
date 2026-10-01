@@ -16,6 +16,20 @@ type State =
   | { status: 'not-found' }
   | { status: 'error' }
 
+const structuredDataFor = (post: BlogPostData, pageUrl: string, description: string): string =>
+  JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description,
+    ...(post.cover_image_url === null ? {} : { image: post.cover_image_url }),
+    datePublished: post.published_at,
+    dateModified: post.updated_at,
+    author: { '@type': 'Person', name: post.author_name },
+    publisher: { '@type': 'Organization', name: 'Between the Bread' },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+  }).replace(/</g, '\\u003c')
+
 function RelatedSandwichCard({ sandwich }: { sandwich: RelatedSandwich }) {
   return (
     <li>
@@ -124,6 +138,7 @@ export default function BlogPost() {
         <meta property="og:url" content={pageUrl} />
         <meta property="og:type" content="article" />
         <meta property="article:published_time" content={post.published_at} />
+        <script type="application/ld+json">{structuredDataFor(post, pageUrl, description)}</script>
       </Helmet>
 
       <article>
