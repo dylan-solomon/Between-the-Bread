@@ -26,16 +26,27 @@ const stubSandwich = {
   rating_count: 12,
 }
 
+const stubBlogPost = {
+  slug: 'vegan-builds',
+  title: 'Vegan builds',
+  excerpt: 'Five builds.',
+  cover_image_url: null,
+  published_at: '2026-10-01T12:00:00.000Z',
+  reading_time_minutes: 3,
+}
+
 const setupTables = ({
   sandwich = { data: stubSandwich, error: null } as Result,
   comments = { count: 3, error: null } as Result,
   photos = { count: 2, error: null } as Result,
+  blogPosts = { data: [stubBlogPost], error: null } as Result,
 } = {}) => {
-  const seen: { table: string; eq: unknown[][]; select: string[] }[] = []
+  const seen: { table: string; eq: unknown[][]; select: string[]; calls: Record<string, unknown[]> }[] = []
   mockFrom.mockImplementation((table: string) => {
-    const record = { table, eq: [] as unknown[][], select: [] as string[] }
+    const record = { table, eq: [] as unknown[][], select: [] as string[], calls: {} as Record<string, unknown[]> }
     seen.push(record)
-    const result = table === 'sandwich_database' ? sandwich : table === 'comments' ? comments : photos
+    const results: Record<string, Result> = { sandwich_database: sandwich, comments, photos, blog_posts: blogPosts }
+    const result = results[table]
     const builder: Record<string, unknown> = {}
     builder.select = (columns?: string) => {
       if (columns !== undefined) record.select.push(columns)
@@ -44,6 +55,12 @@ const setupTables = ({
     builder.eq = (...args: unknown[]) => {
       record.eq.push(args)
       return builder
+    }
+    for (const method of ['contains', 'lte', 'order', 'limit']) {
+      builder[method] = (...args: unknown[]) => {
+        record.calls[method] = args
+        return builder
+      }
     }
     builder.maybeSingle = () => Promise.resolve(result)
     builder.then = (resolve: (value: Result) => unknown) => Promise.resolve(result).then(resolve)
@@ -67,14 +84,37 @@ const bodyOf = (res: VercelResponse): { data: unknown } => vi.mocked(res.json).m
 beforeEach(() => { mockFrom.mockReset() })
 
 describe('GET /api/database/:slug', () => {
-  it('returns the entry with its rating, comment count and photo count', async () => {
+  it('returns the entry with its rating, comment count, photo count and blog posts', async () => {
     setupTables()
     const res = makeRes()
 
     await handler(makeReq(), res)
 
     expect(statusOf(res)).toBe(200)
-    expect(bodyOf(res).data).toEqual({ ...stubSandwich, comment_count: 3, photo_count: 2 })
+    expect(bodyOf(res).data).toEqual({ ...stubSandwich, comment_count: 3, photo_count: 2, blog_posts: [stubBlogPost] })
+  })
+
+  it('lists the five newest live blog posts that link to this entry', async () => {
+    const seen = setupTables()
+
+    await handler(makeReq(), makeRes())
+
+    const posts = seen.find((s) => s.table === 'blog_posts')
+    expect(posts?.select[0]).toBe('slug, title, excerpt, cover_image_url, published_at, reading_time_minutes')
+    expect(posts?.calls.contains).toEqual(['related_sandwich_slugs', ['reuben']])
+    expect(posts?.eq).toContainEqual(['published', true])
+    expect(posts?.calls.lte).toEqual(['published_at', expect.any(String)])
+    expect(posts?.calls.order).toEqual(['published_at', { ascending: false }])
+    expect(posts?.calls.limit).toEqual([5])
+  })
+
+  it('returns 500 when the blog post query fails', async () => {
+    setupTables({ blogPosts: { data: null, error: { message: 'db down' } } })
+    const res = makeRes()
+
+    await handler(makeReq(), res)
+
+    expect(statusOf(res)).toBe(500)
   })
 
   it('includes the entry\'s alternative names', async () => {
