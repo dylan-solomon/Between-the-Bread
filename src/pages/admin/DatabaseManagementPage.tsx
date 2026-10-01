@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
@@ -9,7 +9,14 @@ import MarkdownText from '@/components/MarkdownText'
 import { DIETARY_TAGS } from '@/data/dietaryTags'
 import { REGIONS } from '@/data/regions'
 import type { Region } from '@/data/regions'
+import { nextSort, sortRows } from '@/utils/tableSort'
+import type { SortState } from '@/utils/tableSort'
+import SortableHeader from '@/pages/admin/SortableHeader'
 
+
+type SandwichSortKey = 'name' | 'region' | 'country' | 'rating' | 'published'
+
+const filterInputClass = 'rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm'
 
 type Editing = { mode: 'create' } | { mode: 'edit'; sandwich: AdminSandwich }
 
@@ -297,6 +304,10 @@ export default function DatabaseManagementPage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<Editing | null>(null)
   const [saving, setSaving] = useState(false)
+  const [search, setSearch] = useState('')
+  const [regionFilter, setRegionFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [sort, setSort] = useState<SortState<SandwichSortKey>>({ key: 'name', direction: 'asc' })
 
   useEffect(() => {
     if (session === null) return
@@ -353,6 +364,34 @@ export default function DatabaseManagementPage() {
     }
   }
 
+  const filtersActive = search !== '' || regionFilter !== '' || statusFilter !== ''
+
+  const clearFilters = () => {
+    setSearch('')
+    setRegionFilter('')
+    setStatusFilter('')
+  }
+
+  const visible = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    const filtered = sandwiches.filter(
+      (sandwich) =>
+        (term === '' ||
+          sandwich.name.toLowerCase().includes(term) ||
+          sandwich.alternative_names.some((alternative) => alternative.toLowerCase().includes(term))) &&
+        (regionFilter === '' || sandwich.origin_region === regionFilter) &&
+        (statusFilter === '' || sandwich.published === (statusFilter === 'published')),
+    )
+    const byName = sortRows(filtered, { key: 'name', direction: 'asc' }, { name: (s) => s.name })
+    return sortRows(byName, sort, {
+      name: (s) => s.name,
+      region: (s) => s.origin_region,
+      country: (s) => s.origin_country,
+      rating: (s) => s.avg_rating,
+      published: (s) => s.published,
+    })
+  }, [sandwiches, search, regionFilter, statusFilter, sort])
+
   if (editing !== null) {
     return (
       <SandwichForm
@@ -378,22 +417,54 @@ export default function DatabaseManagementPage() {
         </button>
       </div>
 
+      {!loading && (
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <input
+            type="search"
+            aria-label="Search sandwiches"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value) }}
+            placeholder="Search by name or alternative name"
+            className={`${filterInputClass} w-64`}
+          />
+          <select aria-label="Filter by region" value={regionFilter} onChange={(e) => { setRegionFilter(e.target.value) }} className={filterInputClass}>
+            <option value="">All regions</option>
+            {REGIONS.map((region) => <option key={region} value={region}>{region}</option>)}
+          </select>
+          <select aria-label="Filter by status" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value) }} className={filterInputClass}>
+            <option value="">All statuses</option>
+            <option value="published">Published</option>
+            <option value="unpublished">Unpublished</option>
+          </select>
+          {filtersActive && (
+            <button type="button" onClick={clearFilters} className="text-sm text-primary underline">
+              Clear filters
+            </button>
+          )}
+          <p className="text-sm text-neutral-500">{`Showing ${String(visible.length)} of ${String(sandwiches.length)} sandwiches`}</p>
+        </div>
+      )}
+
+      {!loading && sandwiches.length > 0 && visible.length === 0 && (
+        <p className="mb-4 text-sm text-neutral-600">No sandwiches match these filters.</p>
+      )}
+
       {loading ? (
         <p className="text-sm text-neutral-500">Loading…</p>
       ) : (
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-neutral-300 text-xs uppercase text-neutral-500">
-              <th className="p-2">Name</th>
-              <th className="p-2">Region</th>
-              <th className="p-2">Country</th>
-              <th className="p-2">Rating</th>
-              <th className="p-2 text-center">Published</th>
+              <SortableHeader label="Name" sortKey="name" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} />
+              <SortableHeader label="Region" sortKey="region" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} />
+              <SortableHeader label="Country" sortKey="country" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} />
+              <SortableHeader label="Rating" sortKey="rating" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} />
+              <SortableHeader label="Published" sortKey="published" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} centered />
               <th className="p-2" />
             </tr>
           </thead>
           <tbody>
-            {sandwiches.map((sandwich) => (
+            {visible.map((sandwich) => (
               <tr key={sandwich.id} className="border-b border-neutral-200">
                 <td className="p-2 text-sm font-medium text-neutral-900">{sandwich.name}</td>
                 <td className="p-2 text-sm text-neutral-600">{sandwich.origin_region}</td>

@@ -379,3 +379,154 @@ describe('DatabaseManagementPage deleting', () => {
     expect(screen.getByText('Reuben')).toBeInTheDocument()
   })
 })
+
+describe('DatabaseManagementPage sorting and filtering', () => {
+  const sandwich = (overrides: Record<string, unknown>) => ({ ...reuben, alternative_names: [], ...overrides })
+  const all = [
+    sandwich({ id: 's-1', name: 'Reuben', slug: 'reuben', origin_country: 'United States', origin_region: 'Americas', published: false, avg_rating: 4.5 }),
+    sandwich({ id: 's-2', name: 'Banh Mi', slug: 'banh-mi', origin_country: 'Vietnam', origin_region: 'Asia', published: true, avg_rating: 4 }),
+    sandwich({ id: 's-3', name: 'Cubano', slug: 'cubano', origin_country: 'United States', origin_region: 'Americas', published: false, avg_rating: null, alternative_names: ['Cuban sandwich', 'Mixto'] }),
+    sandwich({ id: 's-4', name: 'Croque Monsieur', slug: 'croque-monsieur', origin_country: 'France', origin_region: 'Europe', published: true, avg_rating: 5 }),
+  ]
+
+  const names = (): string[] =>
+    screen.getAllByRole('row').slice(1).map((row) => within(row).getAllByRole('cell')[0]?.textContent ?? '')
+
+  const renderList = async () => {
+    mockFetch.mockResolvedValue(all)
+    render(<DatabaseManagementPage />)
+    await screen.findByText('Reuben')
+  }
+
+  it('lists sandwiches by name to start with', async () => {
+    await renderList()
+
+    expect(names()).toEqual(['Banh Mi', 'Croque Monsieur', 'Cubano', 'Reuben'])
+    expect(screen.getByText('Showing 4 of 4 sandwiches')).toBeInTheDocument()
+  })
+
+  it('searches by name without regard to case', async () => {
+    const user = userEvent.setup()
+    await renderList()
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search sandwiches' }), 'CRO')
+
+    expect(names()).toEqual(['Croque Monsieur'])
+    expect(screen.getByText('Showing 1 of 4 sandwiches')).toBeInTheDocument()
+  })
+
+  it('also searches the alternative names', async () => {
+    const user = userEvent.setup()
+    await renderList()
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search sandwiches' }), 'mixto')
+
+    expect(names()).toEqual(['Cubano'])
+  })
+
+  it('filters by region', async () => {
+    const user = userEvent.setup()
+    await renderList()
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Filter by region' }), 'Americas')
+
+    expect(names()).toEqual(['Cubano', 'Reuben'])
+  })
+
+  it('filters by whether the sandwich is published', async () => {
+    const user = userEvent.setup()
+    await renderList()
+    const status = screen.getByRole('combobox', { name: 'Filter by status' })
+
+    await user.selectOptions(status, 'Published')
+    expect(names()).toEqual(['Banh Mi', 'Croque Monsieur'])
+
+    await user.selectOptions(status, 'Unpublished')
+    expect(names()).toEqual(['Cubano', 'Reuben'])
+  })
+
+  it('combines the search and the filters', async () => {
+    const user = userEvent.setup()
+    await renderList()
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Filter by region' }), 'Americas')
+    await user.type(screen.getByRole('searchbox', { name: 'Search sandwiches' }), 'reub')
+
+    expect(names()).toEqual(['Reuben'])
+  })
+
+  it('says so when nothing matches and offers to clear the filters', async () => {
+    const user = userEvent.setup()
+    await renderList()
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search sandwiches' }), 'zzz')
+    expect(screen.getByText('No sandwiches match these filters.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Clear filters' }))
+
+    expect(names()).toHaveLength(4)
+  })
+
+  it('sorts by rating with unrated sandwiches last in both directions', async () => {
+    const user = userEvent.setup()
+    await renderList()
+
+    await user.click(screen.getByRole('button', { name: 'Sort by Rating' }))
+    expect(names()).toEqual(['Banh Mi', 'Reuben', 'Croque Monsieur', 'Cubano'])
+
+    await user.click(screen.getByRole('button', { name: 'Sort by Rating' }))
+    expect(names()).toEqual(['Croque Monsieur', 'Reuben', 'Banh Mi', 'Cubano'])
+  })
+
+  it('sorts by region, keeping name order within a region', async () => {
+    const user = userEvent.setup()
+    await renderList()
+
+    await user.click(screen.getByRole('button', { name: 'Sort by Region' }))
+
+    expect(names()).toEqual(['Cubano', 'Reuben', 'Banh Mi', 'Croque Monsieur'])
+  })
+
+  it('sorts by country', async () => {
+    const user = userEvent.setup()
+    await renderList()
+
+    await user.click(screen.getByRole('button', { name: 'Sort by Country' }))
+
+    expect(names()).toEqual(['Croque Monsieur', 'Cubano', 'Reuben', 'Banh Mi'])
+  })
+
+  it('sorts by published, with unpublished first', async () => {
+    const user = userEvent.setup()
+    await renderList()
+
+    await user.click(screen.getByRole('button', { name: 'Sort by Published' }))
+
+    expect(names()).toEqual(['Cubano', 'Reuben', 'Banh Mi', 'Croque Monsieur'])
+  })
+
+  it('shows which column the list is sorted by', async () => {
+    const user = userEvent.setup()
+    await renderList()
+
+    expect(screen.getByRole('columnheader', { name: /Name/ })).toHaveAttribute('aria-sort', 'ascending')
+
+    await user.click(screen.getByRole('button', { name: 'Sort by Region' }))
+
+    expect(screen.getByRole('columnheader', { name: /Region/ })).toHaveAttribute('aria-sort', 'ascending')
+    expect(screen.getByRole('columnheader', { name: /Name/ })).toHaveAttribute('aria-sort', 'none')
+  })
+
+  it('keeps the search and sort after opening and closing an edit form', async () => {
+    const user = userEvent.setup()
+    await renderList()
+    await user.type(screen.getByRole('searchbox', { name: 'Search sandwiches' }), 'c')
+    await user.click(screen.getByRole('button', { name: 'Sort by Region' }))
+
+    await user.click(screen.getByRole('button', { name: 'Edit Cubano' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.getByRole('searchbox', { name: 'Search sandwiches' })).toHaveValue('c')
+    expect(names()).toEqual(['Cubano', 'Croque Monsieur'])
+  })
+})
