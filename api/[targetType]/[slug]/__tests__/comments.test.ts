@@ -120,6 +120,19 @@ describe('GET /api/[targetType]/[slug]/comments', () => {
     })
   })
 
+  it('lists the comments on a blog post', async () => {
+    mockRpc.mockResolvedValue({ data: [], error: null })
+
+    const res = makeRes()
+    await handler(makeReq({ query: { targetType: 'blog', slug: 'vegan-builds', target_id: 'post-uuid-1' } }), res)
+
+    expect(res._status).toBe(200)
+    expect(mockRpc).toHaveBeenCalledWith('list_top_level_comments', expect.objectContaining({
+      p_target_type: 'blog',
+      p_target_id: 'post-uuid-1',
+    }))
+  })
+
   it.each(['newest', 'oldest', 'best', 'hot'])('passes sort=%s through to the RPC call', async (sort) => {
     mockRpc.mockResolvedValue({ data: [], error: null })
 
@@ -241,6 +254,25 @@ describe('POST /api/[targetType]/[slug]/comments', () => {
         body: 'Great sandwich!',
         parent_id: null,
       }),
+    )
+  })
+
+  it('lets a signed-in user comment on a blog post', async () => {
+    setupInsertChain()
+    mockInsertSelectSingle.mockResolvedValue({ data: { id: 'c1', parent_id: null }, error: null })
+
+    const res = makeRes()
+    await handler(
+      postReq({
+        query: { targetType: 'blog', slug: 'vegan-builds' },
+        body: { target_id: 'post-uuid-1', body: 'Loved this.' },
+      }),
+      res,
+    )
+
+    expect(res._status).toBe(201)
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ user_id: 'user-123', target_type: 'blog', target_id: 'post-uuid-1', body: 'Loved this.' }),
     )
   })
 

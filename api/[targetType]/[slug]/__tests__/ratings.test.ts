@@ -117,6 +117,14 @@ describe('POST /api/[targetType]/[slug]/ratings', () => {
     expect(body.error.code).toBe('MISSING_TARGET_ID')
   })
 
+  it('does not accept ratings on blog posts', async () => {
+    const res = makeRes()
+    await handler(makeReq({ query: { targetType: 'blog', slug: 'vegan-builds' } }), res)
+
+    expect(res._status).toBe(400)
+    expect((res._json as { error: { code: string } }).error.code).toBe('INVALID_TARGET_TYPE')
+  })
+
   it('returns 400 when targetType is invalid', async () => {
     const res = makeRes()
     await handler(makeReq({ query: { targetType: 'invalid', slug: 'reuben' } }), res)

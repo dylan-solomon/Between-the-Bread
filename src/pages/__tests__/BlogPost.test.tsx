@@ -8,6 +8,11 @@ import { toast } from 'sonner'
 const { mockFetchPost } = vi.hoisted(() => ({ mockFetchPost: vi.fn() }))
 
 vi.mock('@/api/blog', () => ({ fetchBlogPost: mockFetchPost }))
+vi.mock('@/components/sandwich-page/CommentSection', () => ({
+  default: (props: { targetType: string; slug: string; targetId: string }) => (
+    <div data-testid="comments" data-target-type={props.targetType} data-slug={props.slug} data-target-id={props.targetId} />
+  ),
+}))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import BlogPost from '@/pages/BlogPost'
@@ -181,6 +186,25 @@ describe('BlogPost related content', () => {
     await screen.findByRole('heading', { level: 1 })
 
     expect(screen.queryByRole('heading', { name: 'More from the blog' })).not.toBeInTheDocument()
+  })
+})
+
+describe('BlogPost comments', () => {
+  it('shows the comment section for this post', async () => {
+    renderAt()
+
+    const comments = await screen.findByTestId('comments')
+    expect(comments).toHaveAttribute('data-target-type', 'blog')
+    expect(comments).toHaveAttribute('data-slug', 'vegan-builds')
+    expect(comments).toHaveAttribute('data-target-id', 'p-1')
+  })
+
+  it('does not show comments while the post is loading or missing', async () => {
+    mockFetchPost.mockResolvedValue(null)
+    renderAt('missing')
+    await screen.findByRole('heading', { name: 'Post not found' })
+
+    expect(screen.queryByTestId('comments')).not.toBeInTheDocument()
   })
 })
 

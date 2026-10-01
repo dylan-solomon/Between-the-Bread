@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { useAuthPrompt } from '@/context/AuthPromptContext'
 import { deleteComment, fetchComments, likeComment, unlikeComment } from '@/api/sandwichPage'
-import type { Comment, CommentSort, CommentWithReplies, TargetType } from '@/api/sandwichPage'
+import type { Comment, CommentSort, CommentTargetType, CommentWithReplies } from '@/api/sandwichPage'
 import CommentForm from '@/components/sandwich-page/CommentForm'
 
 const PAGE_SIZE = 20
@@ -24,7 +24,7 @@ const formatDate = (iso: string): string =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
 type Props = {
-  targetType: TargetType
+  targetType: CommentTargetType
   slug: string
   targetId: string
 }

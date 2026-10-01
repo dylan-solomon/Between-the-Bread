@@ -172,6 +172,14 @@ describe('GET /api/[targetType]/[slug]/photos', () => {
     expect(mockStorageFrom).not.toHaveBeenCalled()
   })
 
+  it('does not accept photos on blog posts', async () => {
+    const res = makeRes()
+    await handler(makeReq({ query: { targetType: 'blog', slug: 'vegan-builds', target_id: 'post-uuid-1' } }), res)
+
+    expect(res._status).toBe(400)
+    expect((res._json as { error: { code: string } }).error.code).toBe('INVALID_TARGET_TYPE')
+  })
+
   it('returns 400 when targetType is invalid', async () => {
     const res = makeRes()
     await handler(makeReq({ query: { targetType: 'invalid', slug: 'reuben', target_id: 'target-uuid-123' } }), res)

@@ -6,6 +6,7 @@ import { fetchBlogPost } from '@/api/blog'
 import type { BlogPost as BlogPostData, RelatedSandwich } from '@/api/blog'
 import BlogPostCard from '@/components/blog/BlogPostCard'
 import MarkdownText from '@/components/MarkdownText'
+import CommentSection from '@/components/sandwich-page/CommentSection'
 import { SITE_URL } from '@/data/site'
 import { formatPostDate } from '@/utils/blogPost'
 
@@ -168,6 +169,10 @@ export default function BlogPost() {
           <MarkdownText>{post.body}</MarkdownText>
         </div>
       </article>
+
+      <div className="mt-12 border-t border-neutral-200 pt-8">
+        <CommentSection targetType="blog" slug={post.slug} targetId={post.id} />
+      </div>
 
       {post.related_sandwiches.length > 0 && (
         <section className="mt-12">
