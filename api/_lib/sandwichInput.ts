@@ -1,4 +1,5 @@
 import { isDietaryTag } from './dietaryTags.js'
+import { isHttpUrl, isPlainObject } from './fieldChecks.js'
 import { isRegion } from './regions.js'
 import { isSlug } from './slug.js'
 
@@ -14,20 +15,6 @@ type Mode = 'create' | 'update'
 type FieldCheck = { field: string; valid: (value: unknown) => boolean; message: string }
 
 const isNullableString = (value: unknown): boolean => value === null || typeof value === 'string'
-
-const isHttpUrl = (value: unknown): boolean => {
-  if (value === null) return true
-  if (typeof value !== 'string') return false
-  try {
-    const { protocol } = new URL(value)
-    return protocol === 'http:' || protocol === 'https:'
-  } catch {
-    return false
-  }
-}
-
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
 
 const isIngredientList = (value: unknown): boolean =>
   Array.isArray(value) &&
