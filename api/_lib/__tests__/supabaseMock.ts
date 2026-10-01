@@ -13,15 +13,22 @@ export const makeReq = (overrides: Partial<VercelRequest> = {}): VercelRequest =
     ...overrides,
   }) as unknown as VercelRequest
 
-export type MockRes = VercelResponse & { _status: number; _json: unknown; _headers: Record<string, string> }
+export type MockRes = VercelResponse & {
+  _status: number
+  _json: unknown
+  _body: unknown
+  _headers: Record<string, string>
+}
 
 export const makeRes = (): MockRes => {
   const res = {
     _status: 0,
     _json: null as unknown,
+    _body: null as unknown,
     _headers: {} as Record<string, string>,
     status(code: number) { res._status = code; return res },
     json(body: unknown) { res._json = body; return res },
+    send(body: unknown) { res._body = body; return res },
     setHeader(name: string, value: string) { res._headers[name] = value; return res },
   }
   return res as unknown as MockRes
