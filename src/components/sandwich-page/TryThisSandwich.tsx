@@ -16,7 +16,7 @@ const findByName = (pool: Ingredient[], name: string): Ingredient | undefined =>
 
 export default function TryThisSandwich({ composition, exact, onTry }: Props) {
   const navigate = useNavigate()
-  const { pools } = useIngredients()
+  const { lookupPools } = useIngredients()
 
   const handleClick = () => {
     onTry?.()
@@ -31,7 +31,7 @@ export default function TryThisSandwich({ composition, exact, onTry }: Props) {
         continue
       }
 
-      const pool = pools[category] ?? []
+      const pool = lookupPools[category] ?? []
       const matched = ingredients
         .map((i) => findByName(pool, i.name))
         .filter((match): match is Ingredient => match !== undefined)

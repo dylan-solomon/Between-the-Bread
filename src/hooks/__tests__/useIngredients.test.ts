@@ -21,7 +21,7 @@ const makePools = (): Record<CategorySlug, Ingredient[]> => ({
   'chefs-special': [],
 })
 
-const makeFetchResult = () => ({ pools: makePools(), categories: makeCategories() })
+const makeFetchResult = () => ({ pools: makePools(), lookupPools: makePools(), categories: makeCategories() })
 
 beforeEach(() => { mockFetchIngredients.mockReset() })
 
@@ -44,6 +44,27 @@ describe('useIngredients', () => {
 
     expect(result.current.pools).toEqual(pools)
     expect(result.current.error).toBeNull()
+  })
+
+  it('returns the lookup pools, which include hidden ingredients, after a successful fetch', async () => {
+    const lookupPools = { ...makePools(), bread: [...makePools().bread, { ...makePools().bread[0], id: 'h1', slug: 'pain-de-mie', name: 'Pain de mie', enabled: false } as Ingredient] }
+    mockFetchIngredients.mockResolvedValue({ pools: makePools(), lookupPools, categories: makeCategories() })
+
+    const { result } = renderHook(() => useIngredients())
+    await waitFor(() => { expect(result.current.loading).toBe(false) })
+
+    expect(result.current.lookupPools.bread?.map((i) => i.slug)).toEqual(['sourdough', 'pain-de-mie'])
+    expect(result.current.pools.bread?.map((i) => i.slug)).toEqual(['sourdough'])
+  })
+
+  it('has empty lookup pools while loading and after a failure', async () => {
+    mockFetchIngredients.mockRejectedValue(new Error('Network error'))
+
+    const { result } = renderHook(() => useIngredients())
+    expect(result.current.lookupPools).toEqual({})
+    await waitFor(() => { expect(result.current.loading).toBe(false) })
+
+    expect(result.current.lookupPools).toEqual({})
   })
 
   it('returns categories after successful fetch', async () => {

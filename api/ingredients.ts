@@ -28,11 +28,24 @@ type DbIngredient = {
   nutrition: Record<string, number> | null
   image_asset: string | null
   is_trigger: boolean
+  enabled: boolean
 }
 
-type ApiIngredient = Omit<DbIngredient, 'category_id'>
+type ApiIngredient = Omit<DbIngredient, 'category_id' | 'enabled'>
 
-type ApiCategory = DbCategory & { ingredients: ApiIngredient[] }
+type ApiCategory = DbCategory & { ingredients: ApiIngredient[]; hidden_ingredients: ApiIngredient[] }
+
+const toApiIngredient = (ingredient: DbIngredient): ApiIngredient => ({
+  id: ingredient.id,
+  name: ingredient.name,
+  slug: ingredient.slug,
+  dietary_tags: ingredient.dietary_tags,
+  compat_group: ingredient.compat_group,
+  estimated_cost: ingredient.estimated_cost,
+  nutrition: ingredient.nutrition,
+  image_asset: ingredient.image_asset,
+  is_trigger: ingredient.is_trigger,
+})
 
 export default async function handler(
   req: VercelRequest,
@@ -55,8 +68,7 @@ export default async function handler(
       .order('display_order'),
     supabase
       .from('ingredients')
-      .select('id, category_id, name, slug, dietary_tags, compat_group, estimated_cost, nutrition, image_asset, is_trigger')
-      .eq('enabled', true),
+      .select('id, category_id, name, slug, dietary_tags, compat_group, estimated_cost, nutrition, image_asset, is_trigger, enabled'),
     supabase
       .from('config')
       .select('value')
@@ -75,20 +87,29 @@ export default async function handler(
 
   const categories = catResult.data as unknown as DbCategory[]
   const allIngredients = ingResult.data as unknown as DbIngredient[]
+  const published = allIngredients.filter((i) => i.enabled)
+  const hidden = allIngredients.filter((i) => !i.enabled)
 
   const filtered = dietFilter.length > 0
-    ? allIngredients.filter((i) => matchesDiet(i.dietary_tags, dietFilter))
-    : allIngredients
+    ? published.filter((i) => matchesDiet(i.dietary_tags, dietFilter))
+    : published
 
-  const byCategory = new Map<string, ApiIngredient[]>()
-  for (const { category_id, ...rest } of filtered) {
-    const list = byCategory.get(category_id) ?? []
-    byCategory.set(category_id, [...list, rest])
+  const groupByCategory = (ingredients: DbIngredient[]): Map<string, ApiIngredient[]> => {
+    const byCategory = new Map<string, ApiIngredient[]>()
+    for (const ingredient of ingredients) {
+      const list = byCategory.get(ingredient.category_id) ?? []
+      byCategory.set(ingredient.category_id, [...list, toApiIngredient(ingredient)])
+    }
+    return byCategory
   }
+
+  const publishedByCategory = groupByCategory(filtered)
+  const hiddenByCategory = groupByCategory(hidden)
 
   const result: ApiCategory[] = categories.map((cat) => ({
     ...cat,
-    ingredients: byCategory.get(cat.id) ?? [],
+    ingredients: publishedByCategory.get(cat.id) ?? [],
+    hidden_ingredients: hiddenByCategory.get(cat.id) ?? [],
   }))
 
   res.status(200).json(

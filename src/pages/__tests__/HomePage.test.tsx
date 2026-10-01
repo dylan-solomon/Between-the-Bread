@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import { AuthPromptProvider } from '@/context/AuthPromptContext'
 import HomePage from '@/pages/HomePage'
-import { makeCategories, makePool } from '@/test/factories'
+import { makeCategories, makeIngredient, makePool } from '@/test/factories'
 import type { CompatMatrixRow } from '@/types'
 
 vi.mock('@/lib/supabase', () => ({
@@ -18,21 +18,28 @@ vi.mock('@/lib/supabase', () => ({
   },
 }))
 
-vi.mock('@/hooks/useIngredients', () => ({
-  useIngredients: () => ({
-    pools: {
+vi.mock('@/hooks/useIngredients', () => {
+  let cached: unknown
+  const build = () => {
+    const pools = {
       bread: makePool(5),
       protein: makePool(5),
       cheese: makePool(5),
       toppings: makePool(10),
       condiments: makePool(5),
       'chefs-special': makePool(3),
+    }
+    const hiddenBread = makeIngredient({ name: 'Pain de mie', slug: 'pain-de-mie', enabled: false })
+    const lookupPools = { ...pools, bread: [...pools.bread, hiddenBread] }
+    return { pools, lookupPools, categories: makeCategories(), loading: false, error: null }
+  }
+  return {
+    useIngredients: () => {
+      cached ??= build()
+      return cached
     },
-    categories: makeCategories(),
-    loading: false,
-    error: null,
-  }),
-}))
+  }
+})
 
 const stubMatrix: CompatMatrixRow[] = [
   { group_a: 'italian', group_b: 'mediterranean', affinity: 0.85 },
@@ -188,6 +195,80 @@ describe('HomePage', () => {
       renderPage()
       // Should show the sandwich name heading (from SummaryCard)
       expect(await screen.findByRole('heading', { level: 2 })).toBeInTheDocument()
+    })
+
+    describe('with an ingredient that is not enabled', () => {
+      const loadHiddenBread = () => {
+        sessionStorage.setItem('btb_load_sandwich', JSON.stringify({
+          composition: {
+            bread: [{ slug: 'pain-de-mie', name: 'Pain de mie' }],
+            protein: [{ slug: 'item-0', name: 'item-0' }],
+            cheese: [{ slug: 'item-0', name: 'item-0' }],
+            toppings: [{ slug: 'item-0', name: 'item-0' }],
+            condiments: [{ slug: 'item-0', name: 'item-0' }],
+          },
+        }))
+      }
+
+      it('still loads the sandwich and shows the ingredient', () => {
+        loadHiddenBread()
+        renderPage()
+
+        expect(screen.getAllByText('Pain de mie').length).toBeGreaterThan(0)
+        expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument()
+      })
+
+      it('drops the ingredient when the category is rolled again without a lock', () => {
+        vi.useFakeTimers()
+        loadHiddenBread()
+        renderPage()
+
+        act(() => {
+          fireEvent.click(screen.getByRole('button', { name: /roll (again|the dice)/i }))
+          vi.advanceTimersByTime(FULL_ROLL_MS)
+        })
+
+        expect(screen.queryByText('Pain de mie')).not.toBeInTheDocument()
+      })
+
+      it('keeps the ingredient through a re-roll when its category is locked', () => {
+        vi.useFakeTimers()
+        loadHiddenBread()
+        renderPage()
+
+        act(() => {
+          fireEvent.click(screen.getAllByRole('button', { name: /lock category/i })[0])
+        })
+        act(() => {
+          fireEvent.click(screen.getByRole('button', { name: /roll (again|the dice)/i }))
+          vi.advanceTimersByTime(FULL_ROLL_MS)
+        })
+
+        expect(screen.getAllByText('Pain de mie').length).toBeGreaterThan(0)
+      })
+
+      it('drops a kept ingredient once its category is unlocked and rolled', () => {
+        vi.useFakeTimers()
+        loadHiddenBread()
+        renderPage()
+
+        act(() => {
+          fireEvent.click(screen.getAllByRole('button', { name: /lock category/i })[0])
+        })
+        act(() => {
+          fireEvent.click(screen.getByRole('button', { name: /roll (again|the dice)/i }))
+          vi.advanceTimersByTime(FULL_ROLL_MS)
+        })
+        act(() => {
+          fireEvent.click(screen.getByRole('button', { name: /unlock category/i }))
+        })
+        act(() => {
+          fireEvent.click(screen.getByRole('button', { name: /roll again/i }))
+          vi.advanceTimersByTime(FULL_ROLL_MS)
+        })
+
+        expect(screen.queryByText('Pain de mie')).not.toBeInTheDocument()
+      })
     })
 
     it('clears sessionStorage after loading', () => {

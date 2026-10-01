@@ -120,6 +120,36 @@ describe('IngredientsPage', () => {
     expect(toast.success).toHaveBeenCalled()
   })
 
+  it('creates new ingredients disabled and says why', async () => {
+    mockCreateIngredient.mockResolvedValue({ ...ingredient1, id: 'ing-2', name: 'Havarti', slug: 'havarti', enabled: false })
+    render(<IngredientsPage />)
+    await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+    await userEvent.click(screen.getByRole('button', { name: /add ingredient/i }))
+
+    expect(screen.queryByRole('checkbox', { name: 'Enabled' })).not.toBeInTheDocument()
+    expect(screen.getByText(/start disabled/i)).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText(/^name$/i), 'Havarti')
+    await userEvent.type(screen.getByLabelText(/^slug$/i), 'havarti')
+    await userEvent.selectOptions(screen.getByLabelText(/^category$/i), 'cat-1')
+    await userEvent.click(screen.getByRole('button', { name: /create/i }))
+
+    await waitFor(() => {
+      expect(mockCreateIngredient).toHaveBeenCalledWith('token-abc', expect.objectContaining({ enabled: false }))
+    })
+  })
+
+  it('explains that nutrition and cost are needed when an ingredient cannot be enabled', async () => {
+    mockUpdateIngredient.mockRejectedValue(Object.assign(new Error('bad request'), { code: 'INCOMPLETE_INGREDIENT' }))
+    render(<IngredientsPage />)
+    await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /enabled: sourdough/i }))
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Add nutrition and cost data before enabling this ingredient.')
+    })
+  })
+
   it('offers every supported dietary tag by its label', async () => {
     render(<IngredientsPage />)
     await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })

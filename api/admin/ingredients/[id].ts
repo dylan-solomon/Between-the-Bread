@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ok, err } from '../../_lib/response.js'
 import { authenticateAdminRequest } from '../../_lib/adminAuth.js'
+import { hasCompleteCost, hasCompleteNutrition } from '../../_lib/ingredientData.js'
 
 const UPDATABLE_FIELDS = [
   'name',
@@ -38,6 +39,24 @@ export default async function handler(
   if (Object.keys(updates).length === 0) {
     res.status(400).json(err('NO_UPDATES', 'Request body must contain at least one updatable field.', 400))
     return
+  }
+
+  if (updates.enabled === true) {
+    const suppliesBoth = hasCompleteNutrition(updates.nutrition) && hasCompleteCost(updates.estimated_cost)
+    if (!suppliesBoth) {
+      const stored = await auth.supabase.from('ingredients').select('nutrition, estimated_cost').eq('id', id).single()
+      if (stored.error !== null) {
+        res.status(404).json(err('INGREDIENT_NOT_FOUND', 'Ingredient not found.', 404))
+        return
+      }
+      const current = stored.data as { nutrition: unknown; estimated_cost: unknown }
+      const nutrition = 'nutrition' in updates ? updates.nutrition : current.nutrition
+      const cost = 'estimated_cost' in updates ? updates.estimated_cost : current.estimated_cost
+      if (!(hasCompleteNutrition(nutrition) && hasCompleteCost(cost))) {
+        res.status(400).json(err('INCOMPLETE_INGREDIENT', 'Add nutrition and cost data before enabling this ingredient.', 400))
+        return
+      }
+    }
   }
 
   const { data, error } = await auth.supabase

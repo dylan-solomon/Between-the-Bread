@@ -82,6 +82,11 @@ type NewIngredientForm = {
   category_id: string
 }
 
+const INCOMPLETE_MESSAGE = 'Add nutrition and cost data before enabling this ingredient.'
+
+const isIncompleteIngredient = (error: unknown): boolean =>
+  typeof error === 'object' && error !== null && 'code' in error && error.code === 'INCOMPLETE_INGREDIENT'
+
 export default function IngredientsPage() {
   const { session } = useAuth()
   const { categories } = useIngredients()
@@ -107,8 +112,8 @@ export default function IngredientsPage() {
     try {
       const updated = await updateIngredient(session.access_token, id, patch)
       setIngredients((prev) => prev.map((i) => (i.id === id ? updated : i)))
-    } catch {
-      toast.error('Failed to save ingredient.')
+    } catch (error) {
+      toast.error(isIncompleteIngredient(error) ? INCOMPLETE_MESSAGE : 'Failed to save ingredient.')
     }
   }
 
@@ -120,7 +125,7 @@ export default function IngredientsPage() {
     }
     setCreating(true)
     try {
-      const created = await createIngredient(session.access_token, newIngredient)
+      const created = await createIngredient(session.access_token, { ...newIngredient, enabled: false })
       setIngredients((prev) => [...prev, created])
       setShowAddModal(false)
       setNewIngredient({ name: '', slug: '', category_id: '' })
@@ -177,6 +182,9 @@ export default function IngredientsPage() {
         <div role="dialog" aria-modal="true" aria-label="Add Ingredient" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-sm rounded-md bg-white p-5">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Add Ingredient</h2>
+            <p className="mt-1 text-xs text-neutral-500">
+              New ingredients start disabled. Once nutrition and cost data have been added, tick Enabled in the list to put the ingredient in the randomizer.
+            </p>
 
             <div className="mt-4 space-y-3">
               <label className="block text-sm text-neutral-700">

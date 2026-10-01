@@ -4,6 +4,7 @@ import { fetchIngredients } from '@/api/ingredients'
 
 type UseIngredientsResult = {
   pools: Partial<Record<CategorySlug, Ingredient[]>>
+  lookupPools: Partial<Record<CategorySlug, Ingredient[]>>
   categories: Category[]
   costDataLastUpdated: string
   loading: boolean
@@ -12,6 +13,7 @@ type UseIngredientsResult = {
 
 export const useIngredients = (): UseIngredientsResult => {
   const [pools, setPools] = useState<Partial<Record<CategorySlug, Ingredient[]>>>({})
+  const [lookupPools, setLookupPools] = useState<Partial<Record<CategorySlug, Ingredient[]>>>({})
   const [categories, setCategories] = useState<Category[]>([])
   const [costDataLastUpdated, setCostDataLastUpdated] = useState('')
   const [loading, setLoading] = useState(true)
@@ -24,6 +26,7 @@ export const useIngredients = (): UseIngredientsResult => {
       .then((result) => {
         if (!cancelled) {
           setPools(result.pools)
+          setLookupPools(result.lookupPools)
           setCategories(result.categories)
           setCostDataLastUpdated(result.costDataLastUpdated)
         }
@@ -40,5 +43,5 @@ export const useIngredients = (): UseIngredientsResult => {
     return () => { cancelled = true }
   }, [])
 
-  return { pools, categories, costDataLastUpdated, loading, error }
+  return { pools, lookupPools, categories, costDataLastUpdated, loading, error }
 }

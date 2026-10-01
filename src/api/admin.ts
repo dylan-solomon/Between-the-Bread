@@ -92,12 +92,24 @@ const authHeaders = (token: string): Record<string, string> => ({
   Authorization: `Bearer ${token}`,
 })
 
+const readErrorCode = async (response: Response): Promise<string | undefined> => {
+  try {
+    const body = (await response.json()) as { error?: { code?: unknown } }
+    return typeof body.error?.code === 'string' ? body.error.code : undefined
+  } catch {
+    return undefined
+  }
+}
+
 const request = async <T>(token: string, path: string, init: RequestInit = {}): Promise<T> => {
   const response = await fetch(new URL(path, window.location.origin).toString(), {
     ...init,
     headers: authHeaders(token),
   })
-  if (!response.ok) throw new Error(`Admin request failed: ${String(response.status)}`)
+  if (!response.ok) {
+    const code = await readErrorCode(response)
+    throw Object.assign(new Error(`Admin request failed: ${String(response.status)}`), code === undefined ? {} : { code })
+  }
   return ((await response.json()) as { data: T }).data
 }
 

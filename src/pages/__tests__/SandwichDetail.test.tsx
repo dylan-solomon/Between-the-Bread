@@ -94,6 +94,10 @@ beforeEach(() => {
       bread: [makeIngredient({ name: 'Rye', slug: 'rye' })],
       protein: [makeIngredient({ name: 'Corned Beef', slug: 'corned-beef' })],
     },
+    lookupPools: {
+      bread: [makeIngredient({ name: 'Rye', slug: 'rye' })],
+      protein: [makeIngredient({ name: 'Corned Beef', slug: 'corned-beef' }), makeIngredient({ name: 'Roast pork', slug: 'roast-pork', enabled: false })],
+    },
     loading: false,
     error: null,
   })
@@ -214,6 +218,13 @@ describe('SandwichDetail', () => {
     const visual = await screen.findByTestId('visual')
     expect(visual).toHaveTextContent('Rye')
     expect(visual).toHaveTextContent('Corned Beef')
+  })
+
+  it('draws ingredients that are not enabled in the randomizer too', async () => {
+    mockFetchSandwich.mockResolvedValue({ ...reuben, canonical_ingredients: { bread: [{ name: 'Rye' }], protein: [{ name: 'Roast pork' }] } })
+    renderAt()
+
+    expect(await screen.findByTestId('visual')).toHaveTextContent('Roast pork')
   })
 
   it('offers Try This Sandwich using the canonical ingredients', async () => {
