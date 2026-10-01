@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   createBlogCategory,
+  createPost,
+  deletePost,
+  fetchAdminPosts,
+  updatePost,
   deleteBlogCategory,
   fetchBlogCategories,
   updateBlogCategory,
@@ -24,6 +28,30 @@ describe('admin requests', () => {
     } as unknown as Response)
 
     await expect(updateIngredient('token', 'ing-1', { enabled: true })).rejects.toMatchObject({ code: 'INCOMPLETE_INGREDIENT' })
+  })
+
+  it('keeps the explanation the server gave so pages can show it', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: () => Promise.resolve({ error: { code: 'INVALID_INPUT', message: 'That slug is reserved.', status: 400 } }),
+    } as unknown as Response)
+
+    await expect(createPost('token', {
+      title: 'Hi',
+      slug: 'hi',
+      excerpt: '',
+      body: '',
+      cover_image_url: null,
+      meta_description: null,
+      author_name: 'Dylan',
+      related_sandwich_slugs: [],
+      published: false,
+      category_slugs: [],
+    })).rejects.toMatchObject({
+      code: 'INVALID_INPUT',
+      detail: 'That slug is reserved.',
+    })
   })
 
   it('still fails with a status message when the error body cannot be read', async () => {
@@ -102,6 +130,75 @@ describe('blog category requests', () => {
     await deleteBlogCategory('token-1', 'dietary')
 
     expect(lastRequest().url).toBe('https://betweenbread.co/api/admin/blog/categories/dietary')
+    expect(lastRequest().method).toBe('DELETE')
+  })
+})
+
+describe('blog post requests', () => {
+  const respondWith = (data: unknown) => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data }),
+    } as unknown as Response)
+  }
+
+  const lastRequest = () => {
+    const [url, init] = vi.mocked(fetch).mock.calls[0]
+    const body = init?.body
+    return {
+      url: typeof url === 'string' ? url : '',
+      method: init?.method,
+      body: typeof body === 'string' ? body : '',
+    }
+  }
+
+  const input = {
+    title: 'Vegan builds',
+    slug: 'vegan-builds',
+    excerpt: '',
+    body: '',
+    cover_image_url: null,
+    meta_description: null,
+    author_name: 'Dylan',
+    related_sandwich_slugs: [],
+    published: false,
+    category_slugs: ['dietary'],
+  }
+
+  it('loads every post', async () => {
+    respondWith([{ slug: 'vegan-builds' }])
+
+    await expect(fetchAdminPosts('token-1')).resolves.toEqual([{ slug: 'vegan-builds' }])
+
+    expect(lastRequest().url).toBe('https://betweenbread.co/api/admin/blog')
+  })
+
+  it('creates a post by posting its fields', async () => {
+    respondWith({ slug: 'vegan-builds' })
+
+    await createPost('token-1', input)
+
+    expect(lastRequest().method).toBe('POST')
+    expect(JSON.parse(lastRequest().body)).toEqual(input)
+  })
+
+  it('updates a post by its slug', async () => {
+    respondWith({ slug: 'vegan-builds' })
+
+    await updatePost('token-1', 'vegan-builds', { published: false })
+
+    expect(lastRequest().url).toBe('https://betweenbread.co/api/admin/blog/vegan-builds')
+    expect(lastRequest().method).toBe('PATCH')
+    expect(JSON.parse(lastRequest().body)).toEqual({ published: false })
+  })
+
+  it('deletes a post permanently', async () => {
+    respondWith({ slug: 'vegan-builds', deleted: true })
+
+    await deletePost('token-1', 'vegan-builds')
+
+    expect(lastRequest().url).toBe('https://betweenbread.co/api/admin/blog/vegan-builds?permanent=true')
     expect(lastRequest().method).toBe('DELETE')
   })
 })
