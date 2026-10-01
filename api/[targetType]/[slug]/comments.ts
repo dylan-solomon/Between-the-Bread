@@ -3,7 +3,7 @@ import { ok, err } from '../../_lib/response.js'
 import { authenticateRequest } from '../../_lib/auth.js'
 import { createClient } from '@supabase/supabase-js'
 
-const VALID_TARGET_TYPES = ['database', 'community'] as const
+const VALID_TARGET_TYPES = ['database', 'community', 'blog'] as const
 type TargetType = (typeof VALID_TARGET_TYPES)[number]
 
 const VALID_SORTS = ['newest', 'oldest', 'best', 'hot'] as const
@@ -160,7 +160,7 @@ export default async function handler(
   const { targetType } = req.query as Record<string, string | undefined>
 
   if (!isValidTargetType(targetType)) {
-    res.status(400).json(err('INVALID_TARGET_TYPE', 'targetType must be "database" or "community".', 400))
+    res.status(400).json(err('INVALID_TARGET_TYPE', 'targetType must be "database", "community" or "blog".', 400))
     return
   }
 

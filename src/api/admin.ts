@@ -54,6 +54,49 @@ export type SandwichInput = Pick<
   | 'image_url'
 > & { published?: boolean }
 
+export type AdminBlogCategory = {
+  id: string
+  slug: string
+  name: string
+  description: string | null
+  display_order: number
+  post_count: number
+}
+
+export type BlogCategoryInput = { name: string; description: string | null }
+
+export type AdminBlogPost = {
+  id: string
+  slug: string
+  title: string
+  excerpt: string
+  body: string
+  cover_image_url: string | null
+  related_sandwich_slugs: string[]
+  author_name: string
+  meta_description: string | null
+  reading_time_minutes: number
+  published: boolean
+  published_at: string | null
+  created_at: string
+  updated_at: string
+  categories: { slug: string; name: string }[]
+}
+
+export type BlogPostInput = {
+  title: string
+  slug: string
+  excerpt: string
+  body: string
+  cover_image_url: string | null
+  meta_description: string | null
+  author_name: string
+  related_sandwich_slugs: string[]
+  published: boolean
+  published_at?: string | null
+  category_slugs: string[]
+}
+
 export type ModerationComment = {
   id: string
   user_id: string
@@ -92,12 +135,17 @@ const authHeaders = (token: string): Record<string, string> => ({
   Authorization: `Bearer ${token}`,
 })
 
-const readErrorCode = async (response: Response): Promise<string | undefined> => {
+type ErrorDetails = { code?: string; detail?: string }
+
+const readErrorDetails = async (response: Response): Promise<ErrorDetails> => {
   try {
-    const body = (await response.json()) as { error?: { code?: unknown } }
-    return typeof body.error?.code === 'string' ? body.error.code : undefined
+    const body = (await response.json()) as { error?: { code?: unknown; message?: unknown } }
+    return {
+      ...(typeof body.error?.code === 'string' ? { code: body.error.code } : {}),
+      ...(typeof body.error?.message === 'string' ? { detail: body.error.message } : {}),
+    }
   } catch {
-    return undefined
+    return {}
   }
 }
 
@@ -107,8 +155,7 @@ const request = async <T>(token: string, path: string, init: RequestInit = {}): 
     headers: authHeaders(token),
   })
   if (!response.ok) {
-    const code = await readErrorCode(response)
-    throw Object.assign(new Error(`Admin request failed: ${String(response.status)}`), code === undefined ? {} : { code })
+    throw Object.assign(new Error(`Admin request failed: ${String(response.status)}`), await readErrorDetails(response))
   }
   return ((await response.json()) as { data: T }).data
 }
@@ -173,3 +220,35 @@ export const updateSandwich = (
 
 export const deleteSandwich = (token: string, slug: string): Promise<{ slug: string; deleted: boolean }> =>
   request(token, `/api/admin/database/${slug}?permanent=true`, { method: 'DELETE' })
+
+export const fetchBlogCategories = (token: string): Promise<AdminBlogCategory[]> =>
+  request(token, '/api/admin/blog/categories')
+
+export const createBlogCategory = (token: string, body: BlogCategoryInput): Promise<AdminBlogCategory> =>
+  request(token, '/api/admin/blog/categories', { method: 'POST', body: JSON.stringify(body) })
+
+export const updateBlogCategory = (
+  token: string,
+  slug: string,
+  updates: Partial<BlogCategoryInput> & { display_order?: number },
+): Promise<AdminBlogCategory> =>
+  request(token, `/api/admin/blog/categories/${slug}`, { method: 'PATCH', body: JSON.stringify(updates) })
+
+export const deleteBlogCategory = (token: string, slug: string): Promise<{ slug: string; deleted: boolean }> =>
+  request(token, `/api/admin/blog/categories/${slug}`, { method: 'DELETE' })
+
+export const fetchAdminPosts = (token: string): Promise<AdminBlogPost[]> =>
+  request(token, '/api/admin/blog')
+
+export const createPost = (token: string, body: BlogPostInput): Promise<AdminBlogPost> =>
+  request(token, '/api/admin/blog', { method: 'POST', body: JSON.stringify(body) })
+
+export const updatePost = (
+  token: string,
+  slug: string,
+  updates: Partial<BlogPostInput>,
+): Promise<AdminBlogPost> =>
+  request(token, `/api/admin/blog/${slug}`, { method: 'PATCH', body: JSON.stringify(updates) })
+
+export const deletePost = (token: string, slug: string): Promise<{ slug: string; deleted: boolean }> =>
+  request(token, `/api/admin/blog/${slug}?permanent=true`, { method: 'DELETE' })

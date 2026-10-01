@@ -88,6 +88,11 @@ describe('Header', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument()
   })
 
+  it('links to the blog regardless of login state', () => {
+    renderHeader()
+    expect(screen.getByRole('link', { name: 'Blog' })).toHaveAttribute('href', '/blog')
+  })
+
   it('links to the sandwich encyclopedia regardless of login state', () => {
     renderHeader()
     expect(screen.getByRole('link', { name: 'Sandwiches' })).toHaveAttribute('href', '/sandwiches')

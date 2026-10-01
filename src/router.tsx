@@ -14,12 +14,17 @@ const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
 const HistoryPage = lazy(() => import('@/pages/HistoryPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const SandwichIndex = lazy(() => import('@/pages/SandwichIndex'))
+const BlogIndex = lazy(() => import('@/pages/BlogIndex'))
+const BlogPost = lazy(() => import('@/pages/BlogPost'))
+const BlogCategory = lazy(() => import('@/pages/BlogCategory'))
 const SandwichDetail = lazy(() => import('@/pages/SandwichDetail'))
 const SharedSandwich = lazy(() => import('@/pages/SharedSandwich'))
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'))
 const DashboardPage = lazy(() => import('@/pages/admin/DashboardPage'))
 const IngredientsAdminPage = lazy(() => import('@/pages/admin/IngredientsPage'))
 const DatabaseManagementPage = lazy(() => import('@/pages/admin/DatabaseManagementPage'))
+const BlogManagementPage = lazy(() => import('@/pages/admin/BlogManagementPage'))
+const BlogCategoriesPage = lazy(() => import('@/pages/admin/BlogCategoriesPage'))
 const CompatMatrixPage = lazy(() => import('@/pages/admin/CompatMatrixPage'))
 const ModerationPage = lazy(() => import('@/pages/admin/ModerationPage'))
 const ConfigPage = lazy(() => import('@/pages/admin/ConfigPage'))
@@ -47,6 +52,9 @@ export const routes: RouteObject[] = [
       { path: '/account/history', element: withSuspense(HistoryPage) },
       { path: '/sandwiches', element: withSuspense(SandwichIndex) },
       { path: '/sandwiches/:slug', element: withSuspense(SandwichDetail) },
+      { path: '/blog', element: withSuspense(BlogIndex) },
+      { path: '/blog/category/:slug', element: withSuspense(BlogCategory) },
+      { path: '/blog/:slug', element: withSuspense(BlogPost) },
       { path: '/s/:hash', element: withSuspense(SharedSandwich) },
       {
         path: '/admin',
@@ -55,6 +63,8 @@ export const routes: RouteObject[] = [
           { index: true, element: withSuspense(DashboardPage) },
           { path: 'ingredients', element: withSuspense(IngredientsAdminPage) },
           { path: 'database', element: withSuspense(DatabaseManagementPage) },
+          { path: 'blog', element: withSuspense(BlogManagementPage) },
+          { path: 'blog/categories', element: withSuspense(BlogCategoriesPage) },
           { path: 'compat-matrix', element: withSuspense(CompatMatrixPage) },
           { path: 'moderation', element: withSuspense(ModerationPage) },
           { path: 'config', element: withSuspense(ConfigPage) },

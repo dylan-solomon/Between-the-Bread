@@ -3,12 +3,12 @@ import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { useAuthPrompt } from '@/context/AuthPromptContext'
 import { postComment } from '@/api/sandwichPage'
-import type { Comment, TargetType } from '@/api/sandwichPage'
+import type { Comment, CommentTargetType } from '@/api/sandwichPage'
 
 const MAX_LENGTH = 500
 
 type Props = {
-  targetType: TargetType
+  targetType: CommentTargetType
   slug: string
   targetId: string
   parentId?: string

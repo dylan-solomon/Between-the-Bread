@@ -9,6 +9,7 @@ import MarkdownText from '@/components/MarkdownText'
 import { DIETARY_TAGS } from '@/data/dietaryTags'
 import { REGIONS } from '@/data/regions'
 import type { Region } from '@/data/regions'
+import { slugify } from '@/utils/slugify'
 import { nextSort, sortRows } from '@/utils/tableSort'
 import type { SortState } from '@/utils/tableSort'
 import SortableHeader from '@/pages/admin/SortableHeader'
@@ -32,14 +33,6 @@ type FormState = {
   imageUrl: string
   ingredientText: Record<string, string>
 }
-
-const slugify = (name: string): string =>
-  name
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 
 const ingredientsToText = (ingredients: CanonicalIngredients): Record<string, string> =>
   Object.fromEntries(

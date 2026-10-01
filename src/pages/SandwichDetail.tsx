@@ -9,6 +9,7 @@ import SandwichVisual from '@/components/SandwichVisual'
 import SandwichCardPage from '@/components/sandwich-page/SandwichCardPage'
 import TryThisSandwich from '@/components/sandwich-page/TryThisSandwich'
 import { DIETARY_DISCLAIMER, getDietaryTag, isDietaryTag } from '@/data/dietaryTags'
+import { formatPostDate } from '@/utils/blogPost'
 import { useIngredients } from '@/hooks/useIngredients'
 import type { CategorySlug, Ingredient, SandwichComposition } from '@/types'
 
@@ -107,6 +108,22 @@ function Info({ entry, categoryNames }: { entry: SandwichEntry; categoryNames: M
           </ul>
           <p className="mt-2 text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
         </div>
+      )}
+
+      {entry.blog_posts.length > 0 && (
+        <section>
+          <h2 className="font-display text-lg font-bold text-neutral-900">From the blog</h2>
+          <ul className="mt-2 space-y-2">
+            {entry.blog_posts.map((post) => (
+              <li key={post.slug}>
+                <Link to={`/blog/${post.slug}`} className="text-primary underline">{post.title}</Link>
+                <p className="text-xs text-neutral-500">
+                  {`${formatPostDate(post.published_at)} · ${String(post.reading_time_minutes)} min read`}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   )

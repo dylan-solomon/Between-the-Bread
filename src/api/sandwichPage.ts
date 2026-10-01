@@ -1,5 +1,7 @@
 export type TargetType = 'database' | 'community'
 
+export type CommentTargetType = TargetType | 'blog'
+
 export type Comment = {
   id: string
   user_id: string
@@ -37,7 +39,7 @@ const authHeaders = (token: string): Record<string, string> => ({
   Authorization: `Bearer ${token}`,
 })
 
-const basePath = (targetType: TargetType, slug: string): string => `/api/${targetType}/${slug}`
+const basePath = (targetType: CommentTargetType, slug: string): string => `/api/${targetType}/${slug}`
 
 export const submitRating = async (
   token: string,
@@ -56,7 +58,7 @@ export const submitRating = async (
 }
 
 export const fetchComments = async (
-  params: { targetType: TargetType; slug: string; targetId: string; sort?: CommentSort; limit?: number; offset?: number },
+  params: { targetType: CommentTargetType; slug: string; targetId: string; sort?: CommentSort; limit?: number; offset?: number },
 ): Promise<CommentsResponse> => {
   const url = new URL(`${basePath(params.targetType, params.slug)}/comments`, window.location.origin)
   url.searchParams.set('target_id', params.targetId)
@@ -71,7 +73,7 @@ export const fetchComments = async (
 
 export const postComment = async (
   token: string,
-  params: { targetType: TargetType; slug: string; targetId: string; body: string; parentId?: string },
+  params: { targetType: CommentTargetType; slug: string; targetId: string; body: string; parentId?: string },
 ): Promise<Comment> => {
   const response = await fetch(
     new URL(`${basePath(params.targetType, params.slug)}/comments`, window.location.origin).toString(),
@@ -87,7 +89,7 @@ export const postComment = async (
 
 export const deleteComment = async (
   token: string,
-  params: { targetType: TargetType; slug: string; id: string },
+  params: { targetType: CommentTargetType; slug: string; id: string },
 ): Promise<void> => {
   const response = await fetch(
     new URL(`${basePath(params.targetType, params.slug)}/comments/${params.id}`, window.location.origin).toString(),
@@ -98,7 +100,7 @@ export const deleteComment = async (
 
 export const likeComment = async (
   token: string,
-  params: { targetType: TargetType; slug: string; id: string },
+  params: { targetType: CommentTargetType; slug: string; id: string },
 ): Promise<{ like_count: number }> => {
   const response = await fetch(
     new URL(`${basePath(params.targetType, params.slug)}/comments/${params.id}/like`, window.location.origin).toString(),
@@ -110,7 +112,7 @@ export const likeComment = async (
 
 export const unlikeComment = async (
   token: string,
-  params: { targetType: TargetType; slug: string; id: string },
+  params: { targetType: CommentTargetType; slug: string; id: string },
 ): Promise<{ like_count: number }> => {
   const response = await fetch(
     new URL(`${basePath(params.targetType, params.slug)}/comments/${params.id}/like`, window.location.origin).toString(),

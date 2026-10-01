@@ -2,6 +2,8 @@ import { next } from '@vercel/edge'
 
 const SHARE_PATTERN = /^\/s\/([a-zA-Z0-9]{8})$/
 const SANDWICH_PATTERN = /^\/sandwiches\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
+const BLOG_POST_PATTERN = /^\/blog\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
+const BLOG_CATEGORY_PATTERN = /^\/blog\/category\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
 
 type ShareApiResponse = {
   data: { hash: string; name: string }
@@ -9,6 +11,21 @@ type ShareApiResponse = {
 
 type SandwichApiResponse = {
   data: { name: string; slug: string; description: string | null; image_url: string | null }
+}
+
+type BlogPostApiResponse = {
+  data: {
+    slug: string
+    title: string
+    excerpt: string
+    meta_description: string | null
+    cover_image_url: string | null
+    published_at: string
+  }
+}
+
+type BlogCategoriesApiResponse = {
+  data: { slug: string; name: string; description: string | null; post_count: number }[]
 }
 
 const escapeHtml = (value: string): string =>
@@ -80,17 +97,62 @@ const sandwichTags = async (url: URL, slug: string): Promise<string[] | null> =>
   ]
 }
 
+const blogPostTags = async (url: URL, slug: string): Promise<string[] | null> => {
+  const apiRes = await fetch(`${url.origin}/api/blog/${slug}`)
+  if (!apiRes.ok) return null
+
+  const { data } = (await apiRes.json()) as BlogPostApiResponse
+  const description = data.meta_description ?? data.excerpt
+
+  return [
+    `<title>${escapeHtml(data.title)} | Between the Bread</title>`,
+    metaTag('og:title', data.title),
+    metaTag('og:description', description),
+    ...(data.cover_image_url === null ? [] : [metaTag('og:image', data.cover_image_url)]),
+    metaTag('og:url', `${url.origin}/blog/${slug}`),
+    metaTag('og:type', 'article'),
+    metaTag('article:published_time', data.published_at),
+    ...twitterTags({ title: data.title, description, image: data.cover_image_url }),
+  ]
+}
+
+const blogCategoryTags = async (url: URL, slug: string): Promise<string[] | null> => {
+  const apiRes = await fetch(`${url.origin}/api/blog/categories`)
+  if (!apiRes.ok) return null
+
+  const { data } = (await apiRes.json()) as BlogCategoriesApiResponse
+  const category = data.find((candidate) => candidate.slug === slug && candidate.post_count > 0)
+  if (category === undefined) return null
+
+  const title = `${category.name} | Blog | Between the Bread`
+  const description = category.description ?? `${category.name} posts from Between the Bread.`
+
+  return [
+    `<title>${escapeHtml(title)}</title>`,
+    metaTag('og:title', title),
+    metaTag('og:description', description),
+    metaTag('og:url', `${url.origin}/blog/category/${slug}`),
+    metaTag('og:type', 'website'),
+    ...twitterTags({ title, description, image: null }),
+  ]
+}
+
+const ROUTES: { pattern: RegExp; tags: (url: URL, key: string) => Promise<string[] | null> }[] = [
+  { pattern: SHARE_PATTERN, tags: shareTags },
+  { pattern: SANDWICH_PATTERN, tags: sandwichTags },
+  { pattern: BLOG_CATEGORY_PATTERN, tags: blogCategoryTags },
+  { pattern: BLOG_POST_PATTERN, tags: blogPostTags },
+]
+
 export default async function middleware(req: Request): Promise<Response> {
   const url = new URL(req.url)
-  const shareMatch = SHARE_PATTERN.exec(url.pathname)
-  const sandwichMatch = SANDWICH_PATTERN.exec(url.pathname)
 
   try {
-    const tags = shareMatch !== null
-      ? await shareTags(url, shareMatch[1])
-      : sandwichMatch !== null
-        ? await sandwichTags(url, sandwichMatch[1])
-        : null
+    const matches = ROUTES.flatMap(({ pattern, tags }) => {
+      const match = pattern.exec(url.pathname)
+      return match === null ? [] : [{ tags, key: match[1] }]
+    })
+    const tags = matches.length === 0 ? null : await matches[0].tags(url, matches[0].key)
 
     return tags === null ? next() : await respondWithTags(url, tags)
   } catch {
@@ -98,4 +160,6 @@ export default async function middleware(req: Request): Promise<Response> {
   }
 }
 
-export const config = { matcher: ['/s/:hash*', '/sandwiches/:slug'] }
+export const config = {
+  matcher: ['/s/:hash*', '/sandwiches/:slug', '/blog/:slug', '/blog/category/:slug'],
+}

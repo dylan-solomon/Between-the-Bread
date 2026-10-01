@@ -47,6 +47,16 @@ describe('Router', () => {
     expect(await screen.findByRole('heading', { name: 'Terms of Service' })).toBeInTheDocument()
   })
 
+  it('renders the blog index at /blog', async () => {
+    renderRoute('/blog')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Blog' })).toBeInTheDocument()
+  })
+
+  it('renders a blog post at /blog/:slug', () => {
+    renderRoute('/blog/vegan-builds')
+    return screen.findByRole('status', { name: 'Loading post' })
+  })
+
   it('renders the 404 page for unknown routes', async () => {
     renderRoute('/this-does-not-exist')
     expect(

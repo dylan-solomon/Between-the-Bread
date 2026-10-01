@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 const NAV_LINKS = [
   { label: 'Generator', to: '/' },
   { label: 'Sandwiches', to: '/sandwiches' },
+  { label: 'Blog', to: '/blog' },
   { label: 'About', to: '/about' },
   { label: 'Privacy Policy', to: '/privacy' },
   { label: 'Terms of Service', to: '/terms' },

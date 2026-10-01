@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -71,6 +71,7 @@ const reuben = {
   rating_count: 12,
   comment_count: 3,
   photo_count: 2,
+  blog_posts: [] as Record<string, unknown>[],
 }
 
 const renderAt = (slug = 'reuben') =>
@@ -100,6 +101,38 @@ beforeEach(() => {
     },
     loading: false,
     error: null,
+  })
+})
+
+const blogPost = (slug: string, title: string) => ({
+  slug,
+  title,
+  excerpt: 'About sandwiches.',
+  cover_image_url: null,
+  published_at: '2026-10-01T12:00:00.000Z',
+  reading_time_minutes: 4,
+})
+
+describe('SandwichDetail blog posts', () => {
+  it('lists the blog posts that mention the sandwich', async () => {
+    mockFetchSandwich.mockResolvedValue({
+      ...reuben,
+      blog_posts: [blogPost('best-reubens', 'Best Reubens'), blogPost('rye-guide', 'A guide to rye')],
+    })
+    renderAt()
+
+    const section = (await screen.findByRole('heading', { name: 'From the blog' })).closest('section')
+    if (section === null) throw new Error('section not found')
+    expect(within(section).getByRole('link', { name: 'Best Reubens' })).toHaveAttribute('href', '/blog/best-reubens')
+    expect(within(section).getByRole('link', { name: 'A guide to rye' })).toHaveAttribute('href', '/blog/rye-guide')
+    expect(within(section).getAllByText('Oct 1, 2026 · 4 min read')).toHaveLength(2)
+  })
+
+  it('leaves the section out when no post mentions the sandwich', async () => {
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(screen.queryByRole('heading', { name: 'From the blog' })).not.toBeInTheDocument()
   })
 })
 

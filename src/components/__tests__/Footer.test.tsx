@@ -21,6 +21,11 @@ describe('Footer', () => {
     expect(screen.getByRole('link', { name: 'Generator' })).toHaveAttribute('href', '/')
   })
 
+  it('renders a Blog link', () => {
+    renderFooter()
+    expect(screen.getByRole('link', { name: 'Blog' })).toHaveAttribute('href', '/blog')
+  })
+
   it('renders a Sandwiches link to the encyclopedia', () => {
     renderFooter()
     expect(screen.getByRole('link', { name: 'Sandwiches' })).toHaveAttribute('href', '/sandwiches')

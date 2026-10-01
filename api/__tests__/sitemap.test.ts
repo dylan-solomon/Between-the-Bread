@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
-import { makeReq, makeRes, queueTableResults, callsOf } from '../_lib/__tests__/supabaseMock.js'
+import { makeReq, makeRes, queueTableResults, callsOf, anyString } from '../_lib/__tests__/supabaseMock.js'
 
 const { mockFrom } = vi.hoisted(() => ({ mockFrom: vi.fn() }))
 
@@ -18,6 +18,24 @@ const entries = {
   error: null,
 }
 
+const blogPosts = {
+  data: [
+    {
+      slug: 'pairings-guide',
+      updated_at: '2026-09-25T10:00:00.000Z',
+      blog_post_categories: [{ blog_categories: { slug: 'best-pairings' } }],
+    },
+    {
+      slug: 'vegan-builds',
+      updated_at: '2026-10-02T09:00:00.000Z',
+      blog_post_categories: [{ blog_categories: { slug: 'dietary' } }, { blog_categories: { slug: 'best-pairings' } }],
+    },
+  ],
+  error: null,
+}
+
+const noPosts = { data: [], error: null }
+
 const locations = (xml: unknown): string[] =>
   [...String(xml).matchAll(/<loc>([^<]*)<\/loc>/g)].map((match) => match[1])
 
@@ -27,7 +45,7 @@ beforeEach(() => {
 
 describe('GET /sitemap.xml', () => {
   it('lists the static pages, the encyclopedia index and every published entry', async () => {
-    queueTableResults(mockFrom, [entries])
+    queueTableResults(mockFrom, [entries, blogPosts])
     const res = makeRes()
 
     await handler(makeReq(), res)
@@ -36,16 +54,78 @@ describe('GET /sitemap.xml', () => {
     expect(locations(res._body)).toEqual([
       'https://betweenbread.co/',
       'https://betweenbread.co/sandwiches',
+      'https://betweenbread.co/blog',
       'https://betweenbread.co/about',
       'https://betweenbread.co/privacy',
       'https://betweenbread.co/terms',
       'https://betweenbread.co/sandwiches/cubano',
       'https://betweenbread.co/sandwiches/reuben',
+      'https://betweenbread.co/blog/pairings-guide',
+      'https://betweenbread.co/blog/vegan-builds',
+      'https://betweenbread.co/blog/category/best-pairings',
+      'https://betweenbread.co/blog/category/dietary',
     ])
   })
 
+  it('dates each blog post by when it last changed', async () => {
+    queueTableResults(mockFrom, [entries, blogPosts])
+    const res = makeRes()
+
+    await handler(makeReq(), res)
+
+    expect(String(res._body)).toContain(
+      '<loc>https://betweenbread.co/blog/vegan-builds</loc>\n    <lastmod>2026-10-02</lastmod>',
+    )
+  })
+
+  it('dates each category by its most recently changed post', async () => {
+    queueTableResults(mockFrom, [entries, blogPosts])
+    const res = makeRes()
+
+    await handler(makeReq(), res)
+
+    expect(String(res._body)).toContain(
+      '<loc>https://betweenbread.co/blog/category/best-pairings</loc>\n    <lastmod>2026-10-02</lastmod>',
+    )
+    expect(String(res._body)).toContain(
+      '<loc>https://betweenbread.co/blog/category/dietary</loc>\n    <lastmod>2026-10-02</lastmod>',
+    )
+  })
+
+  it('lists only categories that have a live post', async () => {
+    queueTableResults(mockFrom, [entries, noPosts])
+    const res = makeRes()
+
+    await handler(makeReq(), res)
+
+    expect(locations(res._body).some((location) => location.includes('/blog/category/'))).toBe(false)
+  })
+
+  it('asks only for live blog posts', async () => {
+    const calls = queueTableResults(mockFrom, [entries, blogPosts])
+
+    await handler(makeReq(), makeRes())
+
+    const fromCalls = callsOf(calls, 'from').map((call) => call.args[0])
+    expect(fromCalls).toEqual(['sandwich_database', 'blog_posts'])
+    expect(callsOf(calls, 'select').map((call) => call.args[0])).toContain(
+      'slug, updated_at, blog_post_categories(blog_categories(slug))',
+    )
+    expect(callsOf(calls, 'lte')[0]?.args).toEqual(['published_at', anyString])
+  })
+
+  it('returns 500 when the blog query fails', async () => {
+    queueTableResults(mockFrom, [entries, { data: null, error: { message: 'db down' } }])
+    const res = makeRes()
+
+    await handler(makeReq(), res)
+
+    expect(res._status).toBe(500)
+    expect(res._headers['Cache-Control']).toBeUndefined()
+  })
+
   it('dates each entry by when it last changed', async () => {
-    queueTableResults(mockFrom, [entries])
+    queueTableResults(mockFrom, [entries, blogPosts])
     const res = makeRes()
 
     await handler(makeReq(), res)
@@ -56,7 +136,7 @@ describe('GET /sitemap.xml', () => {
   })
 
   it('is valid sitemap XML', async () => {
-    queueTableResults(mockFrom, [entries])
+    queueTableResults(mockFrom, [entries, blogPosts])
     const res = makeRes()
 
     await handler(makeReq(), res)
@@ -67,7 +147,7 @@ describe('GET /sitemap.xml', () => {
   })
 
   it('asks only for published entries, in a stable order', async () => {
-    const calls = queueTableResults(mockFrom, [entries])
+    const calls = queueTableResults(mockFrom, [entries, blogPosts])
 
     await handler(makeReq(), makeRes())
 
@@ -78,16 +158,16 @@ describe('GET /sitemap.xml', () => {
   })
 
   it('still lists the static pages when no entries are published', async () => {
-    queueTableResults(mockFrom, [{ data: [], error: null }])
+    queueTableResults(mockFrom, [{ data: [], error: null }, noPosts])
     const res = makeRes()
 
     await handler(makeReq(), res)
 
-    expect(locations(res._body)).toHaveLength(5)
+    expect(locations(res._body)).toHaveLength(6)
   })
 
   it('escapes characters that are special in XML', async () => {
-    queueTableResults(mockFrom, [{ data: [{ slug: 'a&b<c>', updated_at: '2026-10-01T08:30:00.000Z' }], error: null }])
+    queueTableResults(mockFrom, [{ data: [{ slug: 'a&b<c>', updated_at: '2026-10-01T08:30:00.000Z' }], error: null }, noPosts])
     const res = makeRes()
 
     await handler(makeReq(), res)
@@ -96,7 +176,7 @@ describe('GET /sitemap.xml', () => {
   })
 
   it('lets the CDN cache the sitemap briefly', async () => {
-    queueTableResults(mockFrom, [entries])
+    queueTableResults(mockFrom, [entries, blogPosts])
     const res = makeRes()
 
     await handler(makeReq(), res)
@@ -105,7 +185,7 @@ describe('GET /sitemap.xml', () => {
   })
 
   it('returns 500 and no cache header when the query fails', async () => {
-    queueTableResults(mockFrom, [{ data: null, error: { message: 'db down' } }])
+    queueTableResults(mockFrom, [{ data: null, error: { message: 'db down' } }, noPosts])
     const res = makeRes()
 
     await handler(makeReq(), res)

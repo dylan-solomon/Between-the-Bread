@@ -9,6 +9,10 @@
       "destination": "/api/sitemap"
     },
     {
+      "source": "/blog/rss.xml",
+      "destination": "/api/blog/rss"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

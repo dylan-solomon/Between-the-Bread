@@ -38,6 +38,11 @@ import {
   captureEncyclopediaSearched,
   captureEncyclopediaFiltered,
   captureEncyclopediaTryThisClicked,
+  captureBlogViewed,
+  captureBlogCategorySelected,
+  captureBlogPostViewed,
+  captureBlogPostShared,
+  captureBlogRelatedSandwichClicked,
   identifyUser,
   resetIdentity,
 } from '@/analytics/events'
@@ -461,6 +466,39 @@ describe('captureHistorySearched', () => {
   it('calls posthog.capture with history_searched', () => {
     captureHistorySearched({ query: 'turkey', resultsCount: 3, filtersApplied: ['favorites_only'] })
     expect(mockCapture).toHaveBeenCalledWith('history_searched', { query: 'turkey', results_count: 3, filters_applied: ['favorites_only'] })
+  })
+})
+
+describe('blog events', () => {
+  it('captureBlogViewed fires blog_viewed', () => {
+    captureBlogViewed()
+    expect(mockCapture).toHaveBeenCalledWith('blog_viewed')
+  })
+
+  it('captureBlogCategorySelected fires blog_category_selected with the category slug', () => {
+    captureBlogCategorySelected({ category: 'dietary' })
+    expect(mockCapture).toHaveBeenCalledWith('blog_category_selected', { category: 'dietary' })
+  })
+
+  it('captureBlogPostViewed fires blog_post_viewed with the slug and category slugs', () => {
+    captureBlogPostViewed({ slug: 'vegan-builds', categories: ['dietary', 'sandwich-ideas'] })
+    expect(mockCapture).toHaveBeenCalledWith('blog_post_viewed', {
+      slug: 'vegan-builds',
+      categories: ['dietary', 'sandwich-ideas'],
+    })
+  })
+
+  it('captureBlogPostShared fires blog_post_shared with the slug', () => {
+    captureBlogPostShared({ slug: 'vegan-builds' })
+    expect(mockCapture).toHaveBeenCalledWith('blog_post_shared', { slug: 'vegan-builds' })
+  })
+
+  it('captureBlogRelatedSandwichClicked fires blog_related_sandwich_clicked with both slugs', () => {
+    captureBlogRelatedSandwichClicked({ postSlug: 'vegan-builds', sandwichSlug: 'reuben' })
+    expect(mockCapture).toHaveBeenCalledWith('blog_related_sandwich_clicked', {
+      post_slug: 'vegan-builds',
+      sandwich_slug: 'reuben',
+    })
   })
 })
 
