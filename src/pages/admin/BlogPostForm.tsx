@@ -1,13 +1,19 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
+import { useBlocker } from 'react-router-dom'
 import { toast } from 'sonner'
+import { BLOG_IMAGE_TYPES, uploadBlogImage } from '@/api/blogImages'
 import MarkdownText from '@/components/MarkdownText'
+import RelatedSandwichPicker from '@/pages/admin/RelatedSandwichPicker'
 import type { AdminBlogCategory, AdminBlogPost, BlogPostInput } from '@/api/admin'
 import { fromDateTimeLocal, toDateTimeLocal } from '@/utils/blogPost'
 import { slugify } from '@/utils/slugify'
 
 const DEFAULT_BYLINE = 'Between the Bread'
 const NEEDS_CATEGORY = 'Choose at least one category to publish this post.'
+const UNSAVED_PROMPT = 'You have unsaved changes. Leave without saving?'
+const FILE_BUTTON_CLASS =
+  'inline-block cursor-pointer rounded-md border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50'
 
 type FormState = {
   title: string
@@ -59,6 +65,9 @@ const publishedAtFor = (form: FormState): Pick<BlogPostInput, 'published_at'> =>
   return form.published ? {} : { published_at: null }
 }
 
+const altTextFor = (fileName: string): string =>
+  fileName.replace(/\.[^.]+$/, '').replace(/[[\]]/g, '')
+
 const isInTheFuture = (localDateTime: string): boolean => {
   const iso = fromDateTimeLocal(localDateTime)
   return iso !== null && new Date(iso).getTime() > Date.now()
@@ -76,6 +85,34 @@ export default function BlogPostForm({ post, categories, saving, onSubmit, onCan
   const [form, setForm] = useState<FormState>(post === null ? emptyForm : formFromPost(post))
   const [slugEdited, setSlugEdited] = useState(post !== null)
   const [previewing, setPreviewing] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [initialSnapshot] = useState(() => JSON.stringify(post === null ? emptyForm : formFromPost(post)))
+  const bodyRef = useRef<HTMLTextAreaElement>(null)
+  const cursorAfterInsert = useRef<number | null>(null)
+
+  const dirty = JSON.stringify(form) !== initialSnapshot
+  const blocker = useBlocker(dirty)
+
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return
+    if (window.confirm(UNSAVED_PROMPT)) blocker.proceed()
+    else blocker.reset()
+  }, [blocker])
+
+  useEffect(() => {
+    if (!dirty) return
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault() }
+    window.addEventListener('beforeunload', warn)
+    return () => { window.removeEventListener('beforeunload', warn) }
+  }, [dirty])
+
+  useEffect(() => {
+    const position = cursorAfterInsert.current
+    if (position === null || bodyRef.current === null) return
+    cursorAfterInsert.current = null
+    bodyRef.current.focus()
+    bodyRef.current.setSelectionRange(position, position)
+  }, [form.body])
 
   const patch = (changes: Partial<FormState>) => { setForm((prev) => ({ ...prev, ...changes })) }
 
@@ -89,6 +126,46 @@ export default function BlogPostForm({ post, categories, saving, onSubmit, onCan
         ? form.categorySlugs.filter((existing) => existing !== slug)
         : [...form.categorySlugs, slug],
     })
+  }
+
+  const upload = async (file: File | undefined): Promise<string | null> => {
+    if (file === undefined) return null
+    setUploading(true)
+    try {
+      return await uploadBlogImage(file)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload image. Please try again.')
+      return null
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleInsertImage = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    const start = bodyRef.current?.selectionStart ?? form.body.length
+    const end = bodyRef.current?.selectionEnd ?? start
+    const url = await upload(file)
+    if (url === null || file === undefined) return
+    const markdown = `![${altTextFor(file.name)}](${url})`
+    cursorAfterInsert.current = start + markdown.length
+    setForm((prev) => ({
+      ...prev,
+      body: `${prev.body.slice(0, start)}${markdown}${prev.body.slice(end)}`,
+    }))
+  }
+
+  const handleCoverUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    const url = await upload(file)
+    if (url !== null) patch({ coverImageUrl: url })
+  }
+
+  const handleCancel = () => {
+    if (dirty && !window.confirm(UNSAVED_PROMPT)) return
+    onCancel()
   }
 
   const handleSubmit = (event: FormEvent) => {
@@ -164,13 +241,26 @@ export default function BlogPostForm({ post, categories, saving, onSubmit, onCan
       <div>
         <div className="flex items-center justify-between">
           <label htmlFor="post-body" className="text-sm font-medium text-neutral-700">Body</label>
-          <button
-            type="button"
-            onClick={() => { setPreviewing((prev) => !prev) }}
-            className="text-xs text-primary underline"
-          >
-            {previewing ? 'Edit body' : 'Preview body'}
-          </button>
+          <div className="flex items-center gap-3">
+            <label className={`${FILE_BUTTON_CLASS} ${previewing || uploading ? 'opacity-50' : ''}`}>
+              Insert image
+              <input
+                type="file"
+                accept={BLOG_IMAGE_TYPES.join(',')}
+                aria-label="Insert image"
+                disabled={previewing || uploading}
+                className="sr-only"
+                onChange={(e) => { void handleInsertImage(e) }}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => { setPreviewing((prev) => !prev) }}
+              className="text-xs text-primary underline"
+            >
+              {previewing ? 'Edit body' : 'Preview body'}
+            </button>
+          </div>
         </div>
         {previewing ? (
           <div className="rounded border border-neutral-200 bg-neutral-50 p-3 text-sm">
@@ -179,6 +269,7 @@ export default function BlogPostForm({ post, categories, saving, onSubmit, onCan
         ) : (
           <textarea
             id="post-body"
+            ref={bodyRef}
             value={form.body}
             onChange={(e) => { patch({ body: e.target.value }) }}
             rows={16}
@@ -187,10 +278,36 @@ export default function BlogPostForm({ post, categories, saving, onSubmit, onCan
         )}
       </div>
 
-      <label className="block text-sm font-medium text-neutral-700">
-        Cover image URL
-        <input value={form.coverImageUrl} onChange={(e) => { patch({ coverImageUrl: e.target.value }) }} className={inputClass} />
-      </label>
+      <div>
+        <div className="flex items-center justify-between">
+          <label htmlFor="post-cover" className="text-sm font-medium text-neutral-700">Cover image URL</label>
+          <label className={`${FILE_BUTTON_CLASS} ${uploading ? 'opacity-50' : ''}`}>
+            Upload cover image
+            <input
+              type="file"
+              accept={BLOG_IMAGE_TYPES.join(',')}
+              aria-label="Upload cover image"
+              disabled={uploading}
+              className="sr-only"
+              onChange={(e) => { void handleCoverUpload(e) }}
+            />
+          </label>
+        </div>
+        <input
+          id="post-cover"
+          value={form.coverImageUrl}
+          onChange={(e) => { patch({ coverImageUrl: e.target.value }) }}
+          className={inputClass}
+        />
+        {form.coverImageUrl.trim() !== '' && (
+          <img src={form.coverImageUrl.trim()} alt="Cover preview" className="mt-2 max-h-40 rounded-md object-cover" />
+        )}
+      </div>
+
+      <RelatedSandwichPicker
+        selected={form.relatedSandwichSlugs}
+        onChange={(slugs) => { patch({ relatedSandwichSlugs: slugs }) }}
+      />
 
       <label className="block text-sm font-medium text-neutral-700">
         Meta description
@@ -239,7 +356,7 @@ export default function BlogPostForm({ post, categories, saving, onSubmit, onCan
         </button>
         <button
           type="button"
-          onClick={onCancel}
+          onClick={handleCancel}
           className="rounded-md border border-neutral-300 px-4 py-1.5 text-sm text-neutral-700"
         >
           Cancel
