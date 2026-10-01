@@ -5,6 +5,8 @@ import { useIngredients } from '@/hooks/useIngredients'
 import { fetchAdminIngredients, updateIngredient, createIngredient } from '@/api/admin'
 import type { AdminIngredient } from '@/api/admin'
 import { DIETARY_TAGS } from '@/data/dietaryTags'
+import IngredientDetailsDialog from '@/pages/admin/IngredientDetailsDialog'
+import { hasCompleteData } from '@/utils/ingredientData'
 
 const COMPAT_GROUPS = ['american', 'asian_fusion', 'deli_classic', 'italian', 'mediterranean', 'neutral', 'southern', 'tex_mex'] as const
 
@@ -12,10 +14,12 @@ type RowProps = {
   ingredient: AdminIngredient
   categoryName: string
   onSave: (id: string, patch: Partial<AdminIngredient>) => void
+  onEditDetails: (ingredient: AdminIngredient) => void
 }
 
-function IngredientRow({ ingredient, categoryName, onSave }: RowProps) {
+function IngredientRow({ ingredient, categoryName, onSave, onEditDetails }: RowProps) {
   const [name, setName] = useState(ingredient.name)
+  const complete = hasCompleteData(ingredient)
 
   useEffect(() => { setName(ingredient.name) }, [ingredient.name])
 
@@ -43,6 +47,8 @@ function IngredientRow({ ingredient, categoryName, onSave }: RowProps) {
           type="checkbox"
           aria-label={`Enabled: ${ingredient.name}`}
           checked={ingredient.enabled}
+          disabled={!ingredient.enabled && !complete}
+          title={!ingredient.enabled && !complete ? 'Add nutrition and cost data before enabling' : undefined}
           onChange={(e) => { onSave(ingredient.id, { enabled: e.target.checked }) }}
         />
       </td>
@@ -72,6 +78,17 @@ function IngredientRow({ ingredient, categoryName, onSave }: RowProps) {
           ))}
         </div>
       </td>
+      <td className="p-2">
+        <button
+          type="button"
+          aria-label={`Edit nutrition and cost: ${ingredient.name}`}
+          onClick={() => { onEditDetails(ingredient) }}
+          className="text-xs text-primary underline"
+        >
+          Nutrition &amp; cost
+        </button>
+        {!complete && <p className="mt-1 text-xs font-medium text-amber-700">Missing data</p>}
+      </td>
     </tr>
   )
 }
@@ -95,6 +112,8 @@ export default function IngredientsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [newIngredient, setNewIngredient] = useState<NewIngredientForm>({ name: '', slug: '', category_id: '' })
   const [creating, setCreating] = useState(false)
+  const [detailsFor, setDetailsFor] = useState<AdminIngredient | null>(null)
+  const [savingDetails, setSavingDetails] = useState(false)
 
   useEffect(() => {
     if (session === null) return
@@ -114,6 +133,21 @@ export default function IngredientsPage() {
       setIngredients((prev) => prev.map((i) => (i.id === id ? updated : i)))
     } catch (error) {
       toast.error(isIncompleteIngredient(error) ? INCOMPLETE_MESSAGE : 'Failed to save ingredient.')
+    }
+  }
+
+  const handleSaveDetails = async (data: { nutrition: Record<string, number>; estimated_cost: Record<string, number> }) => {
+    if (session === null || detailsFor === null) return
+    setSavingDetails(true)
+    try {
+      const updated = await updateIngredient(session.access_token, detailsFor.id, data)
+      setIngredients((prev) => prev.map((i) => (i.id === detailsFor.id ? updated : i)))
+      setDetailsFor(null)
+      toast.success('Nutrition and cost saved.')
+    } catch {
+      toast.error('Failed to save nutrition and cost.')
+    } finally {
+      setSavingDetails(false)
     }
   }
 
@@ -162,6 +196,7 @@ export default function IngredientsPage() {
                 <th className="p-2">Enabled</th>
                 <th className="p-2">Compat Group</th>
                 <th className="p-2">Dietary Tags</th>
+                <th className="p-2">Nutrition &amp; Cost</th>
               </tr>
             </thead>
             <tbody>
@@ -171,11 +206,21 @@ export default function IngredientsPage() {
                   ingredient={ingredient}
                   categoryName={categoryName(ingredient.category_id)}
                   onSave={(id, patch) => { void handleSave(id, patch) }}
+                  onEditDetails={setDetailsFor}
                 />
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {detailsFor !== null && (
+        <IngredientDetailsDialog
+          ingredient={detailsFor}
+          saving={savingDetails}
+          onSave={(data) => { void handleSaveDetails(data) }}
+          onCancel={() => { setDetailsFor(null) }}
+        />
       )}
 
       {showAddModal && (

@@ -120,18 +120,43 @@ describe('POST /api/admin/ingredients', () => {
   })
 
   it.each([
-    ['no nutrition or cost', {}],
-    ['no cost', { nutrition: completeData.nutrition }],
-    ['no nutrition', { estimated_cost: completeData.estimated_cost }],
-    ['incomplete nutrition', { ...completeData, nutrition: { calories: 100 } }],
-  ])('refuses to create an enabled ingredient with %s', async (_label, extra) => {
+    ['no nutrition or cost', {}, 'INCOMPLETE_INGREDIENT'],
+    ['no cost', { nutrition: completeData.nutrition }, 'INCOMPLETE_INGREDIENT'],
+    ['no nutrition', { estimated_cost: completeData.estimated_cost }, 'INCOMPLETE_INGREDIENT'],
+    ['incomplete nutrition', { ...completeData, nutrition: { calories: 100 } }, 'INVALID_NUTRITION'],
+  ])('refuses to create an enabled ingredient with %s', async (_label, extra, expectedCode) => {
     const { mockInsert } = setupInsertChain()
     const res = makeRes()
 
     await handler(makeReq({ method: 'POST', body: { ...validBody, ...extra, enabled: true } }), res)
 
     expect(res._status).toBe(400)
-    expect((res._json as { error: { code: string } }).error.code).toBe('INCOMPLETE_INGREDIENT')
+    expect((res._json as { error: { code: string } }).error.code).toBe(expectedCode)
+    expect(mockInsert).not.toHaveBeenCalled()
+  })
+
+  it('rejects nutrition that is incomplete even when the ingredient stays disabled', async () => {
+    const { mockInsert } = setupInsertChain()
+    const res = makeRes()
+
+    await handler(makeReq({ method: 'POST', body: { ...validBody, nutrition: { calories: 100 } } }), res)
+
+    expect(res._status).toBe(400)
+    expect((res._json as { error: { code: string } }).error.code).toBe('INVALID_NUTRITION')
+    expect(mockInsert).not.toHaveBeenCalled()
+  })
+
+  it('rejects a cost whose low is above its high', async () => {
+    const { mockInsert } = setupInsertChain()
+    const res = makeRes()
+
+    await handler(
+      makeReq({ method: 'POST', body: { ...validBody, estimated_cost: { retail_low: 3, retail_high: 1, restaurant_low: 1, restaurant_high: 2 } } }),
+      res,
+    )
+
+    expect(res._status).toBe(400)
+    expect((res._json as { error: { code: string } }).error.code).toBe('INVALID_COST')
     expect(mockInsert).not.toHaveBeenCalled()
   })
 

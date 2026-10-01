@@ -41,6 +41,16 @@ export default async function handler(
     return
   }
 
+  if ('nutrition' in updates && !hasCompleteNutrition(updates.nutrition)) {
+    res.status(400).json(err('INVALID_NUTRITION', 'Nutrition needs a number of zero or more for every field.', 400))
+    return
+  }
+
+  if ('estimated_cost' in updates && !hasCompleteCost(updates.estimated_cost)) {
+    res.status(400).json(err('INVALID_COST', 'Cost needs a number of zero or more for every field, with each low no higher than its high.', 400))
+    return
+  }
+
   if (updates.enabled === true) {
     const suppliesBoth = hasCompleteNutrition(updates.nutrition) && hasCompleteCost(updates.estimated_cost)
     if (!suppliesBoth) {

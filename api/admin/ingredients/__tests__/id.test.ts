@@ -92,6 +92,80 @@ describe('PATCH /api/admin/ingredients/:id', () => {
 const completeNutrition = { calories: 100, protein_g: 5, fat_g: 3, carbs_g: 10, fiber_g: 1, sodium_mg: 100, sugar_g: 2 }
 const completeCost = { retail_low: 0.5, retail_high: 1, restaurant_low: 1, restaurant_high: 2 }
 
+describe('editing nutrition and cost', () => {
+  const setupSave = () => {
+    const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'ing-1' }, error: null })
+    const mockEq = vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: mockSingle }) })
+    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    mockFrom.mockImplementation((table: string) => (table === 'profiles' ? adminProfileBranch : { update: mockUpdate }))
+    return { mockUpdate }
+  }
+
+  const code = (res: { _json: unknown }) => (res._json as { error: { code: string } }).error.code
+
+  it('saves complete nutrition and cost', async () => {
+    const { mockUpdate } = setupSave()
+    const res = makeRes()
+
+    await handler(makeReq({ body: { nutrition: completeNutrition, estimated_cost: completeCost } }), res)
+
+    expect(res._status).toBe(200)
+    expect(mockUpdate).toHaveBeenCalledWith({ nutrition: completeNutrition, estimated_cost: completeCost })
+  })
+
+  it.each([
+    ['a missing value', { protein_g: 5, fat_g: 3, carbs_g: 10, fiber_g: 1, sodium_mg: 100, sugar_g: 2 }],
+    ['a negative value', { ...completeNutrition, sodium_mg: -1 }],
+    ['a value that is not a number', { ...completeNutrition, calories: '100' }],
+    ['no value at all', null],
+  ])('rejects nutrition with %s', async (_label, nutrition) => {
+    const { mockUpdate } = setupSave()
+    const res = makeRes()
+
+    await handler(makeReq({ body: { nutrition } }), res)
+
+    expect(res._status).toBe(400)
+    expect(code(res)).toBe('INVALID_NUTRITION')
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['a missing value', { retail_low: 0.5, retail_high: 1, restaurant_low: 1 }],
+    ['a negative value', { ...completeCost, retail_low: -0.1 }],
+    ['a retail low above the retail high', { ...completeCost, retail_low: 2, retail_high: 1 }],
+    ['a restaurant low above the restaurant high', { ...completeCost, restaurant_low: 5, restaurant_high: 2 }],
+    ['a value that is not a number', { ...completeCost, retail_high: 'a dollar' }],
+    ['no value at all', null],
+  ])('rejects cost with %s', async (_label, estimated_cost) => {
+    const { mockUpdate } = setupSave()
+    const res = makeRes()
+
+    await handler(makeReq({ body: { estimated_cost } }), res)
+
+    expect(res._status).toBe(400)
+    expect(code(res)).toBe('INVALID_COST')
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('allows equal low and high costs', async () => {
+    setupSave()
+    const res = makeRes()
+
+    await handler(makeReq({ body: { estimated_cost: { retail_low: 1, retail_high: 1, restaurant_low: 3, restaurant_high: 3 } } }), res)
+
+    expect(res._status).toBe(200)
+  })
+
+  it('allows zero values', async () => {
+    setupSave()
+    const res = makeRes()
+
+    await handler(makeReq({ body: { nutrition: { ...completeNutrition, sodium_mg: 0, fiber_g: 0 } } }), res)
+
+    expect(res._status).toBe(200)
+  })
+})
+
 describe('enabling an ingredient', () => {
   const setupEnableChain = (stored: { data: unknown; error: unknown }) => {
     const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'ing-1', enabled: true }, error: null })

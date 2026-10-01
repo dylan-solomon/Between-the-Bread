@@ -32,6 +32,16 @@ const handlePost = async (req: VercelRequest, res: VercelResponse, auth: AdminAu
     return
   }
 
+  if (body.nutrition !== undefined && body.nutrition !== null && !hasCompleteNutrition(body.nutrition)) {
+    res.status(400).json(err('INVALID_NUTRITION', 'Nutrition needs a number of zero or more for every field.', 400))
+    return
+  }
+
+  if (body.estimated_cost !== undefined && body.estimated_cost !== null && !hasCompleteCost(body.estimated_cost)) {
+    res.status(400).json(err('INVALID_COST', 'Cost needs a number of zero or more for every field, with each low no higher than its high.', 400))
+    return
+  }
+
   const enabled = body.enabled === true
   if (enabled && !(hasCompleteNutrition(body.nutrition) && hasCompleteCost(body.estimated_cost))) {
     res.status(400).json(err('INCOMPLETE_INGREDIENT', 'Add nutrition and cost data before enabling this ingredient.', 400))
