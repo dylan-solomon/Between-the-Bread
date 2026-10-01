@@ -4,15 +4,18 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
-const { mockFetchPosts, mockFetchCategories } = vi.hoisted(() => ({
+const { mockFetchPosts, mockFetchCategories, mockCategorySelected } = vi.hoisted(() => ({
   mockFetchPosts: vi.fn(),
   mockFetchCategories: vi.fn(),
+  mockCategorySelected: vi.fn(),
 }))
 
 vi.mock('@/api/blog', () => ({
   fetchBlogPosts: mockFetchPosts,
   fetchPublicBlogCategories: mockFetchCategories,
 }))
+
+vi.mock('@/analytics/events', () => ({ captureBlogCategorySelected: mockCategorySelected }))
 
 import BlogCategory from '@/pages/BlogCategory'
 
@@ -56,6 +59,13 @@ describe('BlogCategory', () => {
     expect(screen.getByText('Vegan, gluten-free and more.')).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: 'Vegan builds' })).toBeInTheDocument()
     expect(mockFetchPosts).toHaveBeenCalledWith({ category: 'dietary', limit: 12, offset: 0 })
+  })
+
+  it('does not record a category pick when the page is opened directly', async () => {
+    renderAt('dietary')
+    await screen.findByRole('heading', { level: 1, name: 'Dietary' })
+
+    expect(mockCategorySelected).not.toHaveBeenCalled()
   })
 
   it('marks the category as current in the category links', async () => {

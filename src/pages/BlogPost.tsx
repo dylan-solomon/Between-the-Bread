@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { captureBlogPostShared, captureBlogPostViewed, captureBlogRelatedSandwichClicked } from '@/analytics/events'
 import { fetchBlogPost } from '@/api/blog'
 import type { BlogPost as BlogPostData, RelatedSandwich } from '@/api/blog'
 import BlogPostCard from '@/components/blog/BlogPostCard'
+import CategoryBadge from '@/components/blog/CategoryBadge'
 import MarkdownText from '@/components/MarkdownText'
 import CommentSection from '@/components/sandwich-page/CommentSection'
 import { SITE_URL } from '@/data/site'
@@ -30,11 +32,12 @@ const structuredDataFor = (post: BlogPostData, pageUrl: string, description: str
     mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
   }).replace(/</g, '\\u003c')
 
-function RelatedSandwichCard({ sandwich }: { sandwich: RelatedSandwich }) {
+function RelatedSandwichCard({ sandwich, onOpen }: { sandwich: RelatedSandwich; onOpen: () => void }) {
   return (
     <li>
       <Link
         to={`/sandwiches/${sandwich.slug}`}
+        onClick={onOpen}
         className="flex h-full flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white transition hover:shadow-md"
       >
         {sandwich.image_url === null ? (
@@ -65,6 +68,9 @@ export default function BlogPost() {
       .then((post) => {
         if (cancelled) return
         setState(post === null ? { status: 'not-found' } : { status: 'ready', post })
+        if (post !== null) {
+          captureBlogPostViewed({ slug: post.slug, categories: post.categories.map((category) => category.slug) })
+        }
       })
       .catch(() => { if (!cancelled) setState({ status: 'error' }) })
     return () => { cancelled = true }
@@ -74,6 +80,7 @@ export default function BlogPost() {
     try {
       await navigator.clipboard.writeText(window.location.href)
       toast.success('Link copied to clipboard!')
+      captureBlogPostShared({ slug })
     } catch {
       toast.error('Failed to copy link. Please try again.')
     }
@@ -146,12 +153,10 @@ export default function BlogPost() {
           <ul className="flex flex-wrap gap-2">
             {post.categories.map((category) => (
               <li key={category.slug}>
-                <Link
-                  to={`/blog/category/${category.slug}`}
+                <CategoryBadge
+                  category={category}
                   className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-200"
-                >
-                  {category.name}
-                </Link>
+                />
               </li>
             ))}
           </ul>
@@ -194,7 +199,11 @@ export default function BlogPost() {
           <h2 className="font-display text-xl font-bold text-neutral-900">Sandwiches in this post</h2>
           <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {post.related_sandwiches.map((sandwich) => (
-              <RelatedSandwichCard key={sandwich.slug} sandwich={sandwich} />
+              <RelatedSandwichCard
+                key={sandwich.slug}
+                sandwich={sandwich}
+                onOpen={() => { captureBlogRelatedSandwichClicked({ postSlug: post.slug, sandwichSlug: sandwich.slug }) }}
+              />
             ))}
           </ul>
         </section>

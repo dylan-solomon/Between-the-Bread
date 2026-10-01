@@ -4,9 +4,13 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { toast } from 'sonner'
 
-const { mockFetchPosts } = vi.hoisted(() => ({ mockFetchPosts: vi.fn() }))
+const { mockFetchPosts, mockCategorySelected } = vi.hoisted(() => ({
+  mockFetchPosts: vi.fn(),
+  mockCategorySelected: vi.fn(),
+}))
 
 vi.mock('@/api/blog', () => ({ fetchBlogPosts: mockFetchPosts }))
+vi.mock('@/analytics/events', () => ({ captureBlogCategorySelected: mockCategorySelected }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import BlogPostList from '@/components/blog/BlogPostList'
@@ -49,6 +53,15 @@ describe('BlogPostList cards', () => {
     expect(within(card).getByText('3 min read')).toBeInTheDocument()
     expect(within(card).getByRole('link', { name: 'Dietary' })).toHaveAttribute('href', '/blog/category/dietary')
     expect(within(card).getByRole('link', { name: 'Sandwich Ideas' })).toHaveAttribute('href', '/blog/category/sandwich-ideas')
+  })
+
+  it('records which category a reader picks from a card badge', async () => {
+    const user = userEvent.setup()
+    renderList()
+
+    await user.click(await screen.findByRole('link', { name: 'Sandwich Ideas' }))
+
+    expect(mockCategorySelected).toHaveBeenCalledWith({ category: 'sandwich-ideas' })
   })
 
   it('links the title to the post', async () => {

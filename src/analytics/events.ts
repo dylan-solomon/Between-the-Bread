@@ -221,6 +221,26 @@ export const captureEncyclopediaTryThisClicked = (props: { slug: string }): void
   posthog.capture('encyclopedia_try_this_clicked', { slug: props.slug })
 }
 
+export const captureBlogViewed = (): void => {
+  posthog.capture('blog_viewed')
+}
+
+export const captureBlogCategorySelected = (props: { category: string }): void => {
+  posthog.capture('blog_category_selected', { category: props.category })
+}
+
+export const captureBlogPostViewed = (props: { slug: string; categories: string[] }): void => {
+  posthog.capture('blog_post_viewed', { slug: props.slug, categories: props.categories })
+}
+
+export const captureBlogPostShared = (props: { slug: string }): void => {
+  posthog.capture('blog_post_shared', { slug: props.slug })
+}
+
+export const captureBlogRelatedSandwichClicked = (props: { postSlug: string; sandwichSlug: string }): void => {
+  posthog.capture('blog_related_sandwich_clicked', { post_slug: props.postSlug, sandwich_slug: props.sandwichSlug })
+}
+
 export const captureAccountSignedUp = (props: { method: string }): void => {
   posthog.capture('account_signed_up', { method: props.method })
 }

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { captureBlogCategorySelected } from '@/analytics/events'
 import type { BlogCategory } from '@/api/blog'
 
 type Props = {
@@ -29,6 +30,7 @@ export default function BlogCategoryNav({ categories, activeSlug }: Props) {
             <Link
               to={`/blog/category/${category.slug}`}
               aria-current={category.slug === activeSlug ? 'page' : undefined}
+              onClick={() => { captureBlogCategorySelected({ category: category.slug }) }}
               className={linkClass(category.slug === activeSlug)}
             >
               {category.name}

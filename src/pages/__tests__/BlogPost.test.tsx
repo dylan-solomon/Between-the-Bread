@@ -5,9 +5,21 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { toast } from 'sonner'
 
-const { mockFetchPost } = vi.hoisted(() => ({ mockFetchPost: vi.fn() }))
+const { mockFetchPost, mockPostViewed, mockPostShared, mockRelatedClicked, mockCategorySelected } = vi.hoisted(() => ({
+  mockFetchPost: vi.fn(),
+  mockPostViewed: vi.fn(),
+  mockPostShared: vi.fn(),
+  mockRelatedClicked: vi.fn(),
+  mockCategorySelected: vi.fn(),
+}))
 
 vi.mock('@/api/blog', () => ({ fetchBlogPost: mockFetchPost }))
+vi.mock('@/analytics/events', () => ({
+  captureBlogPostViewed: mockPostViewed,
+  captureBlogPostShared: mockPostShared,
+  captureBlogRelatedSandwichClicked: mockRelatedClicked,
+  captureBlogCategorySelected: mockCategorySelected,
+}))
 vi.mock('@/components/sandwich-page/CommentSection', () => ({
   default: (props: { targetType: string; slug: string; targetId: string }) => (
     <div data-testid="comments" data-target-type={props.targetType} data-slug={props.slug} data-target-id={props.targetId} />
@@ -186,6 +198,63 @@ describe('BlogPost related content', () => {
     await screen.findByRole('heading', { level: 1 })
 
     expect(screen.queryByRole('heading', { name: 'More from the blog' })).not.toBeInTheDocument()
+  })
+})
+
+describe('BlogPost analytics', () => {
+  it('records that the post was viewed with its category slugs', async () => {
+    renderAt()
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(mockPostViewed).toHaveBeenCalledTimes(1)
+    expect(mockPostViewed).toHaveBeenCalledWith({ slug: 'vegan-builds', categories: ['dietary', 'sandwich-ideas'] })
+  })
+
+  it('does not record a view for a post that does not exist', async () => {
+    mockFetchPost.mockResolvedValue(null)
+    renderAt('missing')
+    await screen.findByRole('heading', { name: 'Post not found' })
+
+    expect(mockPostViewed).not.toHaveBeenCalled()
+  })
+
+  it('records a share only when the link was copied', async () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } })
+    renderAt()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Share' }))
+
+    expect(mockPostShared).toHaveBeenCalledWith({ slug: 'vegan-builds' })
+  })
+
+  it('does not record a share when copying fails', async () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) } })
+    renderAt()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Share' }))
+
+    expect(mockPostShared).not.toHaveBeenCalled()
+  })
+
+  it('records which related sandwich a reader opens', async () => {
+    mockFetchPost.mockResolvedValue(
+      makePost({ related_sandwiches: [{ name: 'Reuben', slug: 'reuben', image_url: null, description: null }] }),
+    )
+    const user = userEvent.setup()
+    renderAt()
+
+    await user.click(await screen.findByRole('link', { name: /Reuben/ }))
+
+    expect(mockRelatedClicked).toHaveBeenCalledWith({ postSlug: 'vegan-builds', sandwichSlug: 'reuben' })
+  })
+
+  it('records which category a reader picks from the post', async () => {
+    const user = userEvent.setup()
+    renderAt()
+
+    await user.click(await screen.findByRole('link', { name: 'Dietary' }))
+
+    expect(mockCategorySelected).toHaveBeenCalledWith({ category: 'dietary' })
   })
 })
 

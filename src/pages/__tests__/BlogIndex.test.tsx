@@ -3,14 +3,20 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
-const { mockFetchPosts, mockFetchCategories } = vi.hoisted(() => ({
+const { mockFetchPosts, mockFetchCategories, mockBlogViewed } = vi.hoisted(() => ({
   mockFetchPosts: vi.fn(),
   mockFetchCategories: vi.fn(),
+  mockBlogViewed: vi.fn(),
 }))
 
 vi.mock('@/api/blog', () => ({
   fetchBlogPosts: mockFetchPosts,
   fetchPublicBlogCategories: mockFetchCategories,
+}))
+
+vi.mock('@/analytics/events', () => ({
+  captureBlogViewed: mockBlogViewed,
+  captureBlogCategorySelected: vi.fn(),
 }))
 
 import BlogIndex from '@/pages/BlogIndex'
@@ -47,6 +53,13 @@ beforeEach(() => {
 })
 
 describe('BlogIndex', () => {
+  it('records that the blog was viewed, once', async () => {
+    renderPage()
+    await screen.findByRole('link', { name: 'Vegan builds' })
+
+    expect(mockBlogViewed).toHaveBeenCalledTimes(1)
+  })
+
   it('has a heading and an introduction', async () => {
     renderPage()
 

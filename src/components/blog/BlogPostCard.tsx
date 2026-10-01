@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { BlogPostSummary } from '@/api/blog'
+import CategoryBadge from '@/components/blog/CategoryBadge'
 import { formatPostDate } from '@/utils/blogPost'
 
 type Props = { post: BlogPostSummary }
@@ -28,12 +29,10 @@ export default function BlogPostCard({ post }: Props) {
           <ul className="mt-auto flex flex-wrap gap-2 pt-1">
             {post.categories.map((category) => (
               <li key={category.slug}>
-                <Link
-                  to={`/blog/category/${category.slug}`}
+                <CategoryBadge
+                  category={category}
                   className="relative z-10 rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200"
-                >
-                  {category.name}
-                </Link>
+                />
               </li>
             ))}
           </ul>
