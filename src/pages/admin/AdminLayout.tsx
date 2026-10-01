@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/ingredients', label: 'Ingredients', end: false },
   { to: '/admin/database', label: 'Sandwiches', end: false },
+  { to: '/admin/blog/categories', label: 'Blog categories', end: false },
   { to: '/admin/compat-matrix', label: 'Compatibility', end: false },
   { to: '/admin/moderation', label: 'Moderation', end: false },
   { to: '/admin/config', label: 'Config', end: false },

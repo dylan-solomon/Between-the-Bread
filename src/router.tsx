@@ -20,6 +20,7 @@ const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'))
 const DashboardPage = lazy(() => import('@/pages/admin/DashboardPage'))
 const IngredientsAdminPage = lazy(() => import('@/pages/admin/IngredientsPage'))
 const DatabaseManagementPage = lazy(() => import('@/pages/admin/DatabaseManagementPage'))
+const BlogCategoriesPage = lazy(() => import('@/pages/admin/BlogCategoriesPage'))
 const CompatMatrixPage = lazy(() => import('@/pages/admin/CompatMatrixPage'))
 const ModerationPage = lazy(() => import('@/pages/admin/ModerationPage'))
 const ConfigPage = lazy(() => import('@/pages/admin/ConfigPage'))
@@ -55,6 +56,7 @@ export const routes: RouteObject[] = [
           { index: true, element: withSuspense(DashboardPage) },
           { path: 'ingredients', element: withSuspense(IngredientsAdminPage) },
           { path: 'database', element: withSuspense(DatabaseManagementPage) },
+          { path: 'blog/categories', element: withSuspense(BlogCategoriesPage) },
           { path: 'compat-matrix', element: withSuspense(CompatMatrixPage) },
           { path: 'moderation', element: withSuspense(ModerationPage) },
           { path: 'config', element: withSuspense(ConfigPage) },

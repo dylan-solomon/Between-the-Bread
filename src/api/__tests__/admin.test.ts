@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { updateIngredient } from '@/api/admin'
+import {
+  createBlogCategory,
+  deleteBlogCategory,
+  fetchBlogCategories,
+  updateBlogCategory,
+  updateIngredient,
+} from '@/api/admin'
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn())
@@ -38,5 +44,64 @@ describe('admin requests', () => {
     } as unknown as Response)
 
     await expect(updateIngredient('token', 'ing-1', { enabled: true })).resolves.toEqual({ id: 'ing-1', enabled: true })
+  })
+})
+
+describe('blog category requests', () => {
+  const respondWith = (data: unknown) => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data }),
+    } as unknown as Response)
+  }
+
+  const lastRequest = () => {
+    const [url, init] = vi.mocked(fetch).mock.calls[0]
+    const body = init?.body
+    return {
+      url: typeof url === 'string' ? url : '',
+      method: init?.method,
+      headers: init?.headers,
+      body: typeof body === 'string' ? body : '',
+    }
+  }
+
+  it('loads the categories with the admin token', async () => {
+    respondWith([{ slug: 'dietary' }])
+
+    await expect(fetchBlogCategories('token-1')).resolves.toEqual([{ slug: 'dietary' }])
+
+    expect(lastRequest().url).toBe('https://betweenbread.co/api/admin/blog/categories')
+    expect(lastRequest().headers).toMatchObject({ Authorization: 'Bearer token-1' })
+  })
+
+  it('creates a category by posting its name and description', async () => {
+    respondWith({ slug: 'best-pairings' })
+
+    await createBlogCategory('token-1', { name: 'Best Pairings', description: 'Pairs' })
+
+    expect(lastRequest().url).toBe('https://betweenbread.co/api/admin/blog/categories')
+    expect(lastRequest().method).toBe('POST')
+    expect(JSON.parse(lastRequest().body)).toEqual({ name: 'Best Pairings', description: 'Pairs' })
+  })
+
+  it('updates a category by its slug', async () => {
+    respondWith({ slug: 'dietary' })
+
+    await updateBlogCategory('token-1', 'dietary', { display_order: 2 })
+
+    expect(lastRequest().url).toBe('https://betweenbread.co/api/admin/blog/categories/dietary')
+    expect(lastRequest().method).toBe('PATCH')
+    expect(JSON.parse(lastRequest().body)).toEqual({ display_order: 2 })
+  })
+
+  it('deletes a category by its slug', async () => {
+    respondWith({ slug: 'dietary', deleted: true })
+
+    await deleteBlogCategory('token-1', 'dietary')
+
+    expect(lastRequest().url).toBe('https://betweenbread.co/api/admin/blog/categories/dietary')
+    expect(lastRequest().method).toBe('DELETE')
   })
 })

@@ -54,6 +54,17 @@ export type SandwichInput = Pick<
   | 'image_url'
 > & { published?: boolean }
 
+export type AdminBlogCategory = {
+  id: string
+  slug: string
+  name: string
+  description: string | null
+  display_order: number
+  post_count: number
+}
+
+export type BlogCategoryInput = { name: string; description: string | null }
+
 export type ModerationComment = {
   id: string
   user_id: string
@@ -173,3 +184,19 @@ export const updateSandwich = (
 
 export const deleteSandwich = (token: string, slug: string): Promise<{ slug: string; deleted: boolean }> =>
   request(token, `/api/admin/database/${slug}?permanent=true`, { method: 'DELETE' })
+
+export const fetchBlogCategories = (token: string): Promise<AdminBlogCategory[]> =>
+  request(token, '/api/admin/blog/categories')
+
+export const createBlogCategory = (token: string, body: BlogCategoryInput): Promise<AdminBlogCategory> =>
+  request(token, '/api/admin/blog/categories', { method: 'POST', body: JSON.stringify(body) })
+
+export const updateBlogCategory = (
+  token: string,
+  slug: string,
+  updates: Partial<BlogCategoryInput> & { display_order?: number },
+): Promise<AdminBlogCategory> =>
+  request(token, `/api/admin/blog/categories/${slug}`, { method: 'PATCH', body: JSON.stringify(updates) })
+
+export const deleteBlogCategory = (token: string, slug: string): Promise<{ slug: string; deleted: boolean }> =>
+  request(token, `/api/admin/blog/categories/${slug}`, { method: 'DELETE' })

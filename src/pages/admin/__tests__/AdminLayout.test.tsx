@@ -41,6 +41,7 @@ describe('AdminLayout', () => {
     expect(screen.getByRole('link', { name: 'Ingredients' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Sandwiches' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Compatibility' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Blog categories' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Moderation' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Config' })).toBeInTheDocument()
     expect(screen.getByText('Dashboard content')).toBeInTheDocument()
