@@ -7,6 +7,7 @@ import {
   updatePost,
   deleteBlogCategory,
   fetchBlogCategories,
+  moveIngredientCategory,
   updateBlogCategory,
   updateIngredient,
 } from '@/api/admin'
@@ -200,5 +201,35 @@ describe('blog post requests', () => {
 
     expect(lastRequest().url).toBe('https://betweenbread.co/api/admin/blog/vegan-builds?permanent=true')
     expect(lastRequest().method).toBe('DELETE')
+  })
+})
+
+describe('moving an ingredient to another category', () => {
+  it('sends only the new category and returns the ingredient with the number of encyclopedia entries updated', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: { id: 'ing-1', category_id: 'cat-2' }, meta: { entries_updated: 3 } }),
+    } as unknown as Response)
+
+    await expect(moveIngredientCategory('token-1', 'ing-1', 'cat-2')).resolves.toEqual({
+      ingredient: { id: 'ing-1', category_id: 'cat-2' },
+      entriesUpdated: 3,
+    })
+
+    const [url, init] = vi.mocked(fetch).mock.calls[0]
+    expect(url).toBe('https://betweenbread.co/api/admin/ingredients/ing-1')
+    expect(init?.method).toBe('PATCH')
+    expect(init?.body).toBe(JSON.stringify({ category_id: 'cat-2' }))
+  })
+
+  it('reports the error code when the move fails', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: () => Promise.resolve({ error: { code: 'SLUG_TAKEN', message: 'taken', status: 409 } }),
+    } as unknown as Response)
+
+    await expect(moveIngredientCategory('token-1', 'ing-1', 'cat-2')).rejects.toMatchObject({ code: 'SLUG_TAKEN' })
   })
 })

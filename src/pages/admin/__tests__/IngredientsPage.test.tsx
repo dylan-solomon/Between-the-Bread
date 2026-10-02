@@ -3,7 +3,9 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-const { mockUseAuth, mockUseIngredients, mockFetchAdminIngredients, mockUpdateIngredient, mockCreateIngredient } = vi.hoisted(() => ({
+const { mockUseAuth, mockUseIngredients, mockFetchAdminIngredients, mockUpdateIngredient, mockCreateIngredient, mockFetchAdminSandwiches, mockMoveIngredientCategory } = vi.hoisted(() => ({
+  mockFetchAdminSandwiches: vi.fn(),
+  mockMoveIngredientCategory: vi.fn(),
   mockUseAuth: vi.fn(),
   mockUseIngredients: vi.fn(),
   mockFetchAdminIngredients: vi.fn(),
@@ -17,6 +19,8 @@ vi.mock('@/api/admin', () => ({
   fetchAdminIngredients: mockFetchAdminIngredients,
   updateIngredient: mockUpdateIngredient,
   createIngredient: mockCreateIngredient,
+  fetchAdminSandwiches: mockFetchAdminSandwiches,
+  moveIngredientCategory: mockMoveIngredientCategory,
 }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
@@ -46,13 +50,14 @@ beforeEach(() => {
     pools: {}, loading: false, error: null,
   })
   mockFetchAdminIngredients.mockResolvedValue([ingredient1])
+  mockFetchAdminSandwiches.mockResolvedValue([])
 })
 
 describe('IngredientsPage', () => {
   it('renders ingredient rows with name and category', async () => {
     render(<IngredientsPage />)
     await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
-    expect(within(screen.getByRole('table')).getByText('Bread')).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Category: Sourdough' })).toHaveValue('cat-1')
   })
 
   it('saves a name edit on blur', async () => {
@@ -514,5 +519,154 @@ describe('IngredientsPage', () => {
 
       expect(names()).toEqual(['Sourdough', 'Cheddar', 'Ham'])
     })
+  })
+})
+
+describe('IngredientsPage category changes', () => {
+  const twoCategories = () => {
+    mockUseIngredients.mockReturnValue({
+      categories: [
+        { id: 'cat-1', name: 'Bread', slug: 'bread' },
+        { id: 'cat-2', name: 'Toppings', slug: 'toppings' },
+      ],
+      pools: {}, loading: false, error: null,
+    })
+  }
+
+  const entry = (name: string, ingredients: Record<string, { name: string }[]>) => ({
+    id: name, name, slug: name.toLowerCase(), canonical_ingredients: ingredients,
+  })
+
+  const renderAndWait = async () => {
+    render(<IngredientsPage />)
+    await screen.findByDisplayValue('Sourdough')
+  }
+
+  it('offers every category in the dropdown with the current one selected', async () => {
+    twoCategories()
+    await renderAndWait()
+
+    const select = screen.getByRole('combobox', { name: 'Category: Sourdough' })
+    expect(select).toHaveValue('cat-1')
+    expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual(['Bread', 'Toppings'])
+  })
+
+  it('moves the ingredient after confirmation, shows its new category and says so', async () => {
+    twoCategories()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    mockMoveIngredientCategory.mockResolvedValue({ ingredient: { ...ingredient1, category_id: 'cat-2' }, entriesUpdated: 0 })
+    await renderAndWait()
+
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
+
+    expect(window.confirm).toHaveBeenCalledWith('Move "Sourdough" from Bread to Toppings?')
+    await waitFor(() => { expect(mockMoveIngredientCategory).toHaveBeenCalledWith('token-abc', 'ing-1', 'cat-2') })
+    await waitFor(() => { expect(screen.getByRole('combobox', { name: 'Category: Sourdough' })).toHaveValue('cat-2') })
+    expect(toast.success).toHaveBeenCalledWith('Moved "Sourdough" to Toppings.')
+    expect(mockUpdateIngredient).not.toHaveBeenCalled()
+  })
+
+  it('tells you which encyclopedia entries will be updated to match', async () => {
+    twoCategories()
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    mockFetchAdminSandwiches.mockResolvedValue([
+      entry('Reuben', { bread: [{ name: 'Rye' }] }),
+      entry('Grilled Cheese', { bread: [{ name: 'sourdough' }] }),
+      entry('Patty Melt', { bread: [{ name: 'Sourdough' }], toppings: [{ name: 'Onion' }] }),
+      entry('Odd One', { toppings: [{ name: 'Sourdough' }] }),
+    ])
+    await renderAndWait()
+
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
+
+    expect(window.confirm).toHaveBeenCalledWith(
+      'Move "Sourdough" from Bread to Toppings?\n\n2 encyclopedia entries list it under Bread and will be updated to list it under Toppings: Grilled Cheese, Patty Melt.',
+    )
+  })
+
+  it('uses the singular when one entry will be updated', async () => {
+    twoCategories()
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    mockFetchAdminSandwiches.mockResolvedValue([entry('Patty Melt', { bread: [{ name: 'Sourdough' }] })])
+    await renderAndWait()
+
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
+
+    expect(window.confirm).toHaveBeenCalledWith(
+      'Move "Sourdough" from Bread to Toppings?\n\n1 encyclopedia entry lists it under Bread and will be updated to list it under Toppings: Patty Melt.',
+    )
+  })
+
+  it('still moves the ingredient when the entries could not be checked first', async () => {
+    twoCategories()
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    mockFetchAdminSandwiches.mockRejectedValue(new Error('nope'))
+    await renderAndWait()
+
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
+
+    expect(window.confirm).toHaveBeenCalledWith(
+      'Move "Sourdough" from Bread to Toppings?\n\nAny encyclopedia entries that list it under Bread will be updated to list it under Toppings.',
+    )
+  })
+
+  it('reports how many encyclopedia entries were updated and refreshes its list of them', async () => {
+    twoCategories()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    mockFetchAdminSandwiches.mockResolvedValue([entry('Patty Melt', { bread: [{ name: 'Sourdough' }] })])
+    mockMoveIngredientCategory.mockResolvedValue({ ingredient: { ...ingredient1, category_id: 'cat-2' }, entriesUpdated: 1 })
+    await renderAndWait()
+
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
+
+    await waitFor(() => { expect(toast.success).toHaveBeenCalledWith('Moved "Sourdough" to Toppings and updated 1 encyclopedia entry.') })
+    expect(mockFetchAdminSandwiches).toHaveBeenCalledTimes(2)
+  })
+
+  it('uses the plural for several updated entries', async () => {
+    twoCategories()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    mockMoveIngredientCategory.mockResolvedValue({ ingredient: { ...ingredient1, category_id: 'cat-2' }, entriesUpdated: 3 })
+    await renderAndWait()
+
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
+
+    await waitFor(() => { expect(toast.success).toHaveBeenCalledWith('Moved "Sourdough" to Toppings and updated 3 encyclopedia entries.') })
+  })
+
+  it('leaves the ingredient where it is when the move is cancelled', async () => {
+    twoCategories()
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    await renderAndWait()
+
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
+
+    expect(mockMoveIngredientCategory).not.toHaveBeenCalled()
+    expect(screen.getByRole('combobox', { name: 'Category: Sourdough' })).toHaveValue('cat-1')
+  })
+
+  it('explains when the new category already has an ingredient with the same slug', async () => {
+    twoCategories()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    mockMoveIngredientCategory.mockRejectedValue(Object.assign(new Error('conflict'), { code: 'SLUG_TAKEN' }))
+    await renderAndWait()
+
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Toppings already has an ingredient with the slug "sourdough", so it cannot be moved there.')
+    })
+    expect(screen.getByRole('combobox', { name: 'Category: Sourdough' })).toHaveValue('cat-1')
+  })
+
+  it('shows a general error when the move fails for another reason', async () => {
+    twoCategories()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    mockMoveIngredientCategory.mockRejectedValue(new Error('nope'))
+    await renderAndWait()
+
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
+
+    await waitFor(() => { expect(toast.error).toHaveBeenCalledWith('Failed to move ingredient. Nothing was changed.') })
   })
 })
