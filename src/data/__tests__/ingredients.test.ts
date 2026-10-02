@@ -33,24 +33,24 @@ describe('getCategories', () => {
 })
 
 describe('getIngredientsByCategory', () => {
-  it('returns 23 bread ingredients', () => {
-    expect(getIngredientsByCategory('bread')).toHaveLength(23)
+  it('returns 27 bread ingredients', () => {
+    expect(getIngredientsByCategory('bread')).toHaveLength(27)
   })
 
-  it('returns 30 protein ingredients', () => {
-    expect(getIngredientsByCategory('protein')).toHaveLength(30)
+  it('returns 34 protein ingredients', () => {
+    expect(getIngredientsByCategory('protein')).toHaveLength(34)
   })
 
-  it('returns 22 cheese ingredients', () => {
-    expect(getIngredientsByCategory('cheese')).toHaveLength(22)
+  it('returns 23 cheese ingredients', () => {
+    expect(getIngredientsByCategory('cheese')).toHaveLength(23)
   })
 
-  it('returns 28 toppings ingredients', () => {
-    expect(getIngredientsByCategory('toppings')).toHaveLength(28)
+  it('returns 33 toppings ingredients', () => {
+    expect(getIngredientsByCategory('toppings')).toHaveLength(33)
   })
 
-  it('returns 32 condiments ingredients', () => {
-    expect(getIngredientsByCategory('condiments')).toHaveLength(32)
+  it('returns 35 condiments ingredients', () => {
+    expect(getIngredientsByCategory('condiments')).toHaveLength(35)
   })
 
   it("returns 15 chef's special ingredients", () => {
@@ -94,7 +94,10 @@ describe('getTriggerIngredients', () => {
     it('are listed in the data but disabled', () => {
       const hidden = getIngredientsByCategory('bread').filter((i) => !i.enabled).map((i) => i.slug)
 
-      expect(hidden).toEqual(['pain-de-mie', 'cuban-bread', 'hoagie-roll', 'french-roll', 'hamburger-bun', 'kaiser-roll'])
+      expect(hidden).toEqual([
+        'pain-de-mie', 'cuban-bread', 'hoagie-roll', 'french-roll', 'hamburger-bun', 'kaiser-roll',
+        'french-bread', 'muffuletta-bread', 'hot-dog-bun', 'kummelweck-roll',
+      ])
     })
 
     it('are left out of the enabled ingredients', () => {
@@ -114,11 +117,15 @@ describe('getTriggerIngredients', () => {
         .sort()
 
       expect(hiddenSlugs).toEqual([
-        'american-cheese', 'au-jus', 'basil', 'bechamel', 'butter', 'celery', 'chicken-salad', 'comte', 'cuban-bread',
-        'emmental', 'french-roll', 'fresh-mozzarella', 'fried-chicken', 'green-pepper', 'ground-beef', 'ground-beef-patty',
-        'hamburger-bun', 'hoagie-roll', 'hot-peppers', 'jam', 'jelly', 'kaiser-roll', 'ketchup', 'maple-syrup',
-        'marinara-sauce', 'meatballs', 'olive-oil', 'onion', 'pain-de-mie', 'parmesan', 'peanut-butter', 'poached-egg',
-        'powdered-sugar', 'roast-pork', 'sauteed-onions', 'smoked-brisket', 'spicy-brown-mustard', 'steak', 'thousand-island',
+        'american-cheese', 'au-jus', 'banana', 'basil', 'bechamel', 'bologna', 'breaded-pork-tenderloin', 'butter',
+        'cayenne-paste', 'celery', 'cheese-sauce', 'chicken-salad', 'comte', 'cuban-bread', 'emmental',
+        'french-bread', 'french-fries', 'french-roll', 'fresh-mozzarella', 'fried-chicken', 'fried-shrimp',
+        'giardiniera', 'green-pepper', 'ground-beef', 'ground-beef-patty', 'hamburger-bun', 'hoagie-roll',
+        'hot-dog-bun', 'hot-peppers', 'jam', 'jelly', 'kaiser-roll', 'ketchup', 'kummelweck-roll', 'lobster',
+        'maple-syrup', 'marinara-sauce', 'marshmallow-creme', 'meatballs', 'mornay-sauce', 'muffuletta-bread',
+        'olive-oil', 'olive-salad', 'onion', 'pain-de-mie', 'parmesan', 'peanut-butter', 'pimentos', 'poached-egg',
+        'powdered-sugar', 'roast-pork', 'sauteed-onions', 'smoked-brisket', 'spicy-brown-mustard', 'steak',
+        'thousand-island',
       ])
     })
 

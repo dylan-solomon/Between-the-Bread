@@ -61,7 +61,10 @@ describe('ingredient dietary tags', () => {
   describe('reviewed ingredients', () => {
     it('tags the pork products as containing pork', () => {
       expect(withTag('contains_pork').sort()).toEqual(
-        ['bacon', 'bacon-jam', 'capicola', 'cuban-bread', 'ham', 'meatballs', 'mortadella', 'pepperoni', 'prosciutto', 'pulled-pork', 'roast-pork', 'salami'].sort(),
+        [
+          'bacon', 'bacon-jam', 'bologna', 'breaded-pork-tenderloin', 'capicola', 'cayenne-paste', 'cuban-bread', 'ham',
+          'meatballs', 'mortadella', 'pepperoni', 'prosciutto', 'pulled-pork', 'roast-pork', 'salami',
+        ].sort(),
       )
     })
 
@@ -112,6 +115,22 @@ describe('ingredient dietary tags', () => {
     it('does not treat Parmesan as vegetarian, because it is traditionally made with animal rennet', () => {
       expect(tagsOf('parmesan')).not.toContain('vegetarian')
       expect(tagsOf('parmesan')).toContain('pescatarian')
+    })
+
+    it('treats shellfish as pescatarian, never vegetarian, and flags it', () => {
+      expect(withTag('contains_shellfish').sort()).toEqual(['fried-shrimp', 'kimchi', 'lobster'])
+      expect(tagsOf('lobster')).toContain('pescatarian')
+      expect(tagsOf('fried-shrimp')).toContain('pescatarian')
+      expect(tagsOf('lobster')).not.toContain('vegetarian')
+    })
+
+    it('treats the hot chicken paste as made with lard', () => {
+      expect(tagsOf('cayenne-paste')).toContain('contains_pork')
+    })
+
+    it('treats marshmallow creme as vegetarian but not vegan, because it contains egg whites', () => {
+      expect(tagsOf('marshmallow-creme')).toContain('vegetarian')
+      expect(tagsOf('marshmallow-creme')).not.toContain('vegan')
     })
 
     it('keeps plant-based staples fully tagged', () => {
