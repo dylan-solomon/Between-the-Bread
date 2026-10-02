@@ -6,7 +6,14 @@ import '@/styles/globals.css'
 import { routes } from '@/router'
 import { initPostHog } from '@/analytics/posthog'
 import { captureWebVitals } from '@/analytics/performance'
+import { installStaleChunkReload } from '@/utils/staleChunkReload'
 
+installStaleChunkReload({
+  target: window,
+  storage: window.sessionStorage,
+  reload: () => { window.location.reload() },
+  now: Date.now,
+})
 initPostHog()
 captureWebVitals()
 

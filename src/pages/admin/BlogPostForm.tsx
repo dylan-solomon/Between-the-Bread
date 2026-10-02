@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { useBlocker } from 'react-router-dom'
 import { toast } from 'sonner'
-import { BLOG_IMAGE_TYPES, uploadBlogImage } from '@/api/blogImages'
+import { IMAGE_TYPES, uploadImage } from '@/api/images'
 import MarkdownText from '@/components/MarkdownText'
 import RelatedSandwichPicker from '@/pages/admin/RelatedSandwichPicker'
 import type { AdminBlogCategory, AdminBlogPost, BlogPostInput } from '@/api/admin'
@@ -132,7 +132,7 @@ export default function BlogPostForm({ post, categories, saving, onSubmit, onCan
     if (file === undefined) return null
     setUploading(true)
     try {
-      return await uploadBlogImage(file)
+      return await uploadImage({ bucket: 'blog-images', file })
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to upload image. Please try again.')
       return null
@@ -246,7 +246,7 @@ export default function BlogPostForm({ post, categories, saving, onSubmit, onCan
               Insert image
               <input
                 type="file"
-                accept={BLOG_IMAGE_TYPES.join(',')}
+                accept={IMAGE_TYPES.join(',')}
                 aria-label="Insert image"
                 disabled={previewing || uploading}
                 className="sr-only"
@@ -285,7 +285,7 @@ export default function BlogPostForm({ post, categories, saving, onSubmit, onCan
             Upload cover image
             <input
               type="file"
-              accept={BLOG_IMAGE_TYPES.join(',')}
+              accept={IMAGE_TYPES.join(',')}
               aria-label="Upload cover image"
               disabled={uploading}
               className="sr-only"

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { useIngredients } from '@/hooks/useIngredients'
 import { createSandwich, deleteSandwich, fetchAdminSandwiches, updateSandwich } from '@/api/admin'
 import type { AdminSandwich, CanonicalIngredients, SandwichInput } from '@/api/admin'
+import { IMAGE_TYPES, uploadImage } from '@/api/images'
 import MarkdownText from '@/components/MarkdownText'
 import { DIETARY_TAGS } from '@/data/dietaryTags'
 import { REGIONS } from '@/data/regions'
@@ -18,6 +19,8 @@ import SortableHeader from '@/pages/admin/SortableHeader'
 type SandwichSortKey = 'name' | 'region' | 'country' | 'rating' | 'published'
 
 const filterInputClass = 'rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm'
+const FILE_BUTTON_CLASS =
+  'inline-block cursor-pointer rounded-md border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50'
 
 type Editing = { mode: 'create' } | { mode: 'edit'; sandwich: AdminSandwich }
 
@@ -96,6 +99,7 @@ function SandwichForm({ editing, categories, saving, onSubmit, onCancel }: Sandw
   const [form, setForm] = useState<FormState>(original === null ? emptyForm : formFromSandwich(original))
   const [slugEdited, setSlugEdited] = useState(original !== null)
   const [previewing, setPreviewing] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   const patch = (changes: Partial<FormState>) => { setForm((prev) => ({ ...prev, ...changes })) }
 
@@ -109,6 +113,20 @@ function SandwichForm({ editing, categories, saving, onSubmit, onCancel }: Sandw
         ? form.dietaryTags.filter((t) => t !== tag)
         : [...form.dietaryTags, tag],
     })
+  }
+
+  const handlePhotoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (file === undefined) return
+    setUploading(true)
+    try {
+      patch({ imageUrl: await uploadImage({ bucket: 'sandwich-images', file }) })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload image. Please try again.')
+    } finally {
+      setUploading(false)
+    }
   }
 
   const buildCanonicalIngredients = (): CanonicalIngredients => {
@@ -239,10 +257,31 @@ function SandwichForm({ editing, categories, saving, onSubmit, onCancel }: Sandw
         </label>
       </div>
 
-      <label className="block text-sm font-medium text-neutral-700">
-        Image URL
-        <input value={form.imageUrl} onChange={(e) => { patch({ imageUrl: e.target.value }) }} className={inputClass} />
-      </label>
+      <div>
+        <div className="flex items-center justify-between">
+          <label htmlFor="sandwich-image" className="text-sm font-medium text-neutral-700">Image URL</label>
+          <label className={`${FILE_BUTTON_CLASS} ${uploading ? 'opacity-50' : ''}`}>
+            {uploading ? 'Uploading…' : 'Upload photo'}
+            <input
+              type="file"
+              accept={IMAGE_TYPES.join(',')}
+              aria-label="Upload photo"
+              disabled={uploading}
+              className="sr-only"
+              onChange={(e) => { void handlePhotoUpload(e) }}
+            />
+          </label>
+        </div>
+        <input
+          id="sandwich-image"
+          value={form.imageUrl}
+          onChange={(e) => { patch({ imageUrl: e.target.value }) }}
+          className={inputClass}
+        />
+        {form.imageUrl.trim() !== '' && (
+          <img src={form.imageUrl.trim()} alt="Photo preview" className="mt-2 max-h-40 rounded-md object-cover" />
+        )}
+      </div>
 
       <fieldset>
         <legend className="text-sm font-medium text-neutral-700">Dietary tags</legend>
@@ -273,7 +312,7 @@ function SandwichForm({ editing, categories, saving, onSubmit, onCancel }: Sandw
       <div className="flex gap-2">
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || uploading}
           className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
         >
           Save

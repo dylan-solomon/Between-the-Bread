@@ -3,8 +3,9 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-const { mockUseAuth, mockUseIngredients, mockFetch, mockCreate, mockUpdate, mockDelete } = vi.hoisted(() => ({
+const { mockUseAuth, mockUseIngredients, mockFetch, mockCreate, mockUpdate, mockDelete, mockUploadImage } = vi.hoisted(() => ({
   mockUseAuth: vi.fn(),
+  mockUploadImage: vi.fn(),
   mockUseIngredients: vi.fn(),
   mockFetch: vi.fn(),
   mockCreate: vi.fn(),
@@ -19,6 +20,10 @@ vi.mock('@/api/admin', () => ({
   createSandwich: mockCreate,
   updateSandwich: mockUpdate,
   deleteSandwich: mockDelete,
+}))
+vi.mock('@/api/images', () => ({
+  uploadImage: mockUploadImage,
+  IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
 }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
@@ -193,6 +198,77 @@ describe('DatabaseManagementPage editing', () => {
 
     expect(screen.getByRole('button', { name: 'Edit Reuben' })).toBeInTheDocument()
     expect(mockUpdate).not.toHaveBeenCalled()
+  })
+})
+
+const photo = () => new File(['x'], 'reuben.jpg', { type: 'image/jpeg' })
+
+describe('DatabaseManagementPage photo', () => {
+  it('uploads a photo to the sandwich images and saves its URL with the entry', async () => {
+    mockUploadImage.mockResolvedValue('https://cdn.example.com/sandwich-images/reuben.jpg')
+    mockUpdate.mockResolvedValue(reuben)
+    const user = userEvent.setup()
+    await renderPage()
+    await user.click(screen.getByRole('button', { name: 'Edit Reuben' }))
+    const file = photo()
+
+    await user.upload(screen.getByLabelText('Upload photo'), file)
+
+    expect(mockUploadImage).toHaveBeenCalledWith({ bucket: 'sandwich-images', file })
+    await waitFor(() => { expect(screen.getByLabelText('Image URL')).toHaveValue('https://cdn.example.com/sandwich-images/reuben.jpg') })
+    expect(screen.getByAltText('Photo preview')).toHaveAttribute('src', 'https://cdn.example.com/sandwich-images/reuben.jpg')
+
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      'token-abc',
+      'reuben',
+      expect.objectContaining({ image_url: 'https://cdn.example.com/sandwich-images/reuben.jpg' }),
+    )
+  })
+
+  it('shows the current photo when editing an entry that has one', async () => {
+    mockFetch.mockResolvedValue([{ ...reuben, image_url: 'https://cdn.example.com/old.jpg' }])
+    const user = userEvent.setup()
+    await renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Edit Reuben' }))
+
+    expect(screen.getByAltText('Photo preview')).toHaveAttribute('src', 'https://cdn.example.com/old.jpg')
+  })
+
+  it('shows no preview when there is no photo', async () => {
+    const user = userEvent.setup()
+    await renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Edit Reuben' }))
+
+    expect(screen.queryByAltText('Photo preview')).not.toBeInTheDocument()
+  })
+
+  it('shows the reason and keeps the old URL when the photo is rejected', async () => {
+    mockFetch.mockResolvedValue([{ ...reuben, image_url: 'https://cdn.example.com/old.jpg' }])
+    mockUploadImage.mockRejectedValue(new Error('Images must be 5MB or smaller.'))
+    const user = userEvent.setup()
+    await renderPage()
+    await user.click(screen.getByRole('button', { name: 'Edit Reuben' }))
+
+    await user.upload(screen.getByLabelText('Upload photo'), photo())
+
+    await waitFor(() => { expect(toast.error).toHaveBeenCalledWith('Images must be 5MB or smaller.') })
+    expect(screen.getByLabelText('Image URL')).toHaveValue('https://cdn.example.com/old.jpg')
+  })
+
+  it('cannot be saved while a photo is still uploading', async () => {
+    mockUploadImage.mockReturnValue(new Promise(() => undefined))
+    const user = userEvent.setup()
+    await renderPage()
+    await user.click(screen.getByRole('button', { name: 'Edit Reuben' }))
+
+    await user.upload(screen.getByLabelText('Upload photo'), photo())
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+    expect(screen.getByLabelText('Upload photo')).toBeDisabled()
   })
 })
 

@@ -149,7 +149,7 @@ const readErrorDetails = async (response: Response): Promise<ErrorDetails> => {
   }
 }
 
-const request = async <T>(token: string, path: string, init: RequestInit = {}): Promise<T> => {
+const requestWithMeta = async (token: string, path: string, init: RequestInit = {}): Promise<{ data: unknown; meta: unknown }> => {
   const response = await fetch(new URL(path, window.location.origin).toString(), {
     ...init,
     headers: authHeaders(token),
@@ -157,8 +157,11 @@ const request = async <T>(token: string, path: string, init: RequestInit = {}): 
   if (!response.ok) {
     throw Object.assign(new Error(`Admin request failed: ${String(response.status)}`), await readErrorDetails(response))
   }
-  return ((await response.json()) as { data: T }).data
+  return (await response.json()) as { data: unknown; meta: unknown }
 }
+
+const request = async <T>(token: string, path: string, init: RequestInit = {}): Promise<T> =>
+  (await requestWithMeta(token, path, init)).data as T
 
 export const fetchConfig = (token: string): Promise<ConfigEntry[]> =>
   request(token, '/api/admin/config')
@@ -181,6 +184,19 @@ export const updateIngredient = (
   updates: Partial<AdminIngredient>,
 ): Promise<AdminIngredient> =>
   request(token, `/api/admin/ingredients/${id}`, { method: 'PATCH', body: JSON.stringify(updates) })
+
+export const moveIngredientCategory = async (
+  token: string,
+  id: string,
+  categoryId: string,
+): Promise<{ ingredient: AdminIngredient; entriesUpdated: number }> => {
+  const { data, meta } = await requestWithMeta(
+    token,
+    `/api/admin/ingredients/${id}`,
+    { method: 'PATCH', body: JSON.stringify({ category_id: categoryId }) },
+  )
+  return { ingredient: data as AdminIngredient, entriesUpdated: (meta as { entries_updated: number }).entries_updated }
+}
 
 export const updateCompatMatrix = (
   token: string,

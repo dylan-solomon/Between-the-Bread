@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { useIngredients } from '@/hooks/useIngredients'
-import { fetchAdminIngredients, updateIngredient, createIngredient } from '@/api/admin'
-import type { AdminIngredient } from '@/api/admin'
+import { fetchAdminIngredients, fetchAdminSandwiches, moveIngredientCategory, updateIngredient, createIngredient } from '@/api/admin'
+import type { AdminIngredient, AdminSandwich } from '@/api/admin'
 import { DIETARY_TAGS } from '@/data/dietaryTags'
 import IngredientDetailsDialog from '@/pages/admin/IngredientDetailsDialog'
 import { hasCompleteData } from '@/utils/ingredientData'
@@ -13,14 +13,17 @@ import SortableHeader from '@/pages/admin/SortableHeader'
 
 const COMPAT_GROUPS = ['american', 'asian_fusion', 'deli_classic', 'italian', 'mediterranean', 'neutral', 'southern', 'tex_mex'] as const
 
+type CategoryOption = { id: string; name: string; slug: string }
+
 type RowProps = {
   ingredient: AdminIngredient
-  categoryName: string
+  categories: CategoryOption[]
   onSave: (id: string, patch: Partial<AdminIngredient>) => void
+  onMoveCategory: (ingredient: AdminIngredient, categoryId: string) => void
   onEditDetails: (ingredient: AdminIngredient) => void
 }
 
-function IngredientRow({ ingredient, categoryName, onSave, onEditDetails }: RowProps) {
+function IngredientRow({ ingredient, categories, onSave, onMoveCategory, onEditDetails }: RowProps) {
   const [name, setName] = useState(ingredient.name)
   const complete = hasCompleteData(ingredient)
 
@@ -44,7 +47,16 @@ function IngredientRow({ ingredient, categoryName, onSave, onEditDetails }: RowP
           className="w-32 rounded border border-neutral-300 px-2 py-1 text-sm"
         />
       </td>
-      <td className="p-2 text-sm text-neutral-600">{categoryName}</td>
+      <td className="p-2">
+        <select
+          aria-label={`Category: ${ingredient.name}`}
+          value={ingredient.category_id}
+          onChange={(e) => { onMoveCategory(ingredient, e.target.value) }}
+          className="rounded border border-neutral-300 px-1 py-1 text-xs"
+        >
+          {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+        </select>
+      </td>
       <td className="p-2 text-center">
         <input
           type="checkbox"
@@ -108,8 +120,44 @@ const inputClass = 'rounded border border-neutral-300 bg-white px-2 py-1.5 text-
 
 const INCOMPLETE_MESSAGE = 'Add nutrition and cost data before enabling this ingredient.'
 
-const isIncompleteIngredient = (error: unknown): boolean =>
-  typeof error === 'object' && error !== null && 'code' in error && error.code === 'INCOMPLETE_INGREDIENT'
+const hasErrorCode = (error: unknown, code: string): boolean =>
+  typeof error === 'object' && error !== null && 'code' in error && error.code === code
+
+const isIncompleteIngredient = (error: unknown): boolean => hasErrorCode(error, 'INCOMPLETE_INGREDIENT')
+
+type Encyclopedia = { status: 'loading' | 'failed' } | { status: 'ready'; entries: AdminSandwich[] }
+
+const entriesListing = (entries: AdminSandwich[], categorySlug: string, ingredientName: string): string[] =>
+  entries
+    .filter((entry) =>
+      (entry.canonical_ingredients[categorySlug] ?? []).some((item) => item.name.toLowerCase() === ingredientName.toLowerCase()),
+    )
+    .map((entry) => entry.name)
+
+const moveMessage = (input: {
+  ingredientName: string
+  from: CategoryOption
+  to: CategoryOption
+  encyclopedia: Encyclopedia
+}): string => {
+  const { ingredientName, from, to, encyclopedia } = input
+  const question = `Move "${ingredientName}" from ${from.name} to ${to.name}?`
+  if (encyclopedia.status !== 'ready') {
+    return `${question}\n\nAny encyclopedia entries that list it under ${from.name} will be updated to list it under ${to.name}.`
+  }
+  const affected = entriesListing(encyclopedia.entries, from.slug, ingredientName)
+  if (affected.length === 0) return question
+  const lead = affected.length === 1
+    ? `1 encyclopedia entry lists it under ${from.name}`
+    : `${String(affected.length)} encyclopedia entries list it under ${from.name}`
+  return `${question}\n\n${lead} and will be updated to list it under ${to.name}: ${affected.join(', ')}.`
+}
+
+const movedMessage = (ingredientName: string, categoryName: string, entriesUpdated: number): string => {
+  const moved = `Moved "${ingredientName}" to ${categoryName}`
+  if (entriesUpdated === 0) return `${moved}.`
+  return `${moved} and updated ${String(entriesUpdated)} encyclopedia ${entriesUpdated === 1 ? 'entry' : 'entries'}.`
+}
 
 export default function IngredientsPage() {
   const { session } = useAuth()
@@ -126,6 +174,13 @@ export default function IngredientsPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [dataFilter, setDataFilter] = useState('')
   const [sort, setSort] = useState<SortState<IngredientSortKey>>({ key: 'name', direction: 'asc' })
+  const [encyclopedia, setEncyclopedia] = useState<Encyclopedia>({ status: 'loading' })
+
+  const loadEncyclopedia = (token: string) => {
+    fetchAdminSandwiches(token)
+      .then((entries) => { setEncyclopedia({ status: 'ready', entries }) })
+      .catch(() => { setEncyclopedia({ status: 'failed' }) })
+  }
 
   useEffect(() => {
     if (session === null) return
@@ -133,10 +188,32 @@ export default function IngredientsPage() {
       .then(setIngredients)
       .catch(() => { toast.error('Failed to load ingredients.') })
       .finally(() => { setLoading(false) })
+    loadEncyclopedia(session.access_token)
   }, [session])
 
-  const categoryName = (categoryId: string): string =>
-    categories.find((c) => c.id === categoryId)?.name ?? 'Unknown'
+  const categoryOptions: CategoryOption[] = categories.flatMap((category) =>
+    category.id === undefined ? [] : [{ id: category.id, name: category.name, slug: category.slug }],
+  )
+
+  const handleMoveCategory = async (ingredient: AdminIngredient, categoryId: string) => {
+    if (session === null) return
+    const from = categoryOptions.find((c) => c.id === ingredient.category_id)
+    const to = categoryOptions.find((c) => c.id === categoryId)
+    if (from === undefined || to === undefined || from.id === to.id) return
+    if (!window.confirm(moveMessage({ ingredientName: ingredient.name, from, to, encyclopedia }))) return
+    try {
+      const { ingredient: moved, entriesUpdated } = await moveIngredientCategory(session.access_token, ingredient.id, categoryId)
+      setIngredients((prev) => prev.map((i) => (i.id === ingredient.id ? moved : i)))
+      toast.success(movedMessage(ingredient.name, to.name, entriesUpdated))
+      loadEncyclopedia(session.access_token)
+    } catch (error) {
+      toast.error(
+        hasErrorCode(error, 'SLUG_TAKEN')
+          ? `${to.name} already has an ingredient with the slug "${ingredient.slug}", so it cannot be moved there.`
+          : 'Failed to move ingredient. Nothing was changed.',
+      )
+    }
+  }
 
   const handleSave = async (id: string, patch: Partial<AdminIngredient>) => {
     if (session === null) return
@@ -280,8 +357,9 @@ export default function IngredientsPage() {
                 <IngredientRow
                   key={ingredient.id}
                   ingredient={ingredient}
-                  categoryName={categoryName(ingredient.category_id)}
+                  categories={categoryOptions}
                   onSave={(id, patch) => { void handleSave(id, patch) }}
+                  onMoveCategory={(target, categoryId) => { void handleMoveCategory(target, categoryId) }}
                   onEditDetails={setDetailsFor}
                 />
               ))}

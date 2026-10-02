@@ -3,11 +3,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const mockGetUser = vi.fn()
 const mockFrom = vi.fn()
+const mockRpc = vi.fn()
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     auth: { getUser: mockGetUser },
     from: mockFrom,
+    rpc: mockRpc,
   }),
 }))
 
@@ -70,6 +72,75 @@ describe('PATCH /api/admin/ingredients/:id', () => {
     await handler(makeReq({ body: {} }), res)
     expect(res._status).toBe(400)
     expect((res._json as { error: { code: string } }).error.code).toBe('NO_UPDATES')
+  })
+
+  describe('changing the category', () => {
+    const movedRow = { id: 'ing-1', category_id: 'cat-2', name: 'Sourdough' }
+
+    const setupLookup = (result: { data: unknown; error: unknown }) => {
+      const mockSingle = vi.fn().mockResolvedValue(result)
+      const mockEq = vi.fn().mockReturnValue({ single: mockSingle })
+      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
+      const mockUpdate = vi.fn()
+      mockFrom.mockImplementation((table: string) =>
+        table === 'profiles' ? adminProfileBranch : { select: mockSelect, update: mockUpdate },
+      )
+      return { mockEq, mockUpdate }
+    }
+
+    const move = (body: Record<string, unknown> = { category_id: 'cat-2' }) => makeReq({ body })
+
+    it('moves the ingredient and its encyclopedia listings in one database call and reports how many entries changed', async () => {
+      const { mockEq, mockUpdate } = setupLookup({ data: movedRow, error: null })
+      mockRpc.mockResolvedValue({ data: 2, error: null })
+      const res = makeRes()
+
+      await handler(move(), res)
+
+      expect(mockRpc).toHaveBeenCalledWith('move_ingredient_category', { p_ingredient_id: 'ing-1', p_category_id: 'cat-2' })
+      expect(mockUpdate).not.toHaveBeenCalled()
+      expect(mockEq).toHaveBeenCalledWith('id', 'ing-1')
+      expect(res._status).toBe(200)
+      expect((res._json as { data: unknown }).data).toEqual(movedRow)
+      expect((res._json as { meta: { entries_updated: number } }).meta.entries_updated).toBe(2)
+    })
+
+    it('refuses to change the category together with other fields', async () => {
+      setupLookup({ data: movedRow, error: null })
+      const res = makeRes()
+
+      await handler(move({ category_id: 'cat-2', name: 'New name' }), res)
+
+      expect(res._status).toBe(400)
+      expect((res._json as { error: { code: string } }).error.code).toBe('CATEGORY_CHANGE_ALONE')
+      expect(mockRpc).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      ['23505', 409, 'SLUG_TAKEN'],
+      ['23503', 400, 'INVALID_CATEGORY'],
+      ['P0002', 404, 'INGREDIENT_NOT_FOUND'],
+      ['XX000', 500, 'INTERNAL_ERROR'],
+    ])('maps database error %s to %i %s', async (code, status, errorCode) => {
+      setupLookup({ data: movedRow, error: null })
+      mockRpc.mockResolvedValue({ data: null, error: { code, message: 'failed' } })
+      const res = makeRes()
+
+      await handler(move(), res)
+
+      expect(res._status).toBe(status)
+      expect((res._json as { error: { code: string } }).error.code).toBe(errorCode)
+    })
+
+    it('returns 500 when the moved ingredient cannot be loaded afterwards', async () => {
+      setupLookup({ data: null, error: { message: 'db down' } })
+      mockRpc.mockResolvedValue({ data: 0, error: null })
+      const res = makeRes()
+
+      await handler(move(), res)
+
+      expect(res._status).toBe(500)
+    })
   })
 
   it('returns 404 when the ingredient does not exist', async () => {
