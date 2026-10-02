@@ -61,12 +61,15 @@ describe('ingredient dietary tags', () => {
   describe('reviewed ingredients', () => {
     it('tags the pork products as containing pork', () => {
       expect(withTag('contains_pork').sort()).toEqual(
-        ['bacon', 'bacon-jam', 'capicola', 'cuban-bread', 'ham', 'mortadella', 'pepperoni', 'prosciutto', 'pulled-pork', 'roast-pork', 'salami'].sort(),
+        ['bacon', 'bacon-jam', 'capicola', 'cuban-bread', 'ham', 'meatballs', 'mortadella', 'pepperoni', 'prosciutto', 'pulled-pork', 'roast-pork', 'salami'].sort(),
       )
     })
 
     it('does not tag beef and poultry as containing pork', () => {
-      const beefAndPoultry = ['turkey', 'roast-beef', 'pastrami', 'corned-beef', 'grilled-chicken']
+      const beefAndPoultry = [
+        'turkey', 'roast-beef', 'pastrami', 'corned-beef', 'grilled-chicken',
+        'steak', 'ground-beef', 'smoked-brisket', 'fried-chicken', 'chicken-salad', 'au-jus',
+      ]
 
       expect(beefAndPoultry.filter((slug) => tagsOf(slug).includes('contains_pork'))).toEqual([])
     })
@@ -92,6 +95,23 @@ describe('ingredient dietary tags', () => {
     it('treats green goddess as made with anchovy', () => {
       expect(tagsOf('green-goddess')).toContain('pescatarian')
       expect(tagsOf('green-goddess')).not.toContain('vegetarian')
+    })
+
+    it('tags peanut butter as containing peanuts and as plant-based', () => {
+      expect(tagsOf('peanut-butter')).toEqual(
+        expect.arrayContaining(['contains_peanuts', 'vegan', 'vegetarian', 'pescatarian', 'dairy_free']),
+      )
+      expect(withTag('contains_peanuts')).toEqual(['peanut-butter'])
+    })
+
+    it('treats meatballs as typically containing pork and not as dairy-free, since they are often bound with cheese', () => {
+      expect(tagsOf('meatballs')).toContain('contains_pork')
+      expect(tagsOf('meatballs')).not.toContain('dairy_free')
+    })
+
+    it('does not treat Parmesan as vegetarian, because it is traditionally made with animal rennet', () => {
+      expect(tagsOf('parmesan')).not.toContain('vegetarian')
+      expect(tagsOf('parmesan')).toContain('pescatarian')
     })
 
     it('keeps plant-based staples fully tagged', () => {
