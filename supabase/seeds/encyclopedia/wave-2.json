@@ -1,0 +1,948 @@
+[
+  {
+    "name": "BLT",
+    "slug": "blt",
+    "alternative_names": [],
+    "description": "Bacon, lettuce, and tomato, often with mayonnaise, between slices of toasted bread.",
+    "history": "A BLT is a sandwich named for the initials of its main ingredients: bacon, lettuce, and tomato. There is little evidence of BLT recipes before 1900. A club sandwich recipe in the 1903 Good Housekeeping Everyday Cook Book already combined bacon, lettuce, tomato, mayonnaise, and turkey, while a 1928 book of bacon sandwiches, Seven Hundred Sandwiches, includes no recipe with tomato.\n\nThe BLT became popular after World War II, when the rapid growth of supermarkets made its ingredients available year-round. The initials likely began as restaurant shorthand in the United States, but it is unclear when they entered everyday use. A 1951 Saturday Evening Post passage describes the sandwich without the initials, and by 1958 a Hellmann's advertisement called mayonnaise traditional on bacon, lettuce, and tomato sandwiches. In a 2019 YouGov poll it was the fifth most popular sandwich in the United States.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Bacon"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Lettuce"
+        },
+        {
+          "name": "Tomato"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free",
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "BLT"
+    }
+  },
+  {
+    "name": "Club Sandwich",
+    "slug": "club-sandwich",
+    "alternative_names": [
+      "Clubhouse sandwich"
+    ],
+    "description": "A three-layer sandwich of toasted bread with sliced turkey or chicken, bacon, lettuce, tomato, and mayonnaise, often cut into quarters.",
+    "history": "A club sandwich, or clubhouse sandwich, is a three-layer sandwich of toasted bread with sliced poultry, fried bacon, lettuce, tomato, and mayonnaise. It is often cut diagonally into quarters or halves and held together with cocktail sticks.\n\nIts origin is disputed. The earliest known reference, an 1889 article in The Evening World, describes a \"Union Club sandwich\" of turkey or chicken and ham between two toasted slices of Graham bread, and several other early references credit the chef of the Union Club of New York City. Another theory places its invention at the Saratoga Club in Saratoga Springs, New York, after Richard Canfield bought it and turned it into the Canfield Casino in 1894. The sandwich appeared on American restaurant menus by 1899, and the earliest reference in published fiction is from 1903. Early versions used chicken, but turkey has become increasingly common.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Turkey"
+        },
+        {
+          "name": "Bacon"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Lettuce"
+        },
+        {
+          "name": "Tomato"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free",
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Club sandwich"
+    }
+  },
+  {
+    "name": "Peanut Butter and Jelly",
+    "slug": "peanut-butter-and-jelly",
+    "alternative_names": [
+      "PB&J",
+      "PBJ"
+    ],
+    "description": "Peanut butter and fruit jelly or jam spread on sandwich bread.",
+    "history": "A peanut butter and jelly sandwich, often written PB&J, is peanut butter and fruit preserves spread on sliced bread. It is typically associated with grape jelly and white bread and is known for its popularity among children in the United States. Its origin is disputed, though it is understood to be an American invention.\n\nThe first published mention appeared in a 1901 issue of the Boston Cooking School Magazine, where Julia Davis Chandler suggested tea sandwiches made with peanut butter, which she called \"peanut paste,\" and currant or crab-apple jelly. She believed the recipe to be original. At the time, peanut butter was considered a delicacy, and by 1913 the New York Times was recommending peanut and jelly sandwiches for children's school lunches.\n\nThe invention of sliced bread and developments in peanut butter manufacturing, both in 1928, helped make the sandwich more common. It was a frequent meal for families in need during the Great Depression, and American soldiers sometimes ate it because its ingredients keep well. It became a major dish of American cuisine in the 1950s and 1960s. Concern about peanut allergies has since reduced its place in school lunches.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Peanut Butter"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Jelly"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "vegan",
+      "vegetarian",
+      "pescatarian",
+      "dairy_free",
+      "contains_peanuts"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Peanut butter and jelly sandwich"
+    }
+  },
+  {
+    "name": "Ham and Cheese",
+    "slug": "ham-and-cheese",
+    "alternative_names": [],
+    "description": "Sliced ham and cheese on bread, served cold or toasted.",
+    "history": "A ham and cheese sandwich pairs sliced cooked ham with cheese between slices of bread and may be served cold or toasted. Its origin has been debated, and no single point of origin is established. A 1924 interview with ballpark concessionaire Harry Stevens recalled that in 1894 ham and cheese sandwiches were the only food sold at New York baseball parks, with frankfurters introduced in 1909. An Englishwoman who passed through Ellis Island in 1923 described porters bringing baskets of ham and cheese sandwiches to arriving immigrants, and Richard E. Byrd took them on his 1926 polar flight.\n\nThe pairing is the base of many regional variations, including France's croque monsieur, Brazil's misto-quente, and the Cuban sandwich. In the United Kingdom a common addition is pickle, and the British Sandwich Association says the ham sandwich is the country's most popular.",
+    "origin_country": null,
+    "origin_region": "Global",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Ham"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Swiss"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Lettuce"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mustard"
+        },
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Ham sandwich"
+    }
+  },
+  {
+    "name": "Roast Beef",
+    "slug": "roast-beef",
+    "alternative_names": [],
+    "description": "Thinly sliced roast beef on bread or a roll, served hot or cold, often with horseradish.",
+    "history": "A roast beef sandwich is made with sliced roast beef, frequently cold leftovers or deli meat, and may be served hot, cold, or open-faced. Roast beef sandwiches have been eaten since the 19th century: John Keats mentions enjoying them on a walking tour of Scotland in 1818, and some trace the modern American style to an 1877 recipe for \"beefsteak toast,\" a dish of cold beef, bread, and gravy.\n\nThe sandwich has regional specialties. The Boston area, particularly the North Shore of Massachusetts, has served roast beef sandwiches since the early 1950s, typically very rare, thinly sliced, and piled on an onion roll. In the United Kingdom it is often served hot with fried onions, gravy, and horseradish sauce. In the United States it is sold at many diners and at chains such as Arby's, which opened in 1964 and at first served only roast beef sandwiches, potato chips, and soft drinks.",
+    "origin_country": null,
+    "origin_region": "Global",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Kaiser Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Roast Beef"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Cheddar"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Onion"
+        },
+        {
+          "name": "Lettuce"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Horseradish"
+        }
+      ]
+    },
+    "dietary_tags": [],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Roast beef sandwich"
+    }
+  },
+  {
+    "name": "Philly Cheesesteak",
+    "slug": "philly-cheesesteak",
+    "alternative_names": [
+      "Cheesesteak",
+      "Philadelphia cheesesteak",
+      "Steak and cheese"
+    ],
+    "description": "Thinly sliced griddled beef with melted cheese on a long roll.",
+    "history": "A cheesesteak is a sandwich of thinly sliced beefsteak, often rib eye, and melted cheese on a long hoagie roll. It has its roots in Philadelphia. Pat and Harry Olivieri, who opened a hot dog stand in South Philadelphia in 1930, are often credited with inventing it by serving chopped steak with grilled onions on an Italian roll, a story the family dates to 1933. The exact story is debated. The stand grew into Pat's King of Steaks.\n\nThe sandwich was originally made without cheese. According to Pat's son Herb Olivieri, American cheese was first added in 1951 by a manager known as \"Cocky Joe\" Lorenza, though others say it was provolone. Cheez Whiz, first marketed in 1952, was added at Pat's South Philadelphia location in the late 1950s, and provolone, American cheese, and Cheez Whiz remain the most common choices. Geno's Steaks opened across the street in 1966, starting a long rivalry. Today the cheesesteak is a signature dish of Philadelphia.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hoagie Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Steak"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Cheese Whip"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Sautéed Onions"
+        }
+      ]
+    },
+    "dietary_tags": [],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Cheesesteak"
+    }
+  },
+  {
+    "name": "Italian Sub",
+    "slug": "italian-sub",
+    "alternative_names": [
+      "Italian hoagie",
+      "Italian hero",
+      "Italian grinder"
+    ],
+    "description": "A long roll filled with Italian cold cuts, provolone, vegetables, and oil and vinegar.",
+    "history": "A submarine sandwich, or sub, is an American sandwich made on a long roll split lengthwise and filled with meats, cheeses, vegetables, and condiments. The type originated in several Italian-American communities in the northeastern United States between the late 19th and mid-20th centuries and spread as pizzerias added it to their menus. The Italian sub is the classic cold-cut version, with salami and other cured meats, cheese, peppers, and an oil and vinegar dressing.\n\nThe name varies by region: hoagie in Philadelphia, hero in New York City, grinder in much of New England, wedge in parts of the New York suburbs, and simply \"Italian\" in Maine. The origins of these names are disputed. One explanation ties \"hoagie\" to Italian-American workers at Philadelphia's Hog Island shipyard, and \"hero\" is first attested in 1937. According to his granddaughter, Dominic Conti, an Italian immigrant who opened a grocery in Paterson, New Jersey, around 1910, sold a long roll filled with cold cuts, vegetables, oil, vinegar, and herbs. This encyclopedia treats the regional names as aliases of one sandwich.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hoagie Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Salami"
+        },
+        {
+          "name": "Capicola"
+        },
+        {
+          "name": "Ham"
+        },
+        {
+          "name": "Mortadella"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Provolone"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Lettuce"
+        },
+        {
+          "name": "Tomato"
+        },
+        {
+          "name": "Onion"
+        },
+        {
+          "name": "Hot Peppers"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Olive Oil & Vinegar"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Submarine sandwich"
+    }
+  },
+  {
+    "name": "Meatball Sub",
+    "slug": "meatball-sub",
+    "alternative_names": [
+      "Meatball sandwich",
+      "Meatball hero"
+    ],
+    "description": "Meatballs in marinara sauce with melted cheese on a long roll.",
+    "history": "A meatball sandwich is made with meatballs, typically of beef or pork, in a tomato sauce such as marinara on bread, often with a cheese such as provolone or mozzarella. It is part of Italian-American and American cuisine and is sometimes prepared as a submarine sandwich.\n\nIt has been suggested that the meatball sandwich was invented in the United States around the turn of the 20th century, though the specific location is disputed. In New York, pizzeria menus often list meatball heros alongside eggplant and chicken parmigiana, each served with sauce.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hoagie Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Meatballs"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Provolone"
+        },
+        {
+          "name": "Parmesan"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Marinara Sauce"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Meatball sandwich"
+    }
+  },
+  {
+    "name": "Chicken Parm Sub",
+    "slug": "chicken-parm-sub",
+    "alternative_names": [
+      "Chicken parmesan sandwich",
+      "Chicken parmigiana sandwich",
+      "Chicken parm hero"
+    ],
+    "description": "A breaded chicken cutlet with marinara and melted mozzarella on a long roll.",
+    "history": "Chicken parmesan, or chicken parm, is fried breaded chicken breast covered in tomato sauce and mozzarella, Parmesan, or provolone. It originated in the Italian diaspora in the United States in the early 20th century. It has been speculated that it combines parmigiana, the Italian dish of fried eggplant slices in tomato sauce, with the cotoletta, a breaded veal cutlet that in Italy is generally served without sauce or cheese.\n\nItalian immigrants in the northeastern United States began using chicken in parmigiana, and by the 1950s it was a staple of Italian-American restaurants. The New York Times published a recipe in 1962. Many restaurants also offer chicken parm as a sandwich, and New York pizzerias list it as a hero served with sauce.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hoagie Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Fried Chicken"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Mozzarella"
+        },
+        {
+          "name": "Parmesan"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Marinara Sauce"
+        }
+      ]
+    },
+    "dietary_tags": [],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Chicken parmesan"
+    }
+  },
+  {
+    "name": "French Dip",
+    "slug": "french-dip",
+    "alternative_names": [
+      "Beef dip"
+    ],
+    "description": "Thinly sliced roast beef on a French roll or baguette, served with a cup of beef juice for dipping.",
+    "history": "A French dip is a hot sandwich of thinly sliced roast beef on a \"French roll\" or baguette, usually served with a cup of beef juice, called au jus, for dipping. Despite the name it is an American invention and is almost unknown in France; the name seems to refer to the style of bread.\n\nTwo Los Angeles restaurants, Cole's Pacific Electric Buffet and Philippe the Original, both established in 1908, claim to have created it. Cole's says a chef named Jack Garlinghouse invented it shortly after the restaurant opened, while Philippe's says owner Philippe Mathieu invented it in 1918, in one version when a sandwich was accidentally dropped into a pan of meat drippings. Neither restaurant cites period references, and the dispute is unresolved. A November 1929 magazine mention of a Los Angeles eatery called the Dugout may be the first in print.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "French Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Roast Beef"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Au Jus"
+        },
+        {
+          "name": "Mustard"
+        }
+      ]
+    },
+    "dietary_tags": [],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "French dip"
+    }
+  },
+  {
+    "name": "Sloppy Joe",
+    "slug": "sloppy-joe",
+    "alternative_names": [],
+    "description": "Ground beef with onions in a tomato sauce or ketchup, piled on a hamburger bun.",
+    "history": "A sloppy joe is a sandwich of ground meat, typically beef, with onions, tomato sauce or ketchup, Worcestershire sauce, and other seasonings, served on a hamburger bun. Early and mid-20th-century American cookbooks include similar recipes under other names, such as Toasted Deviled Hamburgers, Chopped Meat Sandwiches, and Spanish Hamburgers.\n\nIts origin is uncertain. One theory credits José \"Sloppy Joe\" Abeal y Otero, owner of Sloppy Joe's Bar in Havana, who in 1917 supposedly made a sandwich of ground beef stewed in tomatoes. Another, from H.J. Heinz researchers, traces it to loose-meat sandwiches sold in Sioux City, Iowa, in the 1930s and credits a cook named Joe. References to sloppy joes as sandwiches begin in the 1940s, and food companies were selling packaged sloppy joe sauce, such as Manwich, by the 1960s.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hamburger Bun"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Ground Beef"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Onion"
+        },
+        {
+          "name": "Green Pepper"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Ketchup"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Sloppy joe"
+    }
+  },
+  {
+    "name": "Egg Salad",
+    "slug": "egg-salad",
+    "alternative_names": [
+      "Egg salad sandwich"
+    ],
+    "description": "Chopped hard-boiled eggs mixed with mayonnaise on bread.",
+    "history": "Egg salad is chopped hard-boiled eggs bound with mayonnaise and usually mustard, often with minced celery and onion, and it is a common sandwich filling in North America and Asia. One of the earliest known printed recipes for an egg salad sandwich appears in the 1896 edition of Fannie Farmer's Boston Cooking-School Cook Book, and a 1905 British cookbook describes several egg sandwiches, including one with chutney.\n\nVariations are common. Jewish egg salad is made with schmaltz and onions. In Japan the same idea is the tamago sando, a mayonnaise and boiled egg sandwich, and egg salad sandwiches are a signature item in Japanese 7-Eleven stores.",
+    "origin_country": null,
+    "origin_region": "Global",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Egg Salad"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Celery"
+        },
+        {
+          "name": "Lettuce"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mayo"
+        },
+        {
+          "name": "Mustard"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "vegetarian",
+      "pescatarian",
+      "dairy_free"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Egg salad"
+    }
+  },
+  {
+    "name": "Chicken Salad",
+    "slug": "chicken-salad",
+    "alternative_names": [
+      "Chicken salad sandwich"
+    ],
+    "description": "Chopped chicken bound with mayonnaise, often with celery, on bread or a croissant.",
+    "history": "Chicken salad is chopped chicken bound with mayonnaise or a similar dressing, usually with celery, onion, or other additions, and it is a common sandwich filling. In the United States and Canada the term can mean either any salad with chicken or this mixed salad of chopped chicken and a binder, often made from leftover cooked or canned chicken.\n\nChicken salad is older than the sandwich. A recipe in Mrs Beeton's Book of Household Management dresses cold roast chicken with a mustard, sugar, and vinegar dressing. American recipes appear in 19th-century Southern cookbooks, including Sarah Rutledge's The Carolina Housewife (1847), which explains how to make mayonnaise from scratch for cold meats, and Abby Fisher's What Mrs. Fisher Knows About Old Southern Cooking (1881), which adds it to chicken and celery.",
+    "origin_country": null,
+    "origin_region": "Global",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Chicken Salad"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Celery"
+        },
+        {
+          "name": "Lettuce"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Chicken salad"
+    }
+  },
+  {
+    "name": "Tuna Salad",
+    "slug": "tuna-salad",
+    "alternative_names": [
+      "Tuna fish sandwich",
+      "Tuna salad sandwich"
+    ],
+    "description": "Canned tuna mixed with mayonnaise and celery on bread.",
+    "history": "A tuna salad sandwich, also called a tuna fish sandwich, is canned tuna, usually mixed with mayonnaise and sometimes celery or onion, served on sliced bread. Tuna sandwiches were already being served in American homes in the 19th century: in 1893 New York socialite Dell Montjoy Bradley included a recipe for one made with imported tuna in her cookbook Beverages and Sandwiches for Your Husband's Friends.\n\nIts popularity climbed in the early 20th century. Canning of tuna began in the United States around 1904, and by the 1920s canned tuna was increasingly popular as a lower-cost alternative to canned salmon. The sandwich rests on three convenience foods: canned tuna, presliced bread, and mayonnaise. In the United States, 52 percent of canned tuna is used for sandwiches, and the tuna melt is a popular variation.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Tuna Salad"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Celery"
+        },
+        {
+          "name": "Lettuce"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "pescatarian",
+      "dairy_free"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Tuna fish sandwich"
+    }
+  },
+  {
+    "name": "Pastrami on Rye",
+    "slug": "pastrami-on-rye",
+    "alternative_names": [],
+    "description": "Hot, thin-sliced pastrami piled on rye bread with spicy brown mustard.",
+    "history": "Pastrami is a cured meat of Jewish-American cuisine, usually made from beef brisket, that originated in the Jewish community of Romania and nearby regions. Its name comes from the Yiddish pastrame, probably borrowed from Romanian pastramă. It reached the United States with Jewish immigrants from Bessarabia and Romania in the second half of the 19th century.\n\nAccording to his daughter, Sussman Volk, a Lithuanian-born kosher butcher on New York's Lower East Side, made pastrami from a Romanian friend's recipe and in 1888 opened a delicatessen at 88 Delancey Street, one of the first delis in the city, where he served it on rye. The story is considered apocryphal but is corroborated by another writer. The sandwich became a favorite at other delis, topped with spicy brown mustard and usually served with a kosher dill pickle, and the Wall Street Journal has called it New York's \"signature sandwich.\" Katz's Delicatessen on the Lower East Side, which dates its founding to 1888, is among the delis best known for it.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Rye"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Pastrami"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Spicy Brown Mustard"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Pastrami on rye"
+    }
+  },
+  {
+    "name": "Pulled Pork",
+    "slug": "pulled-pork",
+    "alternative_names": [
+      "Pulled pork sandwich"
+    ],
+    "description": "Slow-smoked, shredded pork shoulder on a bun, often with coleslaw and barbecue sauce.",
+    "history": "Pulled pork is an American barbecue dish of the Southern United States, based on pork shoulder that is slow-cooked, usually smoked over wood, shredded, and mixed with a sauce. It may be served on bread as a sandwich. For the meat to pull properly it must reach an internal temperature of about 195 to 205 °F (91 to 96 °C), and cooking commonly takes many hours. Barbecue has been part of American culture, especially in the South, since colonial times.\n\nStyles vary. In North Carolina, Eastern-style barbecue is a whole-hog style with a thin sauce of vinegar and pepper and no tomato, and its coleslaw, made with mayonnaise, is often placed on the bun when eaten as a sandwich. Lexington, or Piedmont, style uses only the pork shoulder with a red sauce of vinegar, tomatoes, and red pepper flakes, and is typically served pulled or lightly chopped.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hamburger Bun"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Pulled Pork"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Coleslaw"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "BBQ Sauce"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free",
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Pulled pork"
+    }
+  },
+  {
+    "name": "Brisket Sandwich",
+    "slug": "brisket-sandwich",
+    "alternative_names": [],
+    "description": "Sliced or chopped smoked beef brisket on white bread or a bun, often with pickles and onion.",
+    "history": "Smoked brisket is a signature of Texas barbecue and is often considered the \"national dish of Texas.\" Texas barbecue traces its origins to European butchery and meat-smoking traditions brought to Central Texas by German and Czech settlers in the mid-19th century. Before refrigeration, butchers smoked meat that had not sold so it would keep, and as these leftovers became popular, meat markets began to specialize in smoked meats.\n\nAt a traditional Central Texas barbecue restaurant, the meat is carved and sold by weight, and sides such as slices of white bread, dill pickle chips, and sliced onion are picked up along the line. The meat is typically rubbed with only salt and black pepper and cooked over indirect heat from a pecan, post oak, or mesquite fire, and sauce, if served, comes on the side. Brisket is a tough cut with a lot of connective tissue, so it needs long, slow cooking to become tender.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Smoked Brisket"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Pickles"
+        },
+        {
+          "name": "Onion"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Brisket"
+    }
+  },
+  {
+    "name": "Fried Chicken Sandwich",
+    "slug": "fried-chicken-sandwich",
+    "alternative_names": [
+      "Crispy chicken sandwich"
+    ],
+    "description": "A crispy fried chicken breast on a bun with pickles.",
+    "history": "A fried chicken sandwich is fried chicken breast or thigh served between slices of bread or in a bun, typically with pickles. Chick-fil-A claims it invented the fried chicken sandwich in the 1940s, but that claim is unsubstantiated. Its southern-style chicken sandwich, served with pickles on a steamed roll and introduced on March 21, 1964, may have been the first sandwich of this style from an American fast-food chain. Burger King introduced a grilled chicken sandwich in 1990.\n\nIn August 2019 Popeyes began selling a chicken sandwich on a brioche bun with pickles and mayonnaise to compete with Chick-fil-A's flagship sandwich. It went viral and prompted responses from nearly every major fast-food chain, in what the press called the \"chicken sandwich wars.\" By 2024, 47% of restaurant menus featured a fried chicken sandwich, compared with 41% for burgers.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Brioche"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Fried Chicken"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Pickles"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Chicken sandwich"
+    }
+  },
+  {
+    "name": "Buffalo Chicken",
+    "slug": "buffalo-chicken",
+    "alternative_names": [
+      "Buffalo chicken sandwich"
+    ],
+    "description": "Fried chicken tossed in Buffalo hot sauce, with blue cheese or ranch dressing, on a bun.",
+    "history": "A Buffalo chicken sandwich puts fried chicken tossed in Buffalo sauce on a bun. The flavor comes from Buffalo wings, which are fried chicken wings coated in a sauce of vinegar-based cayenne pepper hot sauce and melted butter and are named for Buffalo, New York.\n\nThe origin of Buffalo wings is disputed. One account says they were first prepared in 1964 at the Anchor Bar in Buffalo by Teressa Bellissimo, who owned the bar with her husband Frank. Another credits John Young, who says he began serving breaded, fried wings in his own sauce at his Buffalo restaurant in 1961. Wings are traditionally served with celery and carrot sticks and a ranch or blue cheese dip. They spread across the United States as bar food in the 1970s and 1980s, and the Buffalo name is now applied to many other dishes, including pizza, that use the same style of sauce.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hamburger Bun"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Fried Chicken"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Lettuce"
+        },
+        {
+          "name": "Celery"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Buffalo Sauce"
+        },
+        {
+          "name": "Ranch"
+        }
+      ]
+    },
+    "dietary_tags": [],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Buffalo wing"
+    }
+  },
+  {
+    "name": "Bacon Egg and Cheese",
+    "slug": "bacon-egg-and-cheese",
+    "alternative_names": [
+      "BEC",
+      "Baconeggandcheese"
+    ],
+    "description": "Bacon, a fried or scrambled egg, and cheese on a roll, usually eaten for breakfast.",
+    "history": "A bacon, egg, and cheese sandwich, often abbreviated BEC, is a breakfast sandwich made with bacon, eggs that are most often fried or scrambled, cheese, and bread, which may be buttered and toasted. It is popular in the United States and Canada and is especially significant in New York City, where it is typically served on a kaiser roll.\n\nMany similar breakfast sandwiches use other meats, cheeses, or breads. McDonald's Egg McMuffin, invented in 1972 by Herb Peterson, puts Canadian bacon, a griddle-fried egg, and American cheese on a toasted English muffin. Ray Kroc wrote that its arrival opened up a whole new area of business for McDonald's, the breakfast trade.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Kaiser Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Bacon"
+        },
+        {
+          "name": "Fried Egg"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "American"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Ketchup"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Bacon, egg and cheese sandwich"
+    }
+  },
+  {
+    "name": "Caprese",
+    "slug": "caprese",
+    "alternative_names": [
+      "Caprese sandwich"
+    ],
+    "description": "Fresh mozzarella, tomato, and basil with olive oil on crusty bread.",
+    "history": "The caprese sandwich is based on caprese salad, an Italian salad of sliced fresh mozzarella, tomatoes, and basil seasoned with salt and olive oil. It is named for the island of Capri in the Bay of Naples, Campania, where it is believed to have originated, and its green, white, and red colors match the Italian flag.\n\nAccounts of its creation are mostly legend. One credits the Roman emperor Tiberius, and the Naples Chamber of Commerce dates the salad's prominence on Capri to the 1920s, when the Futurist founder Filippo Tommaso Marinetti served it at dinners at the Grand Hotel Quisisana. The dish became known internationally in the 1950s, sometimes said to have followed its being served to King Farouk of Egypt on a visit; the Chamber of Commerce adds that he was served it in a roll.\n\nIn Italy caprese is often eaten as an antipasto, and its components are also used uncooked in sandwiches. Italian preparations typically omit vinegar, on the belief that it would overwhelm the delicate flavor of fresh mozzarella.",
+    "origin_country": "Italy",
+    "origin_region": "Europe",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Ciabatta"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Fresh Mozzarella"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Tomato"
+        },
+        {
+          "name": "Basil"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Olive Oil"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "vegetarian",
+      "pescatarian"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "2",
+      "wikipedia": "Caprese salad"
+    }
+  }
+]

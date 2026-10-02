@@ -12,7 +12,7 @@
       "condiments": "1 tablespoon (approx 15g) per serving",
       "chefs_special": "Varies by item. See individual entries."
     },
-    "total_ingredients": 125,
+    "total_ingredients": 167,
     "categories": 6,
     "estimated_cost_source": "Custom research: US retail (generic and artisanal brands) and restaurant per-serving pricing",
     "estimated_cost_contexts": {
@@ -634,6 +634,230 @@
           "retail_high": 1.3,
           "restaurant_low": 0.9,
           "restaurant_high": 3.9
+        }
+      },
+      {
+        "name": "Hoagie Roll",
+        "slug": "hoagie-roll",
+        "dietary_tags": [
+          "vegetarian",
+          "vegan",
+          "dairy_free",
+          "pescatarian"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 200,
+          "protein_g": 7,
+          "fat_g": 3,
+          "carbs_g": 38,
+          "fiber_g": 2,
+          "sodium_mg": 400,
+          "sugar_g": 3
+        },
+        "image_asset": "/assets/ingredients/bread/hoagie-roll.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.5,
+          "retail_high": 1.5,
+          "restaurant_low": 1.5,
+          "restaurant_high": 4.5
+        }
+      },
+      {
+        "name": "French Roll",
+        "slug": "french-roll",
+        "dietary_tags": [
+          "vegetarian",
+          "vegan",
+          "dairy_free",
+          "pescatarian"
+        ],
+        "compat_group": "neutral",
+        "nutrition": {
+          "calories": 150,
+          "protein_g": 5,
+          "fat_g": 1,
+          "carbs_g": 29,
+          "fiber_g": 1,
+          "sodium_mg": 320,
+          "sugar_g": 2
+        },
+        "image_asset": "/assets/ingredients/bread/french-roll.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.4,
+          "retail_high": 1.3,
+          "restaurant_low": 1.2,
+          "restaurant_high": 3.9
+        }
+      },
+      {
+        "name": "Hamburger Bun",
+        "slug": "hamburger-bun",
+        "dietary_tags": [
+          "vegetarian",
+          "pescatarian"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 140,
+          "protein_g": 4,
+          "fat_g": 2,
+          "carbs_g": 26,
+          "fiber_g": 1,
+          "sodium_mg": 220,
+          "sugar_g": 4
+        },
+        "image_asset": "/assets/ingredients/bread/hamburger-bun.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.25,
+          "retail_high": 0.8,
+          "restaurant_low": 0.75,
+          "restaurant_high": 2.4
+        }
+      },
+      {
+        "name": "Kaiser Roll",
+        "slug": "kaiser-roll",
+        "dietary_tags": [
+          "vegetarian",
+          "pescatarian"
+        ],
+        "compat_group": "deli_classic",
+        "nutrition": {
+          "calories": 170,
+          "protein_g": 6,
+          "fat_g": 2,
+          "carbs_g": 32,
+          "fiber_g": 1,
+          "sodium_mg": 310,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/bread/kaiser-roll.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.35,
+          "retail_high": 1.0,
+          "restaurant_low": 1.05,
+          "restaurant_high": 3.0
+        }
+      },
+      {
+        "name": "French Bread",
+        "slug": "french-bread",
+        "dietary_tags": [
+          "vegetarian",
+          "vegan",
+          "dairy_free",
+          "pescatarian"
+        ],
+        "compat_group": "southern",
+        "nutrition": {
+          "calories": 180,
+          "protein_g": 6,
+          "fat_g": 1,
+          "carbs_g": 35,
+          "fiber_g": 1,
+          "sodium_mg": 380,
+          "sugar_g": 2
+        },
+        "image_asset": "/assets/ingredients/bread/french-bread.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.5,
+          "retail_high": 1.5,
+          "restaurant_low": 1.5,
+          "restaurant_high": 4.5
+        }
+      },
+      {
+        "name": "Muffuletta Bread",
+        "slug": "muffuletta-bread",
+        "dietary_tags": [
+          "vegetarian",
+          "vegan",
+          "dairy_free",
+          "pescatarian"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 200,
+          "protein_g": 7,
+          "fat_g": 3,
+          "carbs_g": 37,
+          "fiber_g": 2,
+          "sodium_mg": 380,
+          "sugar_g": 2
+        },
+        "image_asset": "/assets/ingredients/bread/muffuletta-bread.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.6,
+          "retail_high": 1.8,
+          "restaurant_low": 1.8,
+          "restaurant_high": 5.4
+        }
+      },
+      {
+        "name": "Hot Dog Bun",
+        "slug": "hot-dog-bun",
+        "dietary_tags": [
+          "vegetarian",
+          "pescatarian"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 120,
+          "protein_g": 4,
+          "fat_g": 2,
+          "carbs_g": 22,
+          "fiber_g": 1,
+          "sodium_mg": 210,
+          "sugar_g": 3
+        },
+        "image_asset": "/assets/ingredients/bread/hot-dog-bun.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.2,
+          "retail_high": 0.7,
+          "restaurant_low": 0.6,
+          "restaurant_high": 2.1
+        }
+      },
+      {
+        "name": "Kummelweck Roll",
+        "slug": "kummelweck-roll",
+        "dietary_tags": [
+          "vegetarian",
+          "pescatarian"
+        ],
+        "compat_group": "deli_classic",
+        "nutrition": {
+          "calories": 180,
+          "protein_g": 6,
+          "fat_g": 2,
+          "carbs_g": 34,
+          "fiber_g": 1,
+          "sodium_mg": 600,
+          "sugar_g": 2
+        },
+        "image_asset": "/assets/ingredients/bread/kummelweck-roll.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.4,
+          "retail_high": 1.2,
+          "restaurant_low": 1.2,
+          "restaurant_high": 3.6
         }
       }
     ],
@@ -1272,6 +1496,304 @@
           "restaurant_low": 0.75,
           "restaurant_high": 1.8
         }
+      },
+      {
+        "name": "Peanut Butter",
+        "slug": "peanut-butter",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free",
+          "contains_peanuts"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 190,
+          "protein_g": 7,
+          "fat_g": 16,
+          "carbs_g": 7,
+          "fiber_g": 2,
+          "sodium_mg": 140,
+          "sugar_g": 3
+        },
+        "image_asset": "/assets/ingredients/protein/peanut-butter.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.15,
+          "retail_high": 0.5,
+          "restaurant_low": 0.45,
+          "restaurant_high": 1.5
+        }
+      },
+      {
+        "name": "Ground Beef",
+        "slug": "ground-beef",
+        "dietary_tags": [
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 150,
+          "protein_g": 14,
+          "fat_g": 10,
+          "carbs_g": 0,
+          "fiber_g": 0,
+          "sodium_mg": 50,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/protein/ground-beef.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.8,
+          "retail_high": 2.0,
+          "restaurant_low": 2.4,
+          "restaurant_high": 6.0
+        }
+      },
+      {
+        "name": "Steak",
+        "slug": "steak",
+        "dietary_tags": [
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 170,
+          "protein_g": 14,
+          "fat_g": 12,
+          "carbs_g": 0,
+          "fiber_g": 0,
+          "sodium_mg": 40,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/protein/steak.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 1.5,
+          "retail_high": 3.5,
+          "restaurant_low": 4.5,
+          "restaurant_high": 10.5
+        }
+      },
+      {
+        "name": "Meatballs",
+        "slug": "meatballs",
+        "dietary_tags": [
+          "contains_pork"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 240,
+          "protein_g": 14,
+          "fat_g": 16,
+          "carbs_g": 8,
+          "fiber_g": 1,
+          "sodium_mg": 500,
+          "sugar_g": 2
+        },
+        "image_asset": "/assets/ingredients/protein/meatballs.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 1.0,
+          "retail_high": 2.5,
+          "restaurant_low": 3.0,
+          "restaurant_high": 7.5
+        }
+      },
+      {
+        "name": "Fried Chicken",
+        "slug": "fried-chicken",
+        "dietary_tags": [],
+        "compat_group": "southern",
+        "nutrition": {
+          "calories": 260,
+          "protein_g": 20,
+          "fat_g": 13,
+          "carbs_g": 15,
+          "fiber_g": 1,
+          "sodium_mg": 560,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/protein/fried-chicken.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 1.0,
+          "retail_high": 2.5,
+          "restaurant_low": 3.0,
+          "restaurant_high": 7.5
+        }
+      },
+      {
+        "name": "Chicken Salad",
+        "slug": "chicken-salad",
+        "dietary_tags": [
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 150,
+          "protein_g": 12,
+          "fat_g": 11,
+          "carbs_g": 1,
+          "fiber_g": 0,
+          "sodium_mg": 250,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/protein/chicken-salad.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.8,
+          "retail_high": 2.0,
+          "restaurant_low": 2.4,
+          "restaurant_high": 6.0
+        }
+      },
+      {
+        "name": "Smoked Brisket",
+        "slug": "smoked-brisket",
+        "dietary_tags": [
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "southern",
+        "nutrition": {
+          "calories": 160,
+          "protein_g": 14,
+          "fat_g": 11,
+          "carbs_g": 0,
+          "fiber_g": 0,
+          "sodium_mg": 300,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/protein/smoked-brisket.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 1.5,
+          "retail_high": 3.5,
+          "restaurant_low": 4.5,
+          "restaurant_high": 10.5
+        }
+      },
+      {
+        "name": "Fried Shrimp",
+        "slug": "fried-shrimp",
+        "dietary_tags": [
+          "pescatarian",
+          "contains_shellfish"
+        ],
+        "compat_group": "southern",
+        "nutrition": {
+          "calories": 200,
+          "protein_g": 12,
+          "fat_g": 10,
+          "carbs_g": 14,
+          "fiber_g": 1,
+          "sodium_mg": 450,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/protein/fried-shrimp.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 2.0,
+          "retail_high": 4.5,
+          "restaurant_low": 6.0,
+          "restaurant_high": 13.5
+        }
+      },
+      {
+        "name": "Lobster",
+        "slug": "lobster",
+        "dietary_tags": [
+          "pescatarian",
+          "dairy_free",
+          "gluten_free",
+          "contains_shellfish"
+        ],
+        "compat_group": "neutral",
+        "nutrition": {
+          "calories": 90,
+          "protein_g": 19,
+          "fat_g": 1,
+          "carbs_g": 0,
+          "fiber_g": 0,
+          "sodium_mg": 380,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/protein/lobster.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 6.0,
+          "retail_high": 12.0,
+          "restaurant_low": 18.0,
+          "restaurant_high": 36.0
+        }
+      },
+      {
+        "name": "Bologna",
+        "slug": "bologna",
+        "dietary_tags": [
+          "contains_pork"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 180,
+          "protein_g": 7,
+          "fat_g": 16,
+          "carbs_g": 2,
+          "fiber_g": 0,
+          "sodium_mg": 600,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/protein/bologna.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.4,
+          "retail_high": 1.2,
+          "restaurant_low": 1.2,
+          "restaurant_high": 3.6
+        }
+      },
+      {
+        "name": "Breaded Pork Tenderloin",
+        "slug": "breaded-pork-tenderloin",
+        "dietary_tags": [
+          "dairy_free",
+          "contains_pork"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 300,
+          "protein_g": 22,
+          "fat_g": 15,
+          "carbs_g": 18,
+          "fiber_g": 1,
+          "sodium_mg": 500,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/protein/breaded-pork-tenderloin.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 1.5,
+          "retail_high": 3.5,
+          "restaurant_low": 4.5,
+          "restaurant_high": 10.5
+        }
       }
     ],
     "cheese": [
@@ -1835,6 +2357,88 @@
           "retail_high": 2.0,
           "restaurant_low": 2.1,
           "restaurant_high": 6.0
+        }
+      },
+      {
+        "name": "Parmesan",
+        "slug": "parmesan",
+        "dietary_tags": [
+          "gluten_free",
+          "pescatarian"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 42,
+          "protein_g": 4,
+          "fat_g": 3,
+          "carbs_g": 0,
+          "fiber_g": 0,
+          "sodium_mg": 150,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/cheese/parmesan.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.3,
+          "retail_high": 0.9,
+          "restaurant_low": 0.9,
+          "restaurant_high": 2.7
+        }
+      },
+      {
+        "name": "Fresh Mozzarella",
+        "slug": "fresh-mozzarella",
+        "dietary_tags": [
+          "vegetarian",
+          "gluten_free",
+          "pescatarian"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 70,
+          "protein_g": 5,
+          "fat_g": 5,
+          "carbs_g": 1,
+          "fiber_g": 0,
+          "sodium_mg": 85,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/cheese/fresh-mozzarella.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.5,
+          "retail_high": 1.5,
+          "restaurant_low": 1.5,
+          "restaurant_high": 4.5
+        }
+      },
+      {
+        "name": "Cheese Sauce",
+        "slug": "cheese-sauce",
+        "dietary_tags": [
+          "vegetarian",
+          "pescatarian"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 90,
+          "protein_g": 4,
+          "fat_g": 7,
+          "carbs_g": 3,
+          "fiber_g": 0,
+          "sodium_mg": 300,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/cheese/cheese-sauce.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.3,
+          "retail_high": 0.9,
+          "restaurant_low": 0.9,
+          "restaurant_high": 2.7
         }
       }
     ],
@@ -2494,6 +3098,335 @@
           "retail_high": 0,
           "restaurant_low": 0,
           "restaurant_high": 0
+        }
+      },
+      {
+        "name": "Sautéed Onions",
+        "slug": "sauteed-onions",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "neutral",
+        "nutrition": {
+          "calories": 25,
+          "protein_g": 0,
+          "fat_g": 1,
+          "carbs_g": 4,
+          "fiber_g": 1,
+          "sodium_mg": 3,
+          "sugar_g": 2
+        },
+        "image_asset": "/assets/ingredients/toppings/sauteed-onions.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.15,
+          "retail_high": 0.5,
+          "restaurant_low": 0.45,
+          "restaurant_high": 1.5
+        }
+      },
+      {
+        "name": "Hot Peppers",
+        "slug": "hot-peppers",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 5,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbs_g": 1,
+          "fiber_g": 0,
+          "sodium_mg": 150,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/toppings/hot-peppers.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.1,
+          "retail_high": 0.4,
+          "restaurant_low": 0.3,
+          "restaurant_high": 1.2
+        }
+      },
+      {
+        "name": "Celery",
+        "slug": "celery",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "neutral",
+        "nutrition": {
+          "calories": 3,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbs_g": 1,
+          "fiber_g": 0,
+          "sodium_mg": 16,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/toppings/celery.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.05,
+          "retail_high": 0.2,
+          "restaurant_low": 0.15,
+          "restaurant_high": 0.6
+        }
+      },
+      {
+        "name": "Basil",
+        "slug": "basil",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 1,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbs_g": 0,
+          "fiber_g": 0,
+          "sodium_mg": 0,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/toppings/basil.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.1,
+          "retail_high": 0.4,
+          "restaurant_low": 0.3,
+          "restaurant_high": 1.2
+        }
+      },
+      {
+        "name": "Green Pepper",
+        "slug": "green-pepper",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "neutral",
+        "nutrition": {
+          "calories": 5,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbs_g": 1,
+          "fiber_g": 0,
+          "sodium_mg": 1,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/toppings/green-pepper.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.1,
+          "retail_high": 0.3,
+          "restaurant_low": 0.3,
+          "restaurant_high": 0.9
+        }
+      },
+      {
+        "name": "Onion",
+        "slug": "onion",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "neutral",
+        "nutrition": {
+          "calories": 12,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbs_g": 3,
+          "fiber_g": 0,
+          "sodium_mg": 1,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/toppings/onion.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.05,
+          "retail_high": 0.2,
+          "restaurant_low": 0.15,
+          "restaurant_high": 0.6
+        }
+      },
+      {
+        "name": "Olive Salad",
+        "slug": "olive-salad",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 80,
+          "protein_g": 0,
+          "fat_g": 8,
+          "carbs_g": 2,
+          "fiber_g": 1,
+          "sodium_mg": 400,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/toppings/olive-salad.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.5,
+          "retail_high": 1.5,
+          "restaurant_low": 1.5,
+          "restaurant_high": 4.5
+        }
+      },
+      {
+        "name": "Giardiniera",
+        "slug": "giardiniera",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 40,
+          "protein_g": 0,
+          "fat_g": 4,
+          "carbs_g": 1,
+          "fiber_g": 1,
+          "sodium_mg": 300,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/toppings/giardiniera.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.3,
+          "retail_high": 0.9,
+          "restaurant_low": 0.9,
+          "restaurant_high": 2.7
+        }
+      },
+      {
+        "name": "Pimentos",
+        "slug": "pimentos",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "southern",
+        "nutrition": {
+          "calories": 5,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbs_g": 1,
+          "fiber_g": 0,
+          "sodium_mg": 2,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/toppings/pimentos.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.1,
+          "retail_high": 0.4,
+          "restaurant_low": 0.3,
+          "restaurant_high": 1.2
+        }
+      },
+      {
+        "name": "Banana",
+        "slug": "banana",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 105,
+          "protein_g": 1,
+          "fat_g": 0,
+          "carbs_g": 27,
+          "fiber_g": 3,
+          "sodium_mg": 1,
+          "sugar_g": 14
+        },
+        "image_asset": "/assets/ingredients/toppings/banana.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.15,
+          "retail_high": 0.4,
+          "restaurant_low": 0.45,
+          "restaurant_high": 1.2
+        }
+      },
+      {
+        "name": "French Fries",
+        "slug": "french-fries",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 230,
+          "protein_g": 3,
+          "fat_g": 11,
+          "carbs_g": 30,
+          "fiber_g": 3,
+          "sodium_mg": 160,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/toppings/french-fries.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.4,
+          "retail_high": 1.2,
+          "restaurant_low": 1.2,
+          "restaurant_high": 3.6
         }
       }
     ],
@@ -3246,6 +4179,266 @@
           "retail_low": 0.08,
           "retail_high": 0.3,
           "restaurant_low": 0.24,
+          "restaurant_high": 0.9
+        }
+      },
+      {
+        "name": "Jelly",
+        "slug": "jelly",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 50,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbs_g": 13,
+          "fiber_g": 0,
+          "sodium_mg": 5,
+          "sugar_g": 10
+        },
+        "image_asset": "/assets/ingredients/condiments/jelly.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.05,
+          "retail_high": 0.25,
+          "restaurant_low": 0.15,
+          "restaurant_high": 0.75
+        }
+      },
+      {
+        "name": "Spicy Brown Mustard",
+        "slug": "spicy-brown-mustard",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "deli_classic",
+        "nutrition": {
+          "calories": 5,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbs_g": 0,
+          "fiber_g": 0,
+          "sodium_mg": 100,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/condiments/spicy-brown-mustard.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.03,
+          "retail_high": 0.15,
+          "restaurant_low": 0.09,
+          "restaurant_high": 0.45
+        }
+      },
+      {
+        "name": "Ketchup",
+        "slug": "ketchup",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 20,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbs_g": 5,
+          "fiber_g": 0,
+          "sodium_mg": 160,
+          "sugar_g": 4
+        },
+        "image_asset": "/assets/ingredients/condiments/ketchup.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.02,
+          "retail_high": 0.1,
+          "restaurant_low": 0.06,
+          "restaurant_high": 0.3
+        }
+      },
+      {
+        "name": "Marinara Sauce",
+        "slug": "marinara-sauce",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 35,
+          "protein_g": 1,
+          "fat_g": 1,
+          "carbs_g": 5,
+          "fiber_g": 1,
+          "sodium_mg": 300,
+          "sugar_g": 3
+        },
+        "image_asset": "/assets/ingredients/condiments/marinara-sauce.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.1,
+          "retail_high": 0.4,
+          "restaurant_low": 0.3,
+          "restaurant_high": 1.2
+        }
+      },
+      {
+        "name": "Au Jus",
+        "slug": "au-jus",
+        "dietary_tags": [
+          "dairy_free"
+        ],
+        "compat_group": "deli_classic",
+        "nutrition": {
+          "calories": 10,
+          "protein_g": 1,
+          "fat_g": 0,
+          "carbs_g": 1,
+          "fiber_g": 0,
+          "sodium_mg": 350,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/condiments/au-jus.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.1,
+          "retail_high": 0.5,
+          "restaurant_low": 0.3,
+          "restaurant_high": 1.5
+        }
+      },
+      {
+        "name": "Olive Oil",
+        "slug": "olive-oil",
+        "dietary_tags": [
+          "vegan",
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "italian",
+        "nutrition": {
+          "calories": 120,
+          "protein_g": 0,
+          "fat_g": 14,
+          "carbs_g": 0,
+          "fiber_g": 0,
+          "sodium_mg": 0,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/condiments/olive-oil.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.1,
+          "retail_high": 0.4,
+          "restaurant_low": 0.3,
+          "restaurant_high": 1.2
+        }
+      },
+      {
+        "name": "Mornay Sauce",
+        "slug": "mornay-sauce",
+        "dietary_tags": [
+          "vegetarian",
+          "pescatarian"
+        ],
+        "compat_group": "neutral",
+        "nutrition": {
+          "calories": 60,
+          "protein_g": 3,
+          "fat_g": 4,
+          "carbs_g": 3,
+          "fiber_g": 0,
+          "sodium_mg": 150,
+          "sugar_g": 1
+        },
+        "image_asset": "/assets/ingredients/condiments/mornay-sauce.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.2,
+          "retail_high": 0.8,
+          "restaurant_low": 0.6,
+          "restaurant_high": 2.4
+        }
+      },
+      {
+        "name": "Cayenne Paste",
+        "slug": "cayenne-paste",
+        "dietary_tags": [
+          "dairy_free",
+          "gluten_free",
+          "contains_pork"
+        ],
+        "compat_group": "southern",
+        "nutrition": {
+          "calories": 80,
+          "protein_g": 0,
+          "fat_g": 8,
+          "carbs_g": 2,
+          "fiber_g": 1,
+          "sodium_mg": 150,
+          "sugar_g": 0
+        },
+        "image_asset": "/assets/ingredients/condiments/cayenne-paste.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.1,
+          "retail_high": 0.4,
+          "restaurant_low": 0.3,
+          "restaurant_high": 1.2
+        }
+      },
+      {
+        "name": "Marshmallow Creme",
+        "slug": "marshmallow-creme",
+        "dietary_tags": [
+          "vegetarian",
+          "pescatarian",
+          "dairy_free",
+          "gluten_free"
+        ],
+        "compat_group": "american",
+        "nutrition": {
+          "calories": 40,
+          "protein_g": 0,
+          "fat_g": 0,
+          "carbs_g": 10,
+          "fiber_g": 0,
+          "sodium_mg": 10,
+          "sugar_g": 6
+        },
+        "image_asset": "/assets/ingredients/condiments/marshmallow-creme.png",
+        "is_trigger": false,
+        "enabled": false,
+        "estimated_cost": {
+          "retail_low": 0.1,
+          "retail_high": 0.3,
+          "restaurant_low": 0.3,
           "restaurant_high": 0.9
         }
       }

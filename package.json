@@ -14,7 +14,8 @@
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
-    "import:encyclopedia": "tsx scripts/importEncyclopedia.ts"
+    "import:encyclopedia": "tsx scripts/importEncyclopedia.ts",
+    "seed:blog": "tsx scripts/generateBlogSeed.ts"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.2.8",

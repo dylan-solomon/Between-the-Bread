@@ -1,0 +1,799 @@
+[
+  {
+    "name": "Po' Boy",
+    "slug": "po-boy",
+    "alternative_names": [
+      "Po-boy",
+      "Poor boy"
+    ],
+    "description": "Fried shrimp, oysters, or roast beef on a crisp, airy New Orleans French bread roll.",
+    "history": "A po' boy, short for \"poor boy,\" is a sandwich from Louisiana, traditionally a filling of roast beef, ham, or fried seafood such as shrimp, oysters, or crawfish on a New Orleans French bread roll. This \"po' boy bread\" is made with less flour and more water than a baguette, giving it a crisp crust and a light, fluffy crumb. Ordered \"dressed,\" a po' boy comes with shredded lettuce, sliced tomato, pickles, and mayonnaise.\n\nFried oyster sandwiches on French loaves, called \"oyster loaves,\" were already known in New Orleans in the late 19th century. A popular local theory credits the name to Benny and Clovis Martin, former streetcar conductors who opened a restaurant in 1921 and served free sandwiches to striking streetcar workers in 1929, joking that each striker was \"another poor boy.\" One New Orleans historian doubts the story: the local press did not describe it until 40 years after the strike, the brothers earlier said they made the sandwich for farmers and dock workers near the French Market, and their 1929 letter promised the strikers a meal without mentioning sandwiches.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "French Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Fried Shrimp"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Lettuce"
+        },
+        {
+          "name": "Tomato"
+        },
+        {
+          "name": "Pickles"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mayo"
+        },
+        {
+          "name": "Hot Sauce"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "pescatarian",
+      "contains_shellfish"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Po' boy"
+    }
+  },
+  {
+    "name": "Muffuletta",
+    "slug": "muffuletta",
+    "alternative_names": [
+      "Muffaletta"
+    ],
+    "description": "Italian cold cuts, provolone, Swiss, and marinated olive salad on a round Sicilian sesame loaf.",
+    "history": "Muffuletta is both a round Sicilian sesame bread and the sandwich made on it. The sandwich is said to have been created in 1906 at Central Grocery on Decatur Street in New Orleans by its owner, Salvatore Lupo, a Sicilian immigrant. Another New Orleans delicatessen owner, Biaggio Montalbano, is credited with a \"Roma Sandwich\" that may have been a forerunner, and Progress Grocery, opened in 1924, says the sandwich's origin is uncertain.\n\nThe traditional muffuletta is the loaf split horizontally and layered with marinated olive salad, salami, ham, Swiss cheese, provolone, and mortadella. The olive salad, a chopped mix of green and black olives, olive oil, pickled vegetables, capers, herbs, and vinegar, is its signature. It is sold in quarter, half, and full sizes and is usually served cold, though many vendors will toast it.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Muffuletta Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Salami"
+        },
+        {
+          "name": "Ham"
+        },
+        {
+          "name": "Mortadella"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Provolone"
+        },
+        {
+          "name": "Swiss"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Olive Salad"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Olive Oil"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Muffuletta"
+    }
+  },
+  {
+    "name": "Hot Brown",
+    "slug": "hot-brown",
+    "alternative_names": [
+      "Louisville Hot Brown",
+      "Kentucky Hot Brown"
+    ],
+    "description": "An open-faced turkey and bacon sandwich covered in Mornay sauce and broiled.",
+    "history": "The Hot Brown was created in 1926 at the Brown Hotel in Louisville, Kentucky, by chef Fred K. Schmidt, as an alternative to the ham and eggs served at late-night dinners. It is a variation on Welsh rarebit and one of two signature sandwiches created at the hotel shortly after it opened in 1923.\n\nThe original was sliced roast turkey on open-faced white toast, covered in Mornay sauce, sprinkled with Parmesan, and broiled until bubbly, then finished with pimento and bacon strips. Sliced roast turkey was a rarity at the time, usually reserved for holidays, and the dish soon became the choice of 95% of the restaurant's customers. Tomato is a common garnish today. It is a local specialty of Louisville and popular throughout Kentucky, though it was unavailable at its birthplace while the Brown Hotel was closed from 1971 to 1985.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Turkey"
+        },
+        {
+          "name": "Bacon"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Parmesan"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Tomato"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mornay Sauce"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Hot Brown"
+    }
+  },
+  {
+    "name": "Nashville Hot Chicken",
+    "slug": "nashville-hot-chicken",
+    "alternative_names": [
+      "Hot chicken"
+    ],
+    "description": "Fried chicken coated in a fiery cayenne paste, served on white bread with pickles.",
+    "history": "Hot chicken is a fried chicken specialty of Nashville, Tennessee. Chicken is marinated, usually in buttermilk, floured, fried, and then covered in a paste or sauce spiced with cayenne pepper; the traditional paste is three parts cayenne to one part lard. It is served on slices of white bread with pickle chips. The method comes from African American communities in the Southern United States, and spicy fried chicken has been served in Nashville's African American communities for generations.\n\nThe dish may date to the 1930s, though the current style of spice paste may only go back to the mid-1970s. The Prince family is generally credited as its originator. Family lore holds that Thornton Prince's girlfriend cooked him an extra-hot fried chicken breakfast as revenge for his womanizing, that he liked it, and that he and his brothers created their own recipe and opened the BBQ Chicken Shack, the business that became Prince's Hot Chicken Shack. The story is impossible to verify.\n\nHot chicken has since spread to cities across the United States and abroad, and in 2016 KFC began selling \"Nashville Hot Chicken\" in its U.S. restaurants.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Fried Chicken"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Pickles"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Cayenne Paste"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Hot chicken"
+    }
+  },
+  {
+    "name": "Lobster Roll",
+    "slug": "lobster-roll",
+    "alternative_names": [],
+    "description": "Lobster meat on a grilled hot dog-style bun, served cold with mayonnaise or warm with butter.",
+    "history": "A lobster roll is lobster meat served on a grilled hot dog-style bun. The filling may include butter, lemon juice, salt, and black pepper, and some parts of New England use mayonnaise in place of butter.\n\nCredit for its invention is disputed. The Encyclopedia of American Food and Drink says it began as a hot dish at Perry's restaurant in Milford, Connecticut, as early as 1929, while another account credits English and Portuguese fishermen and sailors. Two styles are recognized: in Maine the meat is usually served cold with mayonnaise, while the hot, buttered version is known as Connecticut style. By 1970 roadside stands such as Red's Eats in Maine were serving lobster heated in drawn butter on a hot dog bun. Lobster rolls are most associated with Maine but are common across New England and on eastern Long Island, and McDonald's in parts of Canada and New England sometimes sells them as a summer item.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hot Dog Bun"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Lobster"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "pescatarian",
+      "contains_shellfish"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Lobster roll"
+    }
+  },
+  {
+    "name": "Chopped Cheese",
+    "slug": "chopped-cheese",
+    "alternative_names": [
+      "Chop cheese"
+    ],
+    "description": "Ground beef, onions, and melted cheese chopped together on a grill and served on a hero roll.",
+    "history": "The chopped cheese is a New York City bodega sandwich, found mainly in uptown Manhattan and the Bronx. Ground beef, usually from pre-formed patties, is cooked on a grill with onions and seasonings such as adobo, and chopped together with cheese as it melts. It is served on a hero roll with lettuce, tomatoes, and condiments.\n\nIts origins are debated, but most agree it was first made at Hajji's Deli, also called Blue Sky Deli, in Spanish Harlem. Hajji's says a former worker invented it for himself sometime in the 1990s, and some speculate that it adapts a Yemeni dish of cooked chopped meat and vegetables. The sandwich drew wide media attention in the 2010s, beginning with a 2014 episode of Anthony Bourdain's Parts Unknown. As upscale restaurants and grocers began selling it at two to three times the bodega price, people who grew up eating it accused newcomers of \"Columbusing\" the sandwich.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hoagie Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Ground Beef"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "American"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Onion"
+        },
+        {
+          "name": "Lettuce"
+        },
+        {
+          "name": "Tomato"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Ketchup"
+        },
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Chopped cheese"
+    }
+  },
+  {
+    "name": "Italian Beef",
+    "slug": "italian-beef",
+    "alternative_names": [
+      "Chicago Italian beef"
+    ],
+    "description": "Thin-sliced seasoned roast beef soaked in its juices on French bread, topped with hot giardiniera or sweet peppers.",
+    "history": "An Italian beef is a Chicago sandwich of very thinly sliced roast beef, simmered and served with a thin gravy on crusty French bread. It is ordered \"hot,\" with spicy giardiniera, or \"sweet,\" with grilled or boiled bell peppers, and the whole sandwich may be dunked in the cooking juices. Orders can be \"dry,\" \"dipped,\" \"dunked,\" or \"wet,\" though the terms vary between restaurants.\n\nThe sandwich traces back to Italian-American immigrants in Chicago as early as the 1930s, but its exact origin is unknown. One explanation is that immigrants sliced inexpensive cuts very thin to feed many people and to tenderize tougher meat. Some historians credit Pasquale Scala with inventing it in the 1920s to serve at weddings, while Al's Beef says Tony Ferreri did; Al's Beef itself was founded in 1938. The sandwich became ubiquitous in Chicago by the 1980s, and its popularity surged nationwide after the 2022 premiere of the television show The Bear.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "French Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Roast Beef"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Giardiniera"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Au Jus"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Italian beef"
+    }
+  },
+  {
+    "name": "Beef on Weck",
+    "slug": "beef-on-weck",
+    "alternative_names": [],
+    "description": "Thin-sliced rare roast beef on a salt-and-caraway kummelweck roll with horseradish and jus.",
+    "history": "A beef on weck is a sandwich of Western New York, especially Buffalo, made with thin-sliced rare roast beef on a kummelweck roll, which is topped with kosher salt and caraway seeds. The top of the roll is dipped in the jus from the roast, and horseradish is spread on it. Along with Buffalo wings and sponge candy, it is one of the three best-known food specialties of Buffalo.\n\nIts origin is not well established, but it is thought to predate Buffalo wings by about a century. A German baker named William Wahr, believed to be from the Black Forest, is thought to have created the kummelweck roll in Buffalo, possibly basing it on a Swabian salt-and-caraway roll. A local pub owner is said to have used the roll for the sandwich because the salty top would encourage customers to buy more drinks. Kümmel is German for caraway, and Weck means \"roll\" in south-western German dialects.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Kummelweck Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Roast Beef"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Horseradish"
+        },
+        {
+          "name": "Au Jus"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Beef on weck"
+    }
+  },
+  {
+    "name": "Fried Bologna",
+    "slug": "fried-bologna",
+    "alternative_names": [
+      "Fried bologna sandwich",
+      "Baloney sandwich"
+    ],
+    "description": "Thick-sliced bologna fried until browned, on white bread with mustard.",
+    "history": "A bologna sandwich, or baloney sandwich, is bologna sausage between slices of bread with condiments such as mayonnaise, mustard, and ketchup. Bologna is an American cooked sausage derived from the Italian mortadella of Bologna.\n\nThe bologna sandwich is a regional specialty of the Eastern, Midwestern, Appalachian, and Southern United States. It is served at lunch counters of small family-run markets around the Great Smoky Mountains, and fried bologna sandwiches appear on restaurant menus in many places in the South and at some stadium concession stands, including the Cincinnati Reds'. It goes by local names: a \"jumbo\" in Pittsburgh and a \"Lonsdale ham\" sandwich in Knoxville, Tennessee. In Newfoundland and Atlantic Canada, thick-sliced fried bologna is called \"Newfie steak.\"",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Bologna"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Onion"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mustard"
+        },
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Bologna sandwich"
+    }
+  },
+  {
+    "name": "Pimento Cheese",
+    "slug": "pimento-cheese",
+    "alternative_names": [
+      "Pimiento cheese"
+    ],
+    "description": "A spread of grated cheddar, mayonnaise, and chopped pimentos on white bread.",
+    "history": "Pimento cheese is a spread typically made of grated cheddar, mayonnaise, and chopped pimentos, often used as a sandwich filling. Although it is most closely associated with the cuisine of the Southern United States, it began in the North in the early 20th century as a homemade snack spread. A 1908 Good Housekeeping recipe called for soft cream cheese and minced pimentos, and commercial versions had appeared by 1910. Until World War II it was mentioned in hundreds of newspaper stories and advertisements, none of which described it as Southern.\n\nThe original canned Spanish pimentos were expensive, so Southern farmers began growing pimentos, and Southern cooks adapted the recipe with hoop cheese and mayonnaise. After the war it faded in most of the country but stayed popular in the South, where it has been called the \"pâté of the South.\" Pimento cheese sandwiches have been sold at the Masters golf tournament in Augusta, Georgia, since the 1940s.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Cheddar"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Pimentos"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "vegetarian",
+      "pescatarian"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Pimento cheese"
+    }
+  },
+  {
+    "name": "Pork Tenderloin",
+    "slug": "pork-tenderloin",
+    "alternative_names": [
+      "Breaded pork tenderloin sandwich",
+      "BPT"
+    ],
+    "description": "A pounded, breaded, and fried pork tenderloin cutlet that hangs well past its bun.",
+    "history": "The pork tenderloin sandwich, or breaded pork tenderloin, is a breaded and fried pork cutlet similar to Wiener schnitzel, popular in the Midwestern United States, especially Indiana, Illinois, Nebraska, Missouri, and Iowa. It is claimed to have originated at Nick's Kitchen in Huntington, Indiana, near Fort Wayne.\n\nThe pork is sliced thin, pounded with a mallet, dipped in flour, egg, and breadcrumbs or crushed saltines, and deep-fried. Unlike Wiener schnitzel, it is made only with pork and is deep-fried rather than pan-fried. It is served on a hamburger bun with the meat overhanging the bun considerably, with condiments such as mustard, ketchup, mayonnaise, lettuce, tomato, onion, and pickles, and usually with french fries or onion rings on the side.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hamburger Bun"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Breaded Pork Tenderloin"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Pickles"
+        },
+        {
+          "name": "Onion"
+        },
+        {
+          "name": "Lettuce"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mustard"
+        },
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free",
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Pork tenderloin sandwich"
+    }
+  },
+  {
+    "name": "Fluffernutter",
+    "slug": "fluffernutter",
+    "alternative_names": [
+      "Peanut butter and marshmallow sandwich"
+    ],
+    "description": "Peanut butter and marshmallow creme on white bread.",
+    "history": "A fluffernutter is a sandwich of peanut butter and marshmallow creme, usually on white bread. Marshmallow creme was invented in Massachusetts in the early 20th century: Amory and Emma Curtis of Melrose created Snowflake Marshmallow Creme in 1913, and Archibald Query of Somerville made his own Marshmallow Creme in 1917. In a promotional booklet sent to customers in 1918, Emma Curtis published a recipe for the \"Liberty Sandwich,\" peanut butter and Snowflake Marshmallow Creme on oat or barley bread, the earliest known version of the sandwich.\n\nQuery sold his recipe in 1920 to H. Allen Durkee and Fred L. Mower, whose company still sells it as Marshmallow Fluff. The sandwich was not called a fluffernutter until 1960, when an advertising firm hired by Durkee-Mower coined the name. It is particularly popular in New England and has been proposed as the official state sandwich of Massachusetts.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Peanut Butter"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Marshmallow Creme"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "vegetarian",
+      "pescatarian",
+      "dairy_free",
+      "contains_peanuts"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Fluffernutter"
+    }
+  },
+  {
+    "name": "Elvis",
+    "slug": "elvis",
+    "alternative_names": [
+      "Elvis sandwich",
+      "Peanut butter and banana sandwich",
+      "PB&B"
+    ],
+    "description": "Peanut butter and sliced or mashed banana on toasted bread, sometimes with bacon, often cooked in a pan.",
+    "history": "The peanut butter and banana sandwich, sometimes with bacon, is often called an Elvis sandwich after Elvis Presley, who made it famous as one of his favorites. It is made with toasted bread, peanut butter, and sliced or mashed banana, and it is frequently cooked in a pan or on a griddle. Honey or jelly appears in some versions.\n\nPresley's fondness for peanut butter and banana sandwiches is well established, but bacon is not mentioned in every account; one book about Presley and his mother describes his favorite as peanut butter, sliced bananas, and crisp bacon. Author Dan Koeppel credits Chiquita with popularizing, or even originating, the sandwich when it distributed 90,000 recipe cards for it in 1967.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Peanut Butter"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Banana"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Butter"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "vegetarian",
+      "pescatarian",
+      "contains_peanuts"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Peanut butter, banana and bacon sandwich"
+    }
+  },
+  {
+    "name": "Spiedie",
+    "slug": "spiedie",
+    "alternative_names": [],
+    "description": "Cubes of marinated, grilled meat served on soft Italian bread or a sub roll.",
+    "history": "A spiedie is marinated meat, now most often chicken, threaded onto skewers, grilled over a charcoal pit, and served on soft Italian bread or a submarine roll, sometimes drizzled with fresh marinade. The marinade usually includes olive oil, vinegar, Italian spices, and fresh mint. Spiedies are a specialty of Binghamton and Broome County in New York's Southern Tier, and the name comes from the Italian spiedo, \"spit.\"\n\nItalian immigrants brought the idea to upstate New York in the early 1920s. The early Broome County spiedie was made only with spring lamb, but most restaurants now use chicken or pork. The specific origin is disputed: Camillo Iacovelli was serving spiedies at his Endicott restaurant in 1938, and his brother Augie popularized them from 1939, while Peter Sharak, who began serving them at Sharkey's in Binghamton in 1947, is also said to have invented them. Binghamton has held the Spiedie Fest and Balloon Rally every August since 1983.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hoagie Roll"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Grilled Chicken"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Spiedie"
+    }
+  },
+  {
+    "name": "Loose Meat",
+    "slug": "loose-meat",
+    "alternative_names": [
+      "Tavern sandwich",
+      "Loosemeat",
+      "Maid-Rite"
+    ],
+    "description": "Seasoned crumbled ground beef on a bun, without tomato sauce.",
+    "history": "A loose meat sandwich, also called a tavern sandwich, is ground beef on a bun, sometimes mixed with sautéed onions and topped with pickles, ketchup, mustard, raw onions, or cheese. Unlike a hamburger, the meat is cooked loose rather than formed into a patty, so it resembles a sloppy joe without the tomato sauce.\n\nCarroll Dietz of Missoula, Montana, created a precursor, the \"steamed hamburger,\" in 1920. The name \"tavern\" is credited to David Heglin, who sold the sandwiches at his Sioux City, Iowa, restaurant in 1924; Abe Kaled bought the business in 1934, renamed it Ye Olde Tavern, and spread the sandwich across the Sioux City area. In 1926 Fred Angell, a Muscatine, Iowa, butcher, began selling his version as a \"loose meat sandwich\" at the first Maid-Rite restaurant. The sandwich is now known throughout the Midwest and was featured in the sitcom Roseanne.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Hamburger Bun"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Ground Beef"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Pickles"
+        },
+        {
+          "name": "Onion"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mustard"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "dairy_free"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Tavern sandwich"
+    }
+  },
+  {
+    "name": "Horseshoe",
+    "slug": "horseshoe",
+    "alternative_names": [
+      "Horseshoe sandwich",
+      "Pony shoe"
+    ],
+    "description": "An open-faced sandwich of thick toast, a hamburger patty or ham, and fries, covered in cheese sauce.",
+    "history": "The horseshoe is an open-faced sandwich from Springfield, Illinois, made of thick-sliced toast, often Texas toast, topped with a hamburger patty or other meat, French fries, and cheese sauce. Hamburger is now the most common meat, but the original was ham. The name has been attributed both to the horseshoe shape of a slice of bone-in ham and to the horseshoe-shaped arrangement of potato wedges around the ham.\n\nThe cheese sauce varies by chef but is generally derived from Welsh rarebit, with ingredients such as eggs, beer, butter, sharp cheddar, and Worcestershire sauce. A smaller portion with one slice of bread and one serving of meat is called a pony shoe, and a breakfast horseshoe swaps in sausage or bacon, eggs, and hash browns.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "Texas Toast"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Ground beef patty"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Cheese Sauce"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "French Fries"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Horseshoe sandwich"
+    }
+  },
+  {
+    "name": "Dagwood",
+    "slug": "dagwood",
+    "alternative_names": [
+      "Dagwood sandwich"
+    ],
+    "description": "A towering, multi-layer sandwich stacked with meats, cheeses, vegetables, and extra slices of bread.",
+    "history": "A Dagwood is a tall, multilayered sandwich made with a variety of meats, cheeses, and condiments. It is named after Dagwood Bumstead, a central character in the comic strip Blondie, who is often drawn making enormous sandwiches; according to Blondie writer Dean Young, his father, Chic Young, began drawing them in 1936. The cartoon version seems to hold cold cuts, sliced cheese, and vegetables separated by extra slices of bread, usually with a small fish such as a sardine and an olive on a toothpick on top. \"Dagwood sandwich\" is included in Webster's New World Dictionary and The American Heritage Dictionary.\n\nRestaurants have served their own versions. The Dagwood's Sandwich Shoppes chain sold a 1.5-pound sandwich of three slices of deli bread with Genoa salami, ham, pepperoni, turkey, cheddar, provolone, lettuce, tomato, roasted red peppers, banana peppers, red onion, deli mustard, and mayonnaise. In South Africa a Dagwood is usually three slices of toasted bread with a hamburger patty, lettuce, tomato, and a fried egg.",
+    "origin_country": "United States",
+    "origin_region": "Americas",
+    "canonical_ingredients": {
+      "bread": [
+        {
+          "name": "White Bread"
+        }
+      ],
+      "protein": [
+        {
+          "name": "Salami"
+        },
+        {
+          "name": "Ham"
+        },
+        {
+          "name": "Pepperoni"
+        },
+        {
+          "name": "Turkey"
+        }
+      ],
+      "cheese": [
+        {
+          "name": "Cheddar"
+        },
+        {
+          "name": "Provolone"
+        }
+      ],
+      "toppings": [
+        {
+          "name": "Lettuce"
+        },
+        {
+          "name": "Tomato"
+        },
+        {
+          "name": "Roasted Peppers"
+        },
+        {
+          "name": "Banana Peppers"
+        },
+        {
+          "name": "Red Onion"
+        },
+        {
+          "name": "Olives"
+        }
+      ],
+      "condiments": [
+        {
+          "name": "Mustard"
+        },
+        {
+          "name": "Mayo"
+        }
+      ]
+    },
+    "dietary_tags": [
+      "contains_pork"
+    ],
+    "image_url": null,
+    "published": false,
+    "source": {
+      "wave": "4",
+      "wikipedia": "Dagwood sandwich"
+    }
+  }
+]
