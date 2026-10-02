@@ -27,9 +27,9 @@ vi.mock('@/api/admin', () => ({
   updatePost: mockUpdate,
   deletePost: mockDelete,
 }))
-vi.mock('@/api/blogImages', () => ({
-  uploadBlogImage: mockUploadImage,
-  BLOG_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
+vi.mock('@/api/images', () => ({
+  uploadImage: mockUploadImage,
+  IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
 }))
 vi.mock('@/api/database', () => ({
   fetchSandwiches: mockFetchSandwiches,
@@ -528,7 +528,7 @@ describe('BlogManagementPage images', () => {
     const file = png()
     await user.upload(screen.getByLabelText('Insert image'), file)
 
-    expect(mockUploadImage).toHaveBeenCalledWith(file)
+    expect(mockUploadImage).toHaveBeenCalledWith({ bucket: 'blog-images', file })
     await waitFor(() => { expect(body).toHaveValue('Hello![diagram](https://cdn.example.com/diagram.png) world') })
   })
 
