@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { fetchCommunityLeaderboard } from '@/api/community'
-import type { CommunityComposition, CommunitySandwichSummary, CommunitySort } from '@/api/community'
+import { fetchCommunityLeaderboard, isCommunityPage } from '@/api/community'
+import type { CommunityComposition, CommunityPage, CommunitySandwichSummary, CommunitySort } from '@/api/community'
 import SandwichVisual from '@/components/SandwichVisual'
 import type { VisualComposition } from '@/components/SandwichVisual'
 import { DIETARY_DISCLAIMER, DIETARY_TAGS, getDietaryTag, isDietaryTag } from '@/data/dietaryTags'
 import { SITE_URL } from '@/data/site'
 import { useIngredients } from '@/hooks/useIngredients'
 import { COMMUNITY_DESCRIPTION, COMMUNITY_TITLE } from '@/seo/listPages'
-import { madeLabel } from '@/seo/communitySandwich'
+import { madeLabel, rankBadge } from '@/seo/communitySandwich'
+import { readInitialData } from '@/utils/initialData'
 
 const PAGE_SIZE = 24
 const DEFAULT_SORT: CommunitySort = 'most_popular'
@@ -21,12 +22,6 @@ const SORT_OPTIONS: { value: CommunitySort; label: string }[] = [
   { value: 'trending', label: 'Trending' },
   { value: 'newest', label: 'Newest' },
 ]
-
-const MEDALS: Partial<Record<number, { label: string; className: string }>> = {
-  1: { label: '1st place', className: 'bg-amber-400 text-amber-950' },
-  2: { label: '2nd place', className: 'bg-neutral-300 text-neutral-900' },
-  3: { label: '3rd place', className: 'bg-orange-300 text-orange-950' },
-}
 
 type Status = 'loading' | 'ready' | 'error'
 
@@ -43,6 +38,9 @@ const readFilters = (params: URLSearchParams): Filters => {
   }
 }
 
+const pageSentWithPage = (paramsKey: string): CommunityPage | undefined =>
+  paramsKey === '' ? readInitialData({ path: '/community', isData: isCommunityPage }) : undefined
+
 const hasActiveFilters = ({ diet, ingredient }: Filters): boolean => diet.length > 0 || ingredient !== undefined
 
 const toVisual = (composition: CommunityComposition): VisualComposition => ({
@@ -55,15 +53,8 @@ const toVisual = (composition: CommunityComposition): VisualComposition => ({
 })
 
 function RankBadge({ rank }: { rank: number }) {
-  const medal = MEDALS[rank]
-  return (
-    <span
-      aria-label={medal?.label ?? `Ranked ${String(rank)}`}
-      className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-xs font-bold shadow-sm ${medal?.className ?? 'bg-white text-neutral-700'}`}
-    >
-      {`#${String(rank)}`}
-    </span>
-  )
+  const badge = rankBadge(rank)
+  return <span aria-label={badge.label} className={badge.className}>{badge.text}</span>
 }
 
 function CommunityCard({ sandwich }: { sandwich: CommunitySandwichSummary }) {
@@ -110,13 +101,21 @@ export default function CommunityIndex() {
   const filters = readFilters(params)
   const { categories, pools } = useIngredients()
 
-  const [items, setItems] = useState<CommunitySandwichSummary[]>([])
-  const [totalCount, setTotalCount] = useState(0)
-  const [status, setStatus] = useState<Status>('loading')
+  const [sent] = useState(() => pageSentWithPage(paramsKey))
+  const [items, setItems] = useState<CommunitySandwichSummary[]>(sent?.items ?? [])
+  const [totalCount, setTotalCount] = useState(sent?.totalCount ?? 0)
+  const [status, setStatus] = useState<Status>(sent === undefined ? 'loading' : 'ready')
   const [loadingMore, setLoadingMore] = useState(false)
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
+    const sentPage = attempt === 0 ? pageSentWithPage(paramsKey) : undefined
+    if (sentPage !== undefined) {
+      setItems(sentPage.items)
+      setTotalCount(sentPage.totalCount)
+      setStatus('ready')
+      return
+    }
     let cancelled = false
     setStatus('loading')
     const query = readFilters(new URLSearchParams(paramsKey))

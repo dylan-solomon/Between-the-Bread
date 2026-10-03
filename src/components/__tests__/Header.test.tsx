@@ -93,6 +93,18 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: 'Blog' })).toHaveAttribute('href', '/blog')
   })
 
+  it('links to the community leaderboard between the encyclopedia and the blog', () => {
+    renderHeader()
+    expect(screen.getByRole('link', { name: 'Community' })).toHaveAttribute('href', '/community')
+    const nav = screen.getByRole('link', { name: 'Community' }).closest('nav')
+    expect([...(nav?.querySelectorAll('a') ?? [])].map((link) => link.textContent)).toEqual([
+      'Between the Bread',
+      'Sandwiches',
+      'Community',
+      'Blog',
+    ])
+  })
+
   it('links to the sandwich encyclopedia regardless of login state', () => {
     renderHeader()
     expect(screen.getByRole('link', { name: 'Sandwiches' })).toHaveAttribute('href', '/sandwiches')

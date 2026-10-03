@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
+import { clearSentData, sendWithPage } from '@/test/initialData'
 
 const { mockFetchSandwich } = vi.hoisted(() => ({ mockFetchSandwich: vi.fn() }))
 
@@ -208,5 +209,45 @@ describe('CommunityDetail', () => {
     renderAt()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong loading this sandwich.')
+  })
+})
+
+describe('CommunityDetail sent with the page', () => {
+  afterEach(clearSentData)
+
+  it('shows the sandwich straight away without asking the server again', () => {
+    sendWithPage('/community/turkey-swiss-on-rye-abc12345', makeSandwich())
+
+    renderAt()
+
+    expect(screen.getByRole('heading', { name: 'Turkey & Swiss on Rye' })).toBeInTheDocument()
+    expect(mockFetchSandwich).not.toHaveBeenCalled()
+  })
+
+  it('loads the sandwich when the content sent was for another page', async () => {
+    sendWithPage('/community/other-abc12345', makeSandwich({ slug: 'other-abc12345', name: 'Other' }))
+
+    renderAt()
+
+    expect(await screen.findByRole('heading', { name: 'Turkey & Swiss on Rye' })).toBeInTheDocument()
+    expect(mockFetchSandwich).toHaveBeenCalledWith('turkey-swiss-on-rye-abc12345')
+  })
+})
+
+describe('CommunityDetail search engines', () => {
+  it('asks search engines to skip sandwiches nobody has rated yet', async () => {
+    mockFetchSandwich.mockResolvedValue(makeSandwich({ avg_rating: null, rating_count: 0 }))
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    await waitFor(() => { expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex') })
+  })
+
+  it('lets search engines index rated sandwiches', async () => {
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    await waitFor(() => { expect(document.title).toContain('Turkey & Swiss on Rye') })
+    expect(document.head.querySelector('meta[name="robots"]')).toBeNull()
   })
 })

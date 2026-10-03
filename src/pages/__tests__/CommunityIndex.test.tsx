@@ -1,16 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { makeCategories, makeIngredient } from '@/test/factories'
+import { clearSentData, sendWithPage } from '@/test/initialData'
 
 const { mockFetchLeaderboard, mockUseIngredients } = vi.hoisted(() => ({
   mockFetchLeaderboard: vi.fn(),
   mockUseIngredients: vi.fn(),
 }))
 
-vi.mock('@/api/community', () => ({ fetchCommunityLeaderboard: mockFetchLeaderboard }))
+vi.mock('@/api/community', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/community')>()),
+  fetchCommunityLeaderboard: mockFetchLeaderboard,
+}))
 vi.mock('@/hooks/useIngredients', () => ({ useIngredients: mockUseIngredients }))
 
 import CommunityIndex from '@/pages/CommunityIndex'
@@ -262,5 +266,37 @@ describe('CommunityIndex paging and errors', () => {
     await user.click(screen.getByRole('button', { name: 'Try again' }))
 
     expect(await screen.findByText('Turkey & Swiss on Rye')).toBeInTheDocument()
+  })
+})
+
+describe('CommunityIndex sent with the page', () => {
+  afterEach(clearSentData)
+
+  it('shows the leaderboard straight away without asking the server again', () => {
+    sendWithPage('/community', { items: ranked(2), totalCount: 30 })
+
+    renderAt()
+
+    expect(screen.getByRole('link', { name: /Sandwich 1/ })).toHaveAttribute('href', '/community/sandwich-1')
+    expect(screen.getByRole('button', { name: 'Load more' })).toBeInTheDocument()
+    expect(mockFetchLeaderboard).not.toHaveBeenCalled()
+  })
+
+  it('loads the leaderboard when the address has a sort or filter', async () => {
+    sendWithPage('/community', { items: ranked(2), totalCount: 30 })
+
+    renderAt('/community?sort=newest')
+
+    await screen.findByText('Turkey & Swiss on Rye')
+    expect(lastQuery()).toMatchObject({ sort: 'newest' })
+  })
+
+  it('loads the leaderboard when the content sent is incomplete', async () => {
+    sendWithPage('/community', { items: ranked(2) })
+
+    renderAt()
+
+    await screen.findByText('Turkey & Swiss on Rye')
+    expect(mockFetchLeaderboard).toHaveBeenCalled()
   })
 })

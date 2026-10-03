@@ -37,6 +37,9 @@ export default function Header() {
           <Link to="/sandwiches" className="text-sm font-medium text-neutral-600 hover:text-primary">
             Sandwiches
           </Link>
+          <Link to="/community" className="text-sm font-medium text-neutral-600 hover:text-primary">
+            Community
+          </Link>
           <Link to="/blog" className="text-sm font-medium text-neutral-600 hover:text-primary">
             Blog
           </Link>

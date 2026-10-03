@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useParams } from 'react-router-dom'
-import { fetchCommunitySandwich } from '@/api/community'
+import { fetchCommunitySandwich, isCommunitySandwich } from '@/api/community'
 import type { CommunitySandwich } from '@/api/community'
 import AdminBadge from '@/components/AdminBadge'
 import SandwichVisual from '@/components/SandwichVisual'
@@ -12,12 +12,16 @@ import { DIETARY_DISCLAIMER, getDietaryTag, isDietaryTag } from '@/data/dietaryT
 import { SITE_URL } from '@/data/site'
 import { communityDescription, communityGroups, madeLabel } from '@/seo/communitySandwich'
 import { formatPostDate } from '@/utils/blogPost'
+import { readInitialData } from '@/utils/initialData'
 
 type State =
   | { status: 'loading' }
   | { status: 'ready'; sandwich: CommunitySandwich }
   | { status: 'not-found' }
   | { status: 'error' }
+
+const sandwichSentWithPage = (slug: string): CommunitySandwich | undefined =>
+  readInitialData({ path: `/community/${slug}`, isData: isCommunitySandwich })
 
 function FirstMade({ sandwich }: { sandwich: CommunitySandwich }) {
   const date = formatPostDate(sandwich.created_at)
@@ -83,9 +87,17 @@ function Info({ sandwich }: { sandwich: CommunitySandwich }) {
 
 export default function CommunityDetail() {
   const { slug = '' } = useParams()
-  const [state, setState] = useState<State>({ status: 'loading' })
+  const [state, setState] = useState<State>(() => {
+    const sent = sandwichSentWithPage(slug)
+    return sent === undefined ? { status: 'loading' } : { status: 'ready', sandwich: sent }
+  })
 
   useEffect(() => {
+    const sent = sandwichSentWithPage(slug)
+    if (sent !== undefined) {
+      setState({ status: 'ready', sandwich: sent })
+      return
+    }
     let cancelled = false
     setState({ status: 'loading' })
     fetchCommunitySandwich(slug)
@@ -142,6 +154,7 @@ export default function CommunityDetail() {
         <title>{`${title} | Community | Between the Bread`}</title>
         <meta name="description" content={description} />
         <link rel="canonical" href={pageUrl} />
+        {sandwich.rating_count === 0 && <meta name="robots" content="noindex" />}
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:url" content={pageUrl} />

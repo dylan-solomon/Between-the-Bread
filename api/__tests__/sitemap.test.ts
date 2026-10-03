@@ -54,6 +54,7 @@ describe('GET /sitemap.xml', () => {
     expect(locations(res._body)).toEqual([
       'https://betweenbread.co/',
       'https://betweenbread.co/sandwiches',
+      'https://betweenbread.co/community',
       'https://betweenbread.co/blog',
       'https://betweenbread.co/about',
       'https://betweenbread.co/privacy',
@@ -65,6 +66,31 @@ describe('GET /sitemap.xml', () => {
       'https://betweenbread.co/blog/category/best-pairings',
       'https://betweenbread.co/blog/category/dietary',
     ])
+  })
+
+  it('lists community sandwiches that people have rated', async () => {
+    const calls = queueTableResults(mockFrom, [
+      { data: [], error: null },
+      noPosts,
+      { data: [{ slug: 'turkey-on-rye-abc12345', updated_at: '2026-10-02T10:00:00.000Z' }], error: null },
+    ])
+    const res = makeRes()
+
+    await handler(makeReq(), res)
+
+    expect(locations(res._body)).toContain('https://betweenbread.co/community/turkey-on-rye-abc12345')
+    expect(String(res._body)).toContain('<lastmod>2026-10-02</lastmod>')
+    expect(callsOf(calls, 'from').map((call) => call.args[0])).toContain('community_sandwiches')
+    expect(callsOf(calls, 'gte')).toContainEqual({ method: 'gte', args: ['rating_count', 1] })
+  })
+
+  it('returns 500 when the community query fails', async () => {
+    queueTableResults(mockFrom, [entries, blogPosts, { data: null, error: { message: 'boom' } }])
+    const res = makeRes()
+
+    await handler(makeReq(), res)
+
+    expect(res._status).toBe(500)
   })
 
   it('dates each blog post by when it last changed', async () => {
@@ -107,7 +133,7 @@ describe('GET /sitemap.xml', () => {
     await handler(makeReq(), makeRes())
 
     const fromCalls = callsOf(calls, 'from').map((call) => call.args[0])
-    expect(fromCalls).toEqual(['sandwich_database', 'blog_posts'])
+    expect(fromCalls).toEqual(['sandwich_database', 'blog_posts', 'community_sandwiches'])
     expect(callsOf(calls, 'select').map((call) => call.args[0])).toContain(
       'slug, updated_at, blog_post_categories(blog_categories(slug))',
     )
@@ -163,7 +189,7 @@ describe('GET /sitemap.xml', () => {
 
     await handler(makeReq(), res)
 
-    expect(locations(res._body)).toHaveLength(6)
+    expect(locations(res._body)).toHaveLength(7)
   })
 
   it('escapes characters that are special in XML', async () => {

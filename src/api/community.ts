@@ -50,6 +50,9 @@ export type CommunityQuery = {
 
 export type CommunityPage = { items: CommunitySandwichSummary[]; totalCount: number }
 
+export const isCommunityPage = (value: unknown): value is CommunityPage =>
+  hasFields(value, { items: 'array', totalCount: 'number' })
+
 const endpoint = (path: string): URL => new URL(path, window.location.origin)
 
 export const fetchCommunityLeaderboard = async (query: CommunityQuery): Promise<CommunityPage> => {

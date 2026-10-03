@@ -23,3 +23,18 @@ export const communityDescription = (sandwich: {
   const names = communityGroups(sandwich.composition).flatMap(({ items }) => items.map((item) => item.name))
   return `${sandwich.name}: ${listOf(names)}. ${madeLabel(sandwich.generated_count)} by the Between the Bread community.`
 }
+
+const MEDALS: Partial<Record<number, { label: string; className: string }>> = {
+  1: { label: '1st place', className: 'bg-amber-400 text-amber-950' },
+  2: { label: '2nd place', className: 'bg-neutral-300 text-neutral-900' },
+  3: { label: '3rd place', className: 'bg-orange-300 text-orange-950' },
+}
+
+export const rankBadge = (rank: number): { text: string; label: string; className: string } => {
+  const medal = MEDALS[rank]
+  return {
+    text: `#${String(rank)}`,
+    label: medal?.label ?? `Ranked ${String(rank)}`,
+    className: `absolute left-2 top-2 rounded-full px-2 py-0.5 text-xs font-bold shadow-sm ${medal?.className ?? 'bg-white text-neutral-700'}`,
+  }
+}
