@@ -4,12 +4,23 @@ import { Search } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import SearchOverlay from '@/components/search/SearchOverlay'
+import { captureSearchHeaderClosed, captureSearchHeaderOpened } from '@/analytics/events'
 
 export default function Header() {
   const { user, loading, signOut } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+
+  const openSearch = () => {
+    captureSearchHeaderOpened()
+    setSearchOpen(true)
+  }
+
+  const closeSearch = () => {
+    captureSearchHeaderClosed()
+    setSearchOpen(false)
+  }
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -60,9 +71,7 @@ export default function Header() {
           <button
             type="button"
             aria-label="Search"
-            onClick={() => {
-              setSearchOpen(true)
-            }}
+            onClick={openSearch}
             className="text-neutral-600 hover:text-primary"
           >
             <Search size={18} />
@@ -127,11 +136,7 @@ export default function Header() {
       </div>
       {searchOpen &&
         createPortal(
-          <SearchOverlay
-            onClose={() => {
-              setSearchOpen(false)
-            }}
-          />,
+          <SearchOverlay onClose={closeSearch} />,
           document.body,
         )}
     </header>

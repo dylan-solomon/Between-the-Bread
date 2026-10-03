@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { captureSearchPerformed, captureSearchResultClicked } from '@/analytics/events'
 import { searchSite } from '@/api/search'
 import type { SearchResult } from '@/api/search'
 import { resultLink, searchPageLink, SOURCE_LABELS } from '@/components/search/resultLinks'
@@ -38,7 +39,11 @@ export default function SearchOverlay({ onClose }: Props) {
     let cancelled = false
     const timer = setTimeout(() => {
       searchSite({ q: query, limit: INSTANT_LIMIT, token })
-        .then((page) => { if (!cancelled) setAnswer({ query, items: page.items }) })
+        .then((page) => {
+          if (cancelled) return
+          setAnswer({ query, items: page.items })
+          captureSearchPerformed({ query, source: 'all', resultsCount: page.totalCount, surface: 'header' })
+        })
         .catch(() => { if (!cancelled) setAnswer({ query, failed: true }) })
     }, DEBOUNCE_MS)
     return () => {
@@ -88,11 +93,20 @@ export default function SearchOverlay({ onClose }: Props) {
 
             {current !== null && 'items' in current && current.items.length > 0 && (
               <ul className="space-y-1">
-                {current.items.map((result) => (
+                {current.items.map((result, index) => (
                   <li key={`${result.source}-${result.slug}`}>
                     <Link
                       to={resultLink(result)}
-                      onClick={onClose}
+                      onClick={() => {
+                        captureSearchResultClicked({
+                          query,
+                          resultSource: result.source,
+                          slug: result.slug,
+                          position: index + 1,
+                          surface: 'header',
+                        })
+                        onClose()
+                      }}
                       className="flex items-center justify-between gap-3 rounded px-2 py-1.5 hover:bg-neutral-50"
                     >
                       <span className="font-medium text-neutral-900">{result.title}</span>{' '}

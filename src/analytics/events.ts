@@ -241,6 +241,46 @@ export const captureCommunityTryThisClicked = (props: { slug: string }): void =>
   posthog.capture('community_try_this_clicked', { slug: props.slug })
 }
 
+type SearchSurface = 'header' | 'page'
+
+export const captureSearchPerformed = (props: {
+  query: string
+  source: string
+  resultsCount: number
+  surface: SearchSurface
+}): void => {
+  posthog.capture('search_performed', {
+    query: props.query,
+    source: props.source,
+    results_count: props.resultsCount,
+    surface: props.surface,
+  })
+}
+
+export const captureSearchResultClicked = (props: {
+  query: string
+  resultSource: string
+  slug: string
+  position: number
+  surface: SearchSurface
+}): void => {
+  posthog.capture('search_result_clicked', {
+    query: props.query,
+    result_source: props.resultSource,
+    slug: props.slug,
+    position: props.position,
+    surface: props.surface,
+  })
+}
+
+export const captureSearchHeaderOpened = (): void => {
+  posthog.capture('search_header_opened')
+}
+
+export const captureSearchHeaderClosed = (): void => {
+  posthog.capture('search_header_closed')
+}
+
 export const captureBlogViewed = (): void => {
   posthog.capture('blog_viewed')
 }

@@ -4,10 +4,16 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
-const { mockSearch, mockUseAuth } = vi.hoisted(() => ({ mockSearch: vi.fn(), mockUseAuth: vi.fn() }))
+const { mockSearch, mockUseAuth, mockPerformed, mockClicked } = vi.hoisted(() => ({
+  mockSearch: vi.fn(),
+  mockUseAuth: vi.fn(),
+  mockPerformed: vi.fn(),
+  mockClicked: vi.fn(),
+}))
 
 vi.mock('@/api/search', () => ({ searchSite: mockSearch }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
+vi.mock('@/analytics/events', () => ({ captureSearchPerformed: mockPerformed, captureSearchResultClicked: mockClicked }))
 
 import SearchResults from '@/pages/SearchResults'
 
@@ -273,5 +279,43 @@ describe('SearchResults paging, empty results and errors', () => {
     await user.click(screen.getByRole('button', { name: 'Try again' }))
 
     expect(await screen.findByText('Reuben')).toBeInTheDocument()
+  })
+})
+
+describe('SearchResults analytics', () => {
+  it('records each search with its tab and result count', async () => {
+    mockSearch.mockResolvedValue(page([encyclopediaResult], { database: 2, community: 1, blog: 4, saved: null }, 7))
+    renderAt('/search?q=reuben&source=blog')
+    await screen.findByText('Reuben')
+
+    expect(mockPerformed).toHaveBeenCalledWith({ query: 'reuben', source: 'blog', resultsCount: 7, surface: 'page' })
+  })
+
+  it('does not count loading more as a new search', async () => {
+    const user = userEvent.setup()
+    mockSearch.mockResolvedValueOnce(page([encyclopediaResult], undefined, 2))
+    mockSearch.mockResolvedValueOnce(page([blogResult], undefined, 2))
+    renderAt()
+    await screen.findByText('Reuben')
+
+    await user.click(screen.getByRole('button', { name: 'Load more' }))
+    await screen.findByText('Best Reuben Variations')
+
+    expect(mockPerformed).toHaveBeenCalledTimes(1)
+  })
+
+  it('records which result was clicked and where it was in the list', async () => {
+    const user = userEvent.setup()
+    renderAt()
+
+    await user.click(await screen.findByRole('link', { name: /Reuben Melt/ }))
+
+    expect(mockClicked).toHaveBeenCalledWith({
+      query: 'reuben',
+      resultSource: 'community',
+      slug: 'reuben-melt-abc12345',
+      position: 2,
+      surface: 'page',
+    })
   })
 })

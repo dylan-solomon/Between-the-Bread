@@ -3,6 +3,7 @@ import type { FormEvent, ReactNode } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { captureSearchPerformed, captureSearchResultClicked } from '@/analytics/events'
 import { searchSite } from '@/api/search'
 import type { SearchCounts, SearchResult, SearchTab } from '@/api/search'
 import SandwichVisual from '@/components/SandwichVisual'
@@ -97,12 +98,13 @@ const summary = (result: SearchResult): { subtitle: string | null; meta: string 
   }
 }
 
-function ResultRow({ result }: { result: SearchResult }) {
+function ResultRow({ result, onOpen }: { result: SearchResult; onOpen: () => void }) {
   const { subtitle, meta } = summary(result)
   return (
     <li>
       <Link
         to={resultLink(result)}
+        onClick={onOpen}
         className="flex gap-4 rounded-lg border border-neutral-200 bg-white p-3 transition hover:shadow-md"
       >
         <div className="flex w-24 shrink-0 items-center overflow-hidden rounded bg-neutral-50">{thumbnail(result)}</div>
@@ -154,6 +156,7 @@ export default function SearchResults() {
         setCounts(page.counts)
         setTotalCount(page.totalCount)
         setStatus('ready')
+        captureSearchPerformed({ query: query.q, source: query.source, resultsCount: page.totalCount, surface: 'page' })
       })
       .catch(() => { if (!cancelled) setStatus('error') })
     return () => { cancelled = true }
@@ -295,7 +298,21 @@ export default function SearchResults() {
             {status === 'ready' && items.length > 0 && (
               <>
                 <ul className="space-y-3">
-                  {items.map((result) => <ResultRow key={`${result.source}-${result.slug}`} result={result} />)}
+                  {items.map((result, index) => (
+                    <ResultRow
+                      key={`${result.source}-${result.slug}`}
+                      result={result}
+                      onOpen={() => {
+                        captureSearchResultClicked({
+                          query: search.q,
+                          resultSource: result.source,
+                          slug: result.slug,
+                          position: index + 1,
+                          surface: 'page',
+                        })
+                      }}
+                    />
+                  ))}
                 </ul>
                 {items.length < totalCount && (
                   <div className="mt-8 text-center">

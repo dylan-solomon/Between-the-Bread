@@ -3,10 +3,16 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 
-const { mockSearch, mockUseAuth } = vi.hoisted(() => ({ mockSearch: vi.fn(), mockUseAuth: vi.fn() }))
+const { mockSearch, mockUseAuth, mockPerformed, mockClicked } = vi.hoisted(() => ({
+  mockSearch: vi.fn(),
+  mockUseAuth: vi.fn(),
+  mockPerformed: vi.fn(),
+  mockClicked: vi.fn(),
+}))
 
 vi.mock('@/api/search', () => ({ searchSite: mockSearch }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
+vi.mock('@/analytics/events', () => ({ captureSearchPerformed: mockPerformed, captureSearchResultClicked: mockClicked }))
 
 import SearchOverlay from '@/components/search/SearchOverlay'
 
@@ -190,5 +196,28 @@ describe('SearchOverlay', () => {
 
     expect(await screen.findByText('Hamburger')).toBeInTheDocument()
     expect(screen.queryByText('Ham on Rye')).not.toBeInTheDocument()
+  })
+})
+
+describe('SearchOverlay analytics', () => {
+  it('records each instant search once typing pauses', async () => {
+    const user = userEvent.setup()
+    renderOverlay()
+
+    await user.type(box(), 'reuben')
+    await screen.findByText('Reuben Melt')
+
+    expect(mockPerformed).toHaveBeenCalledTimes(1)
+    expect(mockPerformed).toHaveBeenCalledWith({ query: 'reuben', source: 'all', resultsCount: 4, surface: 'header' })
+  })
+
+  it('records which match was clicked and where it was in the list', async () => {
+    const user = userEvent.setup()
+    renderOverlay()
+    await user.type(box(), 'reuben')
+
+    await user.click(await screen.findByRole('link', { name: 'Best Reuben Variations Blog' }))
+
+    expect(mockClicked).toHaveBeenCalledWith({ query: 'reuben', resultSource: 'blog', slug: 'best-reubens', position: 3, surface: 'header' })
   })
 })
