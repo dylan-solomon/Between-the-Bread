@@ -28,6 +28,7 @@ export const routes: RouteObject[] = [
       { path: '/blog/:slug', lazy: page(() => import('@/pages/BlogPost')) },
       { path: '/s/:hash', lazy: page(() => import('@/pages/SharedSandwich')) },
       { path: '/community', lazy: page(() => import('@/pages/CommunityIndex')) },
+      { path: '/community/:slug', lazy: page(() => import('@/pages/CommunityDetail')) },
       { path: '/u/:username', lazy: page(() => import('@/pages/ProfilePage')) },
       {
         path: '/admin',

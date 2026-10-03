@@ -10,6 +10,7 @@ import { DIETARY_DISCLAIMER, DIETARY_TAGS, getDietaryTag, isDietaryTag } from '@
 import { SITE_URL } from '@/data/site'
 import { useIngredients } from '@/hooks/useIngredients'
 import { COMMUNITY_DESCRIPTION, COMMUNITY_TITLE } from '@/seo/listPages'
+import { madeLabel } from '@/seo/communitySandwich'
 
 const PAGE_SIZE = 24
 const DEFAULT_SORT: CommunitySort = 'most_popular'
@@ -52,8 +53,6 @@ const toVisual = (composition: CommunityComposition): VisualComposition => ({
   condiments: composition.condiments ?? [],
   'chefs-special': composition['chefs-special'] ?? [],
 })
-
-const madeLabel = (count: number): string => (count === 1 ? 'Made once' : `Made ${String(count)} times`)
 
 function RankBadge({ rank }: { rank: number }) {
   const medal = MEDALS[rank]

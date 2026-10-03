@@ -1,3 +1,5 @@
+import { hasFields } from '../utils/hasFields'
+
 export type CommunitySort = 'top_rated' | 'most_popular' | 'trending' | 'newest'
 
 export type CommunityIngredient = { slug: string; name: string }
@@ -17,6 +19,26 @@ export type CommunitySandwichSummary = {
   created_at: string
   rank: number
 }
+
+export type CommunityMaker = { username: string; is_admin: boolean }
+
+export type CommunitySandwich = Omit<CommunitySandwichSummary, 'rank'> & {
+  comment_count: number
+  photo_count: number
+  first_made_by: CommunityMaker | null
+}
+
+export const isCommunitySandwich = (value: unknown): value is CommunitySandwich =>
+  hasFields(value, {
+    id: 'string',
+    slug: 'string',
+    name: 'string',
+    composition: 'object',
+    dietary_tags: 'array',
+    generated_count: 'number',
+    rating_count: 'number',
+    created_at: 'string',
+  })
 
 export type CommunityQuery = {
   sort?: CommunitySort
@@ -48,4 +70,14 @@ export const fetchCommunityLeaderboard = async (query: CommunityQuery): Promise<
 
   const body = (await response.json()) as { data: CommunitySandwichSummary[]; meta: { total_count: number } }
   return { items: body.data, totalCount: body.meta.total_count }
+}
+
+export const fetchCommunitySandwich = async (slug: string): Promise<CommunitySandwich | null> => {
+  const response = await fetch(endpoint(`/api/community/${encodeURIComponent(slug)}`).toString())
+  if (response.status === 404) return null
+  if (!response.ok) throw new Error(`Failed to fetch community sandwich: ${String(response.status)}`)
+
+  const body = (await response.json()) as { data?: unknown }
+  if (!isCommunitySandwich(body.data)) throw new Error('Unexpected community sandwich answer.')
+  return body.data
 }

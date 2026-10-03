@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchCommunityLeaderboard } from '@/api/community'
+import { fetchCommunityLeaderboard, fetchCommunitySandwich } from '@/api/community'
 
 const respondWith = (body: unknown, init: { ok?: boolean; status?: number } = {}) => {
   vi.mocked(fetch).mockResolvedValue({
@@ -55,5 +55,48 @@ describe('fetchCommunityLeaderboard', () => {
     respondWith({}, { ok: false, status: 500 })
 
     await expect(fetchCommunityLeaderboard({})).rejects.toThrow()
+  })
+})
+
+const sandwich = {
+  id: 'c-1',
+  slug: 'turkey-abc12345',
+  name: 'Turkey on Rye',
+  fun_name: null,
+  composition: { bread: [{ slug: 'rye', name: 'Rye' }] },
+  dietary_tags: [],
+  generated_count: 3,
+  avg_rating: null,
+  rating_count: 0,
+  created_at: '2026-10-01T12:00:00Z',
+  comment_count: 0,
+  photo_count: 0,
+  first_made_by: { username: 'deli_dan', is_admin: false },
+}
+
+describe('fetchCommunitySandwich', () => {
+  it('loads a community sandwich by slug', async () => {
+    respondWith({ data: sandwich })
+
+    await expect(fetchCommunitySandwich('turkey-abc12345')).resolves.toEqual(sandwich)
+    expect(requestedUrl().pathname).toBe('/api/community/turkey-abc12345')
+  })
+
+  it('returns null when there is no such sandwich', async () => {
+    respondWith({}, { ok: false, status: 404 })
+
+    await expect(fetchCommunitySandwich('nope')).resolves.toBeNull()
+  })
+
+  it('fails on other errors', async () => {
+    respondWith({}, { ok: false, status: 500 })
+
+    await expect(fetchCommunitySandwich('turkey-abc12345')).rejects.toThrow()
+  })
+
+  it('fails when the answer is not a community sandwich', async () => {
+    respondWith({ data: { slug: 'turkey-abc12345' } })
+
+    await expect(fetchCommunitySandwich('turkey-abc12345')).rejects.toThrow()
   })
 })
