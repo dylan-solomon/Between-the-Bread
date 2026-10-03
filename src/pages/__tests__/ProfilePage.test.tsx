@@ -79,8 +79,10 @@ describe('ProfilePage', () => {
     renderAt()
     await screen.findByRole('heading', { level: 1 })
 
-    await waitFor(() => { expect(document.title).toBe('@deli_dan | Between the Bread') })
-    expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex')
+    await waitFor(() => {
+      expect(document.title).toBe('@deli_dan | Between the Bread')
+      expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex')
+    })
   })
 
   it('says when nobody has that username', async () => {

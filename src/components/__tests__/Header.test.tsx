@@ -12,10 +12,18 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate }
 })
 
-const { mockGetSession, mockOnAuthStateChange, mockSignOut } = vi.hoisted(() => ({
+const { mockGetSession, mockOnAuthStateChange, mockSignOut, mockSearchOpened, mockSearchClosed } = vi.hoisted(() => ({
+  mockSearchOpened: vi.fn(),
+  mockSearchClosed: vi.fn(),
   mockGetSession: vi.fn(),
   mockOnAuthStateChange: vi.fn(),
   mockSignOut: vi.fn(),
+}))
+
+vi.mock('@/analytics/events', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/analytics/events')>()),
+  captureSearchHeaderOpened: mockSearchOpened,
+  captureSearchHeaderClosed: mockSearchClosed,
 }))
 
 vi.mock('@/lib/supabase', () => ({
@@ -56,6 +64,8 @@ beforeEach(() => {
   mockOnAuthStateChange.mockReset()
   mockSignOut.mockReset()
   mockNavigate.mockReset()
+  mockSearchOpened.mockReset()
+  mockSearchClosed.mockReset()
 
   mockGetSession.mockResolvedValue({ data: { session: null }, error: null })
   mockOnAuthStateChange.mockImplementation(() => ({
@@ -86,6 +96,37 @@ describe('Header', () => {
   it('renders a header landmark', () => {
     renderHeader()
     expect(screen.getByRole('banner')).toBeInTheDocument()
+  })
+
+  it('opens the site search from the magnifying glass', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+
+    expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: 'Search the site' })).toHaveFocus()
+  })
+
+  it('closes the site search', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('dialog', { name: 'Search' })).not.toBeInTheDocument()
+  })
+
+  it('records when the site search is opened and closed', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+    expect(mockSearchOpened).toHaveBeenCalledTimes(1)
+
+    await user.keyboard('{Escape}')
+    expect(mockSearchClosed).toHaveBeenCalledTimes(1)
   })
 
   it('links to the blog regardless of login state', () => {

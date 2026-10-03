@@ -87,9 +87,9 @@ const makeListResponse = (sandwiches: SavedSandwich[], total?: number) => ({
   meta: { count: sandwiches.length, total: total ?? sandwiches.length, limit: 10, offset: 0 },
 })
 
-const renderPage = () =>
+const renderPage = (url = '/account/history') =>
   render(
-    <MemoryRouter initialEntries={['/account/history']}>
+    <MemoryRouter initialEntries={[url]}>
       <AuthProvider>
         <HistoryPage />
       </AuthProvider>
@@ -295,6 +295,32 @@ describe('HistoryPage', () => {
   })
 
   describe('search', () => {
+    it('starts with the search given in the address', async () => {
+      renderPage('/account/history?q=turkey%20club')
+
+      expect(await screen.findByRole('searchbox')).toHaveValue('turkey club')
+      await waitFor(() => {
+        expect(mockFetchSavedSandwiches).toHaveBeenCalledWith('test-token', expect.objectContaining({ q: 'turkey club' }))
+      })
+      expect(mockFetchSavedSandwiches).not.toHaveBeenCalledWith('test-token', expect.objectContaining({ q: undefined }))
+    })
+
+    it('keeps the newly typed search when the sort changes', async () => {
+      renderPage('/account/history?q=turkey')
+      const searchBox = await screen.findByRole('searchbox')
+      await userEvent.clear(searchBox)
+      await userEvent.type(searchBox, 'ham')
+      await waitFor(() => {
+        expect(mockFetchSavedSandwiches).toHaveBeenCalledWith('test-token', expect.objectContaining({ q: 'ham' }))
+      })
+      mockFetchSavedSandwiches.mockClear()
+
+      await userEvent.selectOptions(screen.getByRole('combobox', { name: /sort/i }), 'oldest')
+
+      await waitFor(() => { expect(mockFetchSavedSandwiches).toHaveBeenCalled() })
+      expect(mockFetchSavedSandwiches).not.toHaveBeenCalledWith('test-token', expect.objectContaining({ q: 'turkey' }))
+    })
+
     it('calls the API with the search query after debounce', async () => {
       renderPage()
       const searchBox = await screen.findByRole('searchbox')

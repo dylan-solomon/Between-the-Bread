@@ -4,15 +4,15 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { captureCommunityFiltered, captureCommunitySorted, captureCommunityViewed } from '@/analytics/events'
 import { fetchCommunityLeaderboard, isCommunityPage } from '@/api/community'
-import type { CommunityComposition, CommunityPage, CommunitySandwichSummary, CommunitySort } from '@/api/community'
+import type { CommunityPage, CommunitySandwichSummary, CommunitySort } from '@/api/community'
 import SandwichVisual from '@/components/SandwichVisual'
-import type { VisualComposition } from '@/components/SandwichVisual'
 import { DIETARY_DISCLAIMER, DIETARY_TAGS, getDietaryTag, isDietaryTag } from '@/data/dietaryTags'
 import { SITE_URL } from '@/data/site'
 import { useIngredients } from '@/hooks/useIngredients'
 import { COMMUNITY_DESCRIPTION, COMMUNITY_TITLE } from '@/seo/listPages'
 import { madeLabel, rankBadge } from '@/seo/communitySandwich'
 import { readInitialData } from '@/utils/initialData'
+import { toVisualComposition } from '@/utils/sandwichLayers'
 
 const PAGE_SIZE = 24
 const DEFAULT_SORT: CommunitySort = 'most_popular'
@@ -44,15 +44,6 @@ const pageSentWithPage = (paramsKey: string): CommunityPage | undefined =>
 
 const hasActiveFilters = ({ diet, ingredient }: Filters): boolean => diet.length > 0 || ingredient !== undefined
 
-const toVisual = (composition: CommunityComposition): VisualComposition => ({
-  bread: composition.bread ?? [],
-  protein: composition.protein ?? [],
-  cheese: composition.cheese ?? [],
-  toppings: composition.toppings ?? [],
-  condiments: composition.condiments ?? [],
-  'chefs-special': composition['chefs-special'] ?? [],
-})
-
 function RankBadge({ rank }: { rank: number }) {
   const badge = rankBadge(rank)
   return <span aria-label={badge.label} className={badge.className}>{badge.text}</span>
@@ -69,7 +60,7 @@ function CommunityCard({ sandwich }: { sandwich: CommunitySandwichSummary }) {
       >
         <RankBadge rank={sandwich.rank} />
         <div className="bg-neutral-50 pt-4">
-          <SandwichVisual size="compact" composition={toVisual(sandwich.composition)} />
+          <SandwichVisual size="compact" composition={toVisualComposition(sandwich.composition)} />
         </div>
         <div className="flex flex-1 flex-col gap-1 p-4">
           <h2 className="font-display text-lg font-bold text-neutral-900">{sandwich.name}</h2>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Heart, Trash2 } from 'lucide-react'
 import StarRating from '@/components/StarRating'
@@ -130,7 +130,9 @@ export default function HistoryPage() {
   const [sandwiches, setSandwiches] = useState<SavedSandwich[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [query, setQuery] = useState('')
+  const [searchParams] = useSearchParams()
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '')
+  const queryRef = useRef(query)
   const [sort, setSort] = useState<SortOption>('newest')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [ratingFilter, setRatingFilter] = useState<number | undefined>(undefined)
@@ -184,7 +186,7 @@ export default function HistoryPage() {
       viewedRef.current = true
       captureHistoryViewed()
     }
-    void fetchData({ sort })
+    void fetchData({ q: queryRef.current, sort })
   }, [authenticated, session, fetchData, sort])
 
   useEffect(() => {
@@ -192,6 +194,7 @@ export default function HistoryPage() {
   }, [])
 
   const handleSearchChange = (value: string) => {
+    queryRef.current = value
     setQuery(value)
     setOffset(0)
     if (debounceRef.current !== null) clearTimeout(debounceRef.current)

@@ -43,6 +43,10 @@ import {
   captureCommunitySorted,
   captureCommunityFiltered,
   captureCommunityTryThisClicked,
+  captureSearchPerformed,
+  captureSearchResultClicked,
+  captureSearchHeaderOpened,
+  captureSearchHeaderClosed,
   captureBlogViewed,
   captureBlogCategorySelected,
   captureBlogPostViewed,
@@ -504,6 +508,34 @@ describe('blog events', () => {
       post_slug: 'vegan-builds',
       sandwich_slug: 'reuben',
     })
+  })
+})
+
+describe('search events', () => {
+  it('captureSearchPerformed fires search_performed with the query, tab, result count and where it was searched', () => {
+    captureSearchPerformed({ query: 'reuben', source: 'all', resultsCount: 7, surface: 'page' })
+    expect(mockCapture).toHaveBeenCalledWith('search_performed', { query: 'reuben', source: 'all', results_count: 7, surface: 'page' })
+  })
+
+  it('captureSearchResultClicked fires search_result_clicked with the result and its position', () => {
+    captureSearchResultClicked({ query: 'reuben', resultSource: 'database', slug: 'reuben', position: 1, surface: 'header' })
+    expect(mockCapture).toHaveBeenCalledWith('search_result_clicked', {
+      query: 'reuben',
+      result_source: 'database',
+      slug: 'reuben',
+      position: 1,
+      surface: 'header',
+    })
+  })
+
+  it('captureSearchHeaderOpened fires search_header_opened', () => {
+    captureSearchHeaderOpened()
+    expect(mockCapture).toHaveBeenCalledWith('search_header_opened')
+  })
+
+  it('captureSearchHeaderClosed fires search_header_closed', () => {
+    captureSearchHeaderClosed()
+    expect(mockCapture).toHaveBeenCalledWith('search_header_closed')
   })
 })
 
