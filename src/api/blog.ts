@@ -1,3 +1,5 @@
+import { hasFields } from '../utils/hasFields'
+
 export type BlogCategorySummary = { slug: string; name: string }
 
 export type BlogCategory = BlogCategorySummary & {
@@ -32,14 +34,6 @@ export type BlogPost = BlogPostSummary & {
   more_posts: BlogPostSummary[]
 }
 
-const hasFields = (value: unknown, fields: Record<string, 'string' | 'array'>): boolean =>
-  typeof value === 'object' &&
-  value !== null &&
-  Object.entries(fields).every(([field, kind]) => {
-    const fieldValue: unknown = (value as Record<string, unknown>)[field]
-    return kind === 'array' ? Array.isArray(fieldValue) : typeof fieldValue === kind
-  })
-
 export const isBlogPost = (value: unknown): value is BlogPost =>
   hasFields(value, {
     id: 'string',
@@ -58,7 +52,13 @@ export type BlogPostQuery = {
   offset?: number
 }
 
-type BlogPostPage = { items: BlogPostSummary[]; totalCount: number }
+export type BlogPostPage = { items: BlogPostSummary[]; totalCount: number }
+
+export type BlogListing = { categories: BlogCategory[]; posts: BlogPostPage }
+
+export const isBlogListing = (value: unknown): value is BlogListing =>
+  hasFields(value, { categories: 'array', posts: 'object' }) &&
+  hasFields(value.posts, { items: 'array', totalCount: 'number' })
 
 const endpoint = (path: string): URL => new URL(path, window.location.origin)
 

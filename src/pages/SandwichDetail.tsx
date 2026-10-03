@@ -2,18 +2,20 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { captureEncyclopediaEntryViewed, captureEncyclopediaTryThisClicked } from '@/analytics/events'
-import { fetchSandwich } from '@/api/database'
+import { fetchSandwich, isSandwichEntry } from '@/api/database'
 import type { CanonicalIngredients, SandwichEntry } from '@/api/database'
 import MarkdownText from '@/components/MarkdownText'
 import SandwichVisual from '@/components/SandwichVisual'
 import SandwichCardPage from '@/components/sandwich-page/SandwichCardPage'
 import TryThisSandwich from '@/components/sandwich-page/TryThisSandwich'
+import { CATEGORY_LABELS, CATEGORY_ORDER } from '@/data/categoryLabels'
 import { DIETARY_DISCLAIMER, getDietaryTag, isDietaryTag } from '@/data/dietaryTags'
+import { SITE_URL } from '@/data/site'
 import { formatPostDate } from '@/utils/blogPost'
 import { useIngredients } from '@/hooks/useIngredients'
+import { readInitialData } from '@/utils/initialData'
+import { entryDescription } from '@/seo/sandwichEntry'
 import type { CategorySlug, Ingredient, SandwichComposition } from '@/types'
-
-const CATEGORY_ORDER: CategorySlug[] = ['bread', 'protein', 'cheese', 'toppings', 'condiments', 'chefs-special']
 
 type State =
   | { status: 'loading' }
@@ -22,6 +24,9 @@ type State =
   | { status: 'error' }
 
 type Pools = Partial<Record<CategorySlug, Ingredient[]>>
+
+const entrySentWithPage = (slug: string): SandwichEntry | undefined =>
+  readInitialData({ path: `/sandwiches/${slug}`, isData: isSandwichEntry })
 
 const knownCategories = (ingredients: CanonicalIngredients): Partial<Record<CategorySlug, { name: string }[]>> =>
   Object.fromEntries(
@@ -62,7 +67,10 @@ function Hero({ entry, pools }: { entry: SandwichEntry; pools: Pools }) {
 
 function Info({ entry, categoryNames }: { entry: SandwichEntry; categoryNames: Map<string, string> }) {
   const origin = [entry.origin_country, entry.origin_region].filter((part) => part !== null).join(' · ')
-  const groups = Object.entries(knownCategories(entry.canonical_ingredients))
+  const groups = CATEGORY_ORDER.flatMap((slug) => {
+    const items = entry.canonical_ingredients[slug] ?? []
+    return items.length > 0 ? [{ slug, items }] : []
+  })
 
   return (
     <div className="space-y-6">
@@ -77,9 +85,11 @@ function Info({ entry, categoryNames }: { entry: SandwichEntry; categoryNames: M
         <div>
           <h2 className="font-display text-lg font-bold text-neutral-900">Ingredients</h2>
           <dl className="mt-2 space-y-2">
-            {groups.map(([slug, items]) => (
+            {groups.map(({ slug, items }) => (
               <div key={slug}>
-                <dt className="text-sm font-semibold text-neutral-700">{categoryNames.get(slug) ?? slug}</dt>
+                <dt className="text-sm font-semibold text-neutral-700">
+                  {categoryNames.get(slug) ?? CATEGORY_LABELS[slug]}
+                </dt>
                 <dd className="text-sm text-neutral-600">
                   {items.map((item) => <span key={item.name} className="mr-2 inline-block">{item.name}</span>)}
                 </dd>
@@ -132,11 +142,20 @@ function Info({ entry, categoryNames }: { entry: SandwichEntry; categoryNames: M
 export default function SandwichDetail() {
   const { slug } = useParams<{ slug: string }>()
   const { categories, lookupPools } = useIngredients()
-  const [state, setState] = useState<State>({ status: 'loading' })
+  const [state, setState] = useState<State>(() => {
+    const sent = slug === undefined ? undefined : entrySentWithPage(slug)
+    return sent === undefined ? { status: 'loading' } : { status: 'success', entry: sent }
+  })
 
   useEffect(() => {
     if (slug === undefined) {
       setState({ status: 'not-found' })
+      return
+    }
+    const sent = entrySentWithPage(slug)
+    if (sent !== undefined) {
+      setState({ status: 'success', entry: sent })
+      captureEncyclopediaEntryViewed({ slug: sent.slug })
       return
     }
     setState({ status: 'loading' })
@@ -184,12 +203,14 @@ export default function SandwichDetail() {
 
   const { entry } = state
   const categoryNames = new Map(categories.map((category) => [category.slug, category.name]))
-  const pageUrl = `https://betweenbread.co/sandwiches/${entry.slug}`
+  const pageUrl = `${SITE_URL}/sandwiches/${entry.slug}`
 
   return (
     <>
       <Helmet>
         <title>{entry.name} | Between the Bread</title>
+        <meta name="description" content={entryDescription(entry)} />
+        <link rel="canonical" href={pageUrl} />
         <meta property="og:title" content={entry.name} />
         {entry.description !== null && <meta property="og:description" content={entry.description} />}
         {entry.image_url !== null && <meta property="og:image" content={entry.image_url} />}

@@ -10,12 +10,14 @@ type UseBlogCategoriesResult = {
   retry: () => void
 }
 
-export const useBlogCategories = (): UseBlogCategoriesResult => {
-  const [status, setStatus] = useState<Status>('loading')
-  const [categories, setCategories] = useState<BlogCategory[]>([])
+export const useBlogCategories = (initial?: BlogCategory[]): UseBlogCategoriesResult => {
+  const [status, setStatus] = useState<Status>(initial === undefined ? 'loading' : 'ready')
+  const [categories, setCategories] = useState<BlogCategory[]>(initial ?? [])
   const [attempt, setAttempt] = useState(0)
+  const [sent] = useState(initial)
 
   useEffect(() => {
+    if (sent !== undefined && attempt === 0) return
     let cancelled = false
     setStatus('loading')
     fetchPublicBlogCategories()
@@ -26,7 +28,7 @@ export const useBlogCategories = (): UseBlogCategoriesResult => {
       })
       .catch(() => { if (!cancelled) setStatus('error') })
     return () => { cancelled = true }
-  }, [attempt])
+  }, [sent, attempt])
 
   const retry = useCallback(() => { setAttempt((prev) => prev + 1) }, [])
 

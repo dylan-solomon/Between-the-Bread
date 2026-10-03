@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
+import { clearSentData, sendWithPage } from '@/test/initialData'
 
 const { mockFetchPosts, mockFetchCategories, mockCategorySelected } = vi.hoisted(() => ({
   mockFetchPosts: vi.fn(),
@@ -10,7 +11,8 @@ const { mockFetchPosts, mockFetchCategories, mockCategorySelected } = vi.hoisted
   mockCategorySelected: vi.fn(),
 }))
 
-vi.mock('@/api/blog', () => ({
+vi.mock('@/api/blog', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/blog')>()),
   fetchBlogPosts: mockFetchPosts,
   fetchPublicBlogCategories: mockFetchCategories,
 }))
@@ -129,5 +131,29 @@ describe('BlogCategory', () => {
     await user.click(screen.getByRole('button', { name: 'Try again' }))
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Dietary' })).toBeInTheDocument()
+  })
+})
+
+describe('BlogCategory sent with the page', () => {
+  afterEach(clearSentData)
+
+  it('shows the category and its posts straight away without asking the server again', () => {
+    sendWithPage('/blog/category/dietary', { categories: [ideas, dietary, empty], posts: { items: [post], totalCount: 1 } })
+
+    renderAt('dietary')
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Dietary' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Vegan builds' })).toBeInTheDocument()
+    expect(mockFetchPosts).not.toHaveBeenCalled()
+    expect(mockFetchCategories).not.toHaveBeenCalled()
+  })
+
+  it('loads the category when the content sent was for another category', async () => {
+    sendWithPage('/blog/category/sandwich-ideas', { categories: [ideas, dietary, empty], posts: { items: [], totalCount: 0 } })
+
+    renderAt('dietary')
+
+    expect(await screen.findByRole('link', { name: 'Vegan builds' })).toBeInTheDocument()
+    expect(mockFetchPosts).toHaveBeenCalledWith({ category: 'dietary', limit: 12, offset: 0 })
   })
 })

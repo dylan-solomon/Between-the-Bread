@@ -1,23 +1,29 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { fetchBlogPosts } from '@/api/blog'
-import type { BlogPostSummary } from '@/api/blog'
+import type { BlogPostPage, BlogPostSummary } from '@/api/blog'
 import BlogPostCard from '@/components/blog/BlogPostCard'
 
 const PAGE_SIZE = 12
 
 type Status = 'loading' | 'ready' | 'error'
 
-type Props = { category?: string }
+type Props = { category?: string; initial?: BlogPostPage }
 
-export default function BlogPostList({ category }: Props) {
-  const [items, setItems] = useState<BlogPostSummary[]>([])
-  const [totalCount, setTotalCount] = useState(0)
-  const [status, setStatus] = useState<Status>('loading')
+export default function BlogPostList({ category, initial }: Props) {
+  const [items, setItems] = useState<BlogPostSummary[]>(initial?.items ?? [])
+  const [totalCount, setTotalCount] = useState(initial?.totalCount ?? 0)
+  const [status, setStatus] = useState<Status>(initial === undefined ? 'loading' : 'ready')
   const [loadingMore, setLoadingMore] = useState(false)
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
+    if (initial !== undefined && attempt === 0) {
+      setItems(initial.items)
+      setTotalCount(initial.totalCount)
+      setStatus('ready')
+      return
+    }
     let cancelled = false
     setStatus('loading')
     fetchBlogPosts({ category, limit: PAGE_SIZE, offset: 0 })
@@ -29,7 +35,7 @@ export default function BlogPostList({ category }: Props) {
       })
       .catch(() => { if (!cancelled) setStatus('error') })
     return () => { cancelled = true }
-  }, [category, attempt])
+  }, [category, initial, attempt])
 
   const loadMore = () => {
     setLoadingMore(true)

@@ -77,8 +77,24 @@ describe('OG middleware', () => {
   })
 })
 
+const entryFields = {
+  id: 's-1',
+  alternative_names: [],
+  history: null,
+  origin_country: 'United States',
+  origin_region: 'Americas',
+  canonical_ingredients: {},
+  dietary_tags: [],
+  avg_rating: null,
+  rating_count: 0,
+  comment_count: 0,
+  photo_count: 0,
+  blog_posts: [],
+}
+
 const reubenEntry = {
   data: {
+    ...entryFields,
     name: 'Reuben',
     slug: 'reuben',
     description: 'Corned beef and sauerkraut on rye.',
@@ -86,9 +102,9 @@ const reubenEntry = {
   },
 }
 
-const mockEntryAndShell = (entry: unknown = reubenEntry) => {
+const mockEntryAndShell = (entry: { data: Record<string, unknown> } = reubenEntry) => {
   vi.mocked(fetch)
-    .mockResolvedValueOnce(new Response(JSON.stringify(entry), { status: 200 }))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ data: { ...entryFields, ...entry.data } }), { status: 200 }))
     .mockResolvedValueOnce(new Response('<html><head></head><body>app</body></html>', { status: 200 }))
 }
 
@@ -134,12 +150,14 @@ describe('OG middleware for encyclopedia entries', () => {
     expect(html).toContain('Reuben&#39;s &quot;Classic&quot;')
   })
 
-  it('passes through when the entry does not exist', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 404 }))
+  it('answers not found when the entry does not exist', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(new Response('<html><head></head><body>app</body></html>', { status: 200 }))
 
     const res = await middleware(makeRequest('/sandwiches/nope'))
 
-    expect(res.headers.get('x-middleware-next')).toBe('1')
+    expect(res.status).toBe(404)
   })
 
   it('passes through when fetch throws', async () => {
@@ -150,17 +168,20 @@ describe('OG middleware for encyclopedia entries', () => {
     expect(res.headers.get('x-middleware-next')).toBe('1')
   })
 
-  it('passes through for the index page and malformed slugs without fetching', async () => {
-    const index = await middleware(makeRequest('/sandwiches'))
+  it('passes through for malformed slugs without fetching', async () => {
     const malformed = await middleware(makeRequest('/sandwiches/Not_A_Slug'))
 
-    expect(index.headers.get('x-middleware-next')).toBe('1')
     expect(malformed.headers.get('x-middleware-next')).toBe('1')
     expect(fetch).not.toHaveBeenCalled()
   })
 
   it('is registered for encyclopedia entry paths', () => {
     expect(config.matcher).toContain('/sandwiches/:slug')
+  })
+
+  it('is registered for the encyclopedia and blog lists', () => {
+    expect(config.matcher).toContain('/sandwiches')
+    expect(config.matcher).toContain('/blog')
   })
 })
 
@@ -367,12 +388,14 @@ describe('OG middleware for blog posts', () => {
     expect(html).toContain('It&#39;s &quot;great&quot; &lt;b&gt;')
   })
 
-  it('passes through when the post does not exist or is not live yet', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 404 }))
+  it('answers not found when the post does not exist or is not live yet', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(new Response(shellWithStaticTags, { status: 200 }))
 
     const res = await middleware(makeRequest('/blog/nope'))
 
-    expect(res.headers.get('x-middleware-next')).toBe('1')
+    expect(res.status).toBe(404)
   })
 
   it('passes through when fetch throws', async () => {
@@ -383,12 +406,10 @@ describe('OG middleware for blog posts', () => {
     expect(res.headers.get('x-middleware-next')).toBe('1')
   })
 
-  it('passes through for the blog index, the feed and malformed slugs without fetching', async () => {
-    const index = await middleware(makeRequest('/blog'))
+  it('passes through for the feed and malformed slugs without fetching', async () => {
     const feed = await middleware(makeRequest('/blog/rss.xml'))
     const malformed = await middleware(makeRequest('/blog/Not_A_Slug'))
 
-    expect(index.headers.get('x-middleware-next')).toBe('1')
     expect(feed.headers.get('x-middleware-next')).toBe('1')
     expect(malformed.headers.get('x-middleware-next')).toBe('1')
     expect(fetch).not.toHaveBeenCalled()
@@ -407,9 +428,12 @@ const categoriesResponse = {
   ],
 }
 
+const noPosts = { data: [], meta: { total_count: 0 } }
+
 const mockCategoriesAndShell = (shell = shellWithStaticTags) => {
   vi.mocked(fetch)
     .mockResolvedValueOnce(new Response(JSON.stringify(categoriesResponse), { status: 200 }))
+    .mockResolvedValueOnce(new Response(JSON.stringify(noPosts), { status: 200 }))
     .mockResolvedValueOnce(new Response(shell, { status: 200 }))
 }
 
@@ -457,12 +481,12 @@ describe('OG middleware for blog category pages', () => {
   it.each([
     ['a category that does not exist', '/blog/category/made-up'],
     ['a category with no live posts', '/blog/category/best-pairings'],
-  ])('passes through for %s', async (_label, path) => {
-    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify(categoriesResponse), { status: 200 }))
+  ])('answers not found for %s', async (_label, path) => {
+    mockCategoriesAndShell()
 
     const res = await middleware(makeRequest(path))
 
-    expect(res.headers.get('x-middleware-next')).toBe('1')
+    expect(res.status).toBe(404)
   })
 
   it('passes through when the category list cannot be loaded', async () => {
@@ -481,6 +505,7 @@ describe('OG middleware for blog category pages', () => {
           { status: 200 },
         ),
       )
+      .mockResolvedValueOnce(new Response(JSON.stringify(noPosts), { status: 200 }))
       .mockResolvedValueOnce(new Response(shellWithStaticTags, { status: 200 }))
 
     const html = await (await middleware(makeRequest('/blog/category/dietary'))).text()

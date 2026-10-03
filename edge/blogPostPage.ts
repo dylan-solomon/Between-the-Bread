@@ -1,7 +1,8 @@
-import type { BlogPost, BlogPostSummary, RelatedSandwich } from '../src/api/blog'
+import type { BlogPost, RelatedSandwich } from '../src/api/blog'
 import { blogPostingData, postDescription } from '../src/seo/blogPosting'
 import { scriptJson } from '../src/seo/scriptJson'
 import { formatPostDate } from '../src/utils/blogPost'
+import { blogPostCard } from './cards'
 import { escapeHtml, metaTag, titleTag, twitterTags } from './html'
 import { markdownHtml } from './markdown'
 import type { Page } from './page'
@@ -49,15 +50,6 @@ const sandwichCard = (sandwich: RelatedSandwich): string =>
     '</div></a></li>',
   ].join('')
 
-const postCard = (other: BlogPostSummary): string =>
-  [
-    `<li class="relative flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white">`,
-    `<div class="flex flex-1 flex-col gap-2 p-4">`,
-    `<h3 class="font-display text-lg font-bold text-neutral-900"><a href="/blog/${escapeHtml(other.slug)}">${escapeHtml(other.title)}</a></h3>`,
-    `<p class="line-clamp-3 text-sm text-neutral-600">${escapeHtml(other.excerpt)}</p>`,
-    '</div></li>',
-  ].join('')
-
 const section = (heading: string, items: string[]): string =>
   items.length === 0
     ? ''
@@ -73,7 +65,7 @@ const articleHtml = (post: BlogPost): string =>
     `<div class="mt-8">${markdownHtml(post.body)}</div>`,
     '</article>',
     section('Sandwiches in this post', post.related_sandwiches.map(sandwichCard)),
-    section('More from the blog', post.more_posts.map(postCard)),
+    section('More from the blog', post.more_posts.map(blogPostCard)),
     '</div>',
   ].join('')
 

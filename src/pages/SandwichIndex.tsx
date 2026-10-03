@@ -3,11 +3,14 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { toast } from 'sonner'
 import { captureEncyclopediaFiltered, captureEncyclopediaSearched, captureEncyclopediaViewed } from '@/analytics/events'
-import { fetchSandwiches } from '@/api/database'
-import type { SandwichSort, SandwichSummary } from '@/api/database'
+import { fetchSandwiches, isSandwichPage } from '@/api/database'
+import type { SandwichPage, SandwichSort, SandwichSummary } from '@/api/database'
 import { DIETARY_DISCLAIMER, DIETARY_TAGS } from '@/data/dietaryTags'
 import { REGIONS } from '@/data/regions'
 import type { Region } from '@/data/regions'
+import { SITE_URL } from '@/data/site'
+import { ENCYCLOPEDIA_DESCRIPTION, ENCYCLOPEDIA_TITLE } from '@/seo/listPages'
+import { readInitialData } from '@/utils/initialData'
 
 const PAGE_SIZE = 24
 const SORT_OPTIONS: { value: SandwichSort; label: string }[] = [
@@ -41,6 +44,9 @@ const readFilters = (params: URLSearchParams): Filters => {
     diet: (params.get('diet') ?? '').split(',').filter((tag) => tag !== ''),
   }
 }
+
+const pageSentWithPage = (paramsKey: string): SandwichPage | undefined =>
+  paramsKey === '' ? readInitialData({ path: '/sandwiches', isData: isSandwichPage }) : undefined
 
 const hasActiveFilters = ({ q, region, diet }: Filters): boolean => q !== '' || region !== undefined || diet.length > 0
 
@@ -84,9 +90,10 @@ export default function SandwichIndex() {
   const filters = readFilters(params)
 
   const [searchText, setSearchText] = useState(filters.q)
-  const [items, setItems] = useState<SandwichSummary[]>([])
-  const [totalCount, setTotalCount] = useState(0)
-  const [status, setStatus] = useState<Status>('loading')
+  const [sent] = useState(() => pageSentWithPage(paramsKey))
+  const [items, setItems] = useState<SandwichSummary[]>(sent?.items ?? [])
+  const [totalCount, setTotalCount] = useState(sent?.totalCount ?? 0)
+  const [status, setStatus] = useState<Status>(sent === undefined ? 'loading' : 'ready')
   const [loadingMore, setLoadingMore] = useState(false)
   const [attempt, setAttempt] = useState(0)
 
@@ -95,6 +102,13 @@ export default function SandwichIndex() {
   useEffect(() => { captureEncyclopediaViewed() }, [])
 
   useEffect(() => {
+    const sentPage = attempt === 0 ? pageSentWithPage(paramsKey) : undefined
+    if (sentPage !== undefined) {
+      setItems(sentPage.items)
+      setTotalCount(sentPage.totalCount)
+      setStatus('ready')
+      return
+    }
     let cancelled = false
     setStatus('loading')
     const query = readFilters(new URLSearchParams(paramsKey))
@@ -145,12 +159,14 @@ export default function SandwichIndex() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <Helmet>
-        <title>Sandwich Encyclopedia | Between the Bread</title>
-        <meta property="og:title" content="Sandwich Encyclopedia | Between the Bread" />
+        <title>{ENCYCLOPEDIA_TITLE}</title>
+        <meta name="description" content={ENCYCLOPEDIA_DESCRIPTION} />
+        <link rel="canonical" href={`${SITE_URL}/sandwiches`} />
+        <meta property="og:title" content={ENCYCLOPEDIA_TITLE} />
       </Helmet>
 
       <h1 className="font-display text-3xl font-bold text-neutral-900">Sandwich Encyclopedia</h1>
-      <p className="mt-2 text-neutral-600">Iconic sandwiches from around the world, and the stories behind them.</p>
+      <p className="mt-2 text-neutral-600">{ENCYCLOPEDIA_DESCRIPTION}</p>
 
       <form
         role="search"
