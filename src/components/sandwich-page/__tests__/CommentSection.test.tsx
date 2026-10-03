@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 
 const {
   mockUseAuth,
@@ -32,13 +34,16 @@ vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import CommentSection from '@/components/sandwich-page/CommentSection'
 
+const renderSection = (ui: ReactElement) => render(ui, { wrapper: MemoryRouter })
+
 const loggedInAuth = { user: { id: 'user-1' }, session: { access_token: 'token-abc' } }
 const guestAuth = { user: null, session: null }
 
-const makeComment = (overrides: Partial<{ id: string; user_id: string; username: string | null; body: string; like_count: number; reply_count: number; replies: unknown[] }> = {}) => ({
+const makeComment = (overrides: Partial<{ id: string; user_id: string; username: string | null; author_is_admin: boolean; body: string; like_count: number; reply_count: number; replies: unknown[] }> = {}) => ({
   id: 'c1',
   user_id: 'user-2',
   username: 'deli_dan',
+  author_is_admin: false,
   body: 'Great sandwich!',
   parent_id: null,
   like_count: 0,
@@ -56,7 +61,7 @@ beforeEach(() => {
 describe('CommentSection', () => {
   it('shows a loading state before comments arrive', () => {
     mockFetchComments.mockReturnValue(new Promise(() => {}))
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
     expect(screen.getByText(/loading comments/i)).toBeInTheDocument()
   })
 
@@ -65,7 +70,7 @@ describe('CommentSection', () => {
       data: [makeComment({ replies: [{ id: 'r1', user_id: 'user-3', body: 'Me too', parent_id: 'c1', like_count: 0, reply_count: 0, created_at: '2026-01-01T00:00:00Z' }] })],
       meta: { total_count: 1, limit: 20, offset: 0 },
     })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByText('Great sandwich!')).toBeInTheDocument() })
     expect(screen.getByText('Me too')).toBeInTheDocument()
@@ -73,14 +78,14 @@ describe('CommentSection', () => {
 
   it('shows an empty state when there are no comments', async () => {
     mockFetchComments.mockResolvedValue({ data: [], meta: { total_count: 0, limit: 20, offset: 0 } })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByText(/no comments yet/i)).toBeInTheDocument() })
   })
 
   it('re-fetches with the selected sort when the sort control changes', async () => {
     mockFetchComments.mockResolvedValue({ data: [], meta: { total_count: 0, limit: 20, offset: 0 } })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
     await waitFor(() => { expect(mockFetchComments).toHaveBeenCalledTimes(1) })
 
     await userEvent.selectOptions(screen.getByRole('combobox', { name: /sort/i }), 'best')
@@ -94,7 +99,7 @@ describe('CommentSection', () => {
 
   it('shows "Load more" when more comments exist, and fetches the next page on click', async () => {
     mockFetchComments.mockResolvedValue({ data: [makeComment()], meta: { total_count: 5, limit: 1, offset: 0 } })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByRole('button', { name: /load more/i })).toBeInTheDocument() })
 
@@ -107,7 +112,7 @@ describe('CommentSection', () => {
 
   it('does not show "Load more" once every comment has been loaded', async () => {
     mockFetchComments.mockResolvedValue({ data: [makeComment()], meta: { total_count: 1, limit: 20, offset: 0 } })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByText('Great sandwich!')).toBeInTheDocument() })
     expect(screen.queryByRole('button', { name: /load more/i })).not.toBeInTheDocument()
@@ -116,7 +121,7 @@ describe('CommentSection', () => {
   it('prepends a newly posted top-level comment to the list', async () => {
     mockFetchComments.mockResolvedValue({ data: [], meta: { total_count: 0, limit: 20, offset: 0 } })
     mockPostComment.mockResolvedValue({ id: 'new-1', user_id: 'user-1', body: 'Brand new comment', parent_id: null, like_count: 0, reply_count: 0, created_at: '2026-01-02T00:00:00Z' })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByText(/no comments yet/i)).toBeInTheDocument() })
 
@@ -132,7 +137,7 @@ describe('CommentSection', () => {
       data: [makeComment({ id: 'mine', user_id: 'user-1', body: 'My comment' }), makeComment({ id: 'theirs', user_id: 'user-2', body: 'Their comment' })],
       meta: { total_count: 2, limit: 20, offset: 0 },
     })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByText('My comment')).toBeInTheDocument() })
     expect(screen.getAllByRole('button', { name: /delete/i })).toHaveLength(1)
@@ -144,7 +149,7 @@ describe('CommentSection', () => {
       meta: { total_count: 1, limit: 20, offset: 0 },
     })
     mockDeleteComment.mockResolvedValue(undefined)
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByText('My comment')).toBeInTheDocument() })
     await userEvent.click(screen.getByRole('button', { name: /delete/i }))
@@ -156,7 +161,7 @@ describe('CommentSection', () => {
   it('shows a reply form when Reply is clicked, and appends the new reply under its parent', async () => {
     mockFetchComments.mockResolvedValue({ data: [makeComment({ id: 'c1' })], meta: { total_count: 1, limit: 20, offset: 0 } })
     mockPostComment.mockResolvedValue({ id: 'r1', user_id: 'user-1', body: 'A reply', parent_id: 'c1', like_count: 0, reply_count: 0, created_at: '2026-01-02T00:00:00Z' })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByText('Great sandwich!')).toBeInTheDocument() })
     await userEvent.click(screen.getByRole('button', { name: /reply/i }))
@@ -173,7 +178,7 @@ describe('CommentSection', () => {
   it('likes a comment and shows the updated count', async () => {
     mockFetchComments.mockResolvedValue({ data: [makeComment({ like_count: 2 })], meta: { total_count: 1, limit: 20, offset: 0 } })
     mockLikeComment.mockResolvedValue({ like_count: 3 })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByText('Great sandwich!')).toBeInTheDocument() })
     await userEvent.click(screen.getByRole('button', { name: /^like/i }))
@@ -185,7 +190,7 @@ describe('CommentSection', () => {
   it('prompts for auth when a guest tries to like a comment', async () => {
     mockUseAuth.mockReturnValue(guestAuth)
     mockFetchComments.mockResolvedValue({ data: [makeComment()], meta: { total_count: 1, limit: 20, offset: 0 } })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByText('Great sandwich!')).toBeInTheDocument() })
     await userEvent.click(screen.getByRole('button', { name: /^like/i }))
@@ -200,11 +205,30 @@ describe('CommentSection authors', () => {
       data: [makeComment({ replies: [{ id: 'r1', user_id: 'user-3', username: 'rye_guy', body: 'Me too', parent_id: 'c1', like_count: 0, reply_count: 0, created_at: '2026-01-01T00:00:00Z' }] })],
       meta: { total_count: 1, limit: 20, offset: 0 },
     })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     expect(await screen.findByText('@deli_dan')).toBeInTheDocument()
     expect(screen.getByText('@rye_guy')).toBeInTheDocument()
     expect(screen.queryByText(/^User /)).not.toBeInTheDocument()
+  })
+
+  it('links each username to that person\'s profile', async () => {
+    mockFetchComments.mockResolvedValue({ data: [makeComment()], meta: { total_count: 1, limit: 20, offset: 0 } })
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+
+    expect(await screen.findByRole('link', { name: '@deli_dan' })).toHaveAttribute('href', '/u/deli_dan')
+  })
+
+  it('tags admins next to their username', async () => {
+    mockFetchComments.mockResolvedValue({
+      data: [makeComment({ author_is_admin: true }), makeComment({ id: 'c2', username: 'fan', author_is_admin: false })],
+      meta: { total_count: 2, limit: 20, offset: 0 },
+    })
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+
+    await screen.findByText('@fan')
+    expect(screen.getAllByText('Admin')).toHaveLength(1)
+    expect(screen.getByRole('link', { name: '@deli_dan' }).parentElement).toHaveTextContent('Admin')
   })
 
   it('calls an author without a username a member', async () => {
@@ -212,7 +236,7 @@ describe('CommentSection authors', () => {
       data: [makeComment({ username: null })],
       meta: { total_count: 1, limit: 20, offset: 0 },
     })
-    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     expect(await screen.findByText('Member')).toBeInTheDocument()
   })

@@ -441,10 +441,17 @@ describe('SettingsPage username', () => {
     expect(await screen.findByText('That username is already taken.', { selector: '[role="alert"]' })).toBeInTheDocument()
   })
 
+  it('links to the public profile', async () => {
+    await renderSettings()
+
+    expect(await screen.findByRole('link', { name: 'View your public profile' })).toHaveAttribute('href', '/u/sandwich_fan')
+  })
+
   it('lets someone without a username choose one', async () => {
     mockUseUsername.mockReturnValue({ username: null, needsUsername: true, askForUsername: vi.fn(), saveUsername: vi.fn() })
     await renderSettings()
 
     expect(await screen.findByLabelText('Username')).toHaveValue('')
+    expect(screen.queryByRole('link', { name: 'View your public profile' })).not.toBeInTheDocument()
   })
 })

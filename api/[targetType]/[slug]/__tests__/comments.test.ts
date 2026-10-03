@@ -89,7 +89,7 @@ describe('GET /api/[targetType]/[slug]/comments', () => {
     expect(body.data[0].id).toBe('c1')
     expect(body.data[0].like_count).toBe(3)
     expect(body.data[0].reply_count).toBe(1)
-    expect(body.data[0].replies).toEqual([{ ...reply, username: null }])
+    expect(body.data[0].replies).toEqual([{ ...reply, username: null, author_is_admin: false }])
     expect(body.data[1].replies).toEqual([])
     expect(body.meta.total_count).toBe(2)
   })
@@ -245,6 +245,36 @@ describe('GET comments usernames', () => {
     expect(body.data[1].username).toBeNull()
   })
 
+  it('marks which authors are admins', async () => {
+    answerRpc({
+      data: [
+        { id: 'user-1', username: 'boss', is_admin: true },
+        { id: 'user-2', username: 'fan', is_admin: false },
+      ],
+      error: null,
+    })
+    setupRepliesChain({ data: [row('r1', 'user-1', 'c1')], error: null })
+
+    const res = makeRes()
+    await handler(makeReq(), res)
+
+    const body = res._json as { data: { author_is_admin: boolean; replies: { author_is_admin: boolean }[] }[] }
+    expect(body.data[0].author_is_admin).toBe(true)
+    expect(body.data[0].replies[0].author_is_admin).toBe(true)
+    expect(body.data[1].author_is_admin).toBe(false)
+  })
+
+  it('does not mark authors without a username as admins', async () => {
+    answerRpc({ data: [], error: null })
+    setupRepliesChain({ data: [], error: null })
+
+    const res = makeRes()
+    await handler(makeReq(), res)
+
+    const body = res._json as { data: { author_is_admin: boolean }[] }
+    expect(body.data.map((comment) => comment.author_is_admin)).toEqual([false, false])
+  })
+
   it('looks up each author once', async () => {
     answerRpc({ data: [], error: null })
     setupRepliesChain({ data: [row('r1', 'user-1', 'c1')], error: null })
@@ -269,8 +299,8 @@ describe('GET comments usernames', () => {
 })
 
 describe('POST /api/[targetType]/[slug]/comments', () => {
-  const profileWithUsername = (username: string | null) => ({
-    select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { username }, error: null }) }) }),
+  const profileWithUsername = (username: string | null, isAdmin = false) => ({
+    select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { username, is_admin: isAdmin }, error: null }) }) }),
   })
 
   const setupInsertChain = (username: string | null = 'sandwich_fan') => {
@@ -313,14 +343,17 @@ describe('POST /api/[targetType]/[slug]/comments', () => {
     expect(mockInsert).not.toHaveBeenCalled()
   })
 
-  it('returns the new comment with the commenter username', async () => {
+  it('returns the new comment with the commenter username and admin status', async () => {
     setupInsertChain('sandwich_fan')
     mockInsertSelectSingle.mockResolvedValue({ data: { id: 'c1', user_id: 'user-123', parent_id: null }, error: null })
 
     const res = makeRes()
     await handler(postReq(), res)
 
-    expect((res._json as { data: { username: string } }).data.username).toBe('sandwich_fan')
+    expect((res._json as { data: { username: string; author_is_admin: boolean } }).data).toMatchObject({
+      username: 'sandwich_fan',
+      author_is_admin: false,
+    })
   })
 
   it('returns 201 with the created comment', async () => {

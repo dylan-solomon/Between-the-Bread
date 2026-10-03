@@ -4,7 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 
-const { mockGetSession, mockOnAuthStateChange, mockSignInWithPassword, mockCaptureAccountLoggedIn, mockIdentifyUser } = vi.hoisted(() => ({
+const { mockGetSession, mockOnAuthStateChange, mockSignInWithPassword, mockCaptureAccountLoggedIn, mockIdentifyUser, mockSetSession } = vi.hoisted(() => ({
+  mockSetSession: vi.fn(),
   mockGetSession: vi.fn(),
   mockOnAuthStateChange: vi.fn(),
   mockSignInWithPassword: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock('@/lib/supabase', () => ({
       getSession: mockGetSession,
       onAuthStateChange: mockOnAuthStateChange,
       signInWithPassword: mockSignInWithPassword,
+      setSession: mockSetSession,
       signUp: vi.fn(),
       signInWithOAuth: vi.fn(),
       signOut: vi.fn(),
@@ -254,5 +256,35 @@ describe('LoginPage', () => {
     })
     expect(mockCaptureAccountLoggedIn).not.toHaveBeenCalled()
     expect(mockIdentifyUser).not.toHaveBeenCalled()
+  })
+})
+
+describe('LoginPage with a username', () => {
+  it('asks for an email or username', () => {
+    renderPage()
+
+    const field = screen.getByLabelText('Email or username')
+    expect(field).toHaveAttribute('type', 'text')
+    expect(field).toHaveAttribute('autocomplete', 'username')
+  })
+
+  it('signs in with a username and records the method', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: { access_token: 'a', refresh_token: 'r' } }),
+    }))
+    mockSetSession.mockResolvedValue({
+      data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} },
+      error: null,
+    })
+    renderPage()
+
+    await userEvent.type(screen.getByLabelText('Email or username'), 'deli_dan')
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123')
+    await userEvent.click(screen.getByRole('button', { name: /log in/i }))
+
+    await waitFor(() => { expect(mockCaptureAccountLoggedIn).toHaveBeenCalledWith({ method: 'username' }) })
+    expect(mockSignInWithPassword).not.toHaveBeenCalled()
   })
 })

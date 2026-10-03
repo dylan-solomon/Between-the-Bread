@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import UsernameField from '@/components/UsernameField'
 import { useUsername } from '@/context/UsernameContext'
 import { canSaveUsername, useUsernameCheck } from '@/hooks/useUsernameCheck'
@@ -45,5 +46,14 @@ function UsernameForm({ current }: { current: string | null }) {
 
 export default function UsernameSettings() {
   const { username } = useUsername()
-  return <UsernameForm key={username ?? 'none'} current={username} />
+  return (
+    <>
+      <UsernameForm key={username ?? 'none'} current={username} />
+      {username !== null && (
+        <Link to={`/u/${username}`} className="mt-3 inline-block text-sm text-primary underline">
+          View your public profile
+        </Link>
+      )}
+    </>
+  )
 }

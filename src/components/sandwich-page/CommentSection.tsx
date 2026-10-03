@@ -6,6 +6,7 @@ import { useAuthPrompt } from '@/context/AuthPromptContext'
 import { deleteComment, fetchComments, likeComment, unlikeComment } from '@/api/sandwichPage'
 import type { Comment, CommentSort, CommentTargetType, CommentWithReplies } from '@/api/sandwichPage'
 import CommentForm from '@/components/sandwich-page/CommentForm'
+import AuthorName from '@/components/AuthorName'
 
 const PAGE_SIZE = 20
 
@@ -15,8 +16,6 @@ const SORT_OPTIONS: { value: CommentSort; label: string }[] = [
   { value: 'best', label: 'Best' },
   { value: 'hot', label: 'Hot' },
 ]
-
-const authorLabel = (comment: Comment): string => (comment.username === null ? 'Member' : `@${comment.username}`)
 
 const formatDate = (iso: string): string =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -171,7 +170,7 @@ export default function CommentSection({ targetType, slug, targetId }: Props) {
         <ul className="mt-4 divide-y divide-neutral-200">
           {comments.map((comment) => (
             <li key={comment.id} className="py-3">
-              <p className="text-sm font-medium text-neutral-900">{authorLabel(comment)}</p>
+              <AuthorName username={comment.username} isAdmin={comment.author_is_admin} />
               <p className="text-xs text-neutral-400">{formatDate(comment.created_at)}</p>
               <p className="mt-1 text-sm text-neutral-700">{comment.body}</p>
               {renderActions(comment)}
@@ -198,7 +197,7 @@ export default function CommentSection({ targetType, slug, targetId }: Props) {
                 <ul className="mt-2 ml-4 space-y-3 border-l border-neutral-200 pl-3">
                   {comment.replies.map((reply) => (
                     <li key={reply.id}>
-                      <p className="text-sm font-medium text-neutral-900">{authorLabel(reply)}</p>
+                      <AuthorName username={reply.username} isAdmin={reply.author_is_admin} />
                       <p className="text-xs text-neutral-400">{formatDate(reply.created_at)}</p>
                       <p className="mt-1 text-sm text-neutral-700">{reply.body}</p>
                       {renderActions(reply)}
