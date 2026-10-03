@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { captureSearchPerformed, captureSearchResultClicked } from '@/analytics/events'
+import { setHasUsedSearch } from '@/analytics/userProperties'
 import { searchSite } from '@/api/search'
 import type { SearchResult } from '@/api/search'
 import { resultLink, searchPageLink, SOURCE_LABELS } from '@/components/search/resultLinks'
@@ -43,6 +44,7 @@ export default function SearchOverlay({ onClose }: Props) {
           if (cancelled) return
           setAnswer({ query, items: page.items })
           captureSearchPerformed({ query, source: 'all', resultsCount: page.totalCount, surface: 'header' })
+          setHasUsedSearch()
         })
         .catch(() => { if (!cancelled) setAnswer({ query, failed: true }) })
     }, DEBOUNCE_MS)

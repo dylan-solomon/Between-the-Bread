@@ -6,7 +6,8 @@ import { HelmetProvider } from 'react-helmet-async'
 import { makeCategories, makeIngredient } from '@/test/factories'
 import { clearSentData, sendWithPage } from '@/test/initialData'
 
-const { mockFetchLeaderboard, mockUseIngredients, mockViewed, mockSorted, mockFiltered } = vi.hoisted(() => ({
+const { mockFetchLeaderboard, mockUseIngredients, mockViewed, mockSorted, mockFiltered, mockPreferredSort } = vi.hoisted(() => ({
+  mockPreferredSort: vi.fn(),
   mockViewed: vi.fn(),
   mockSorted: vi.fn(),
   mockFiltered: vi.fn(),
@@ -19,6 +20,7 @@ vi.mock('@/api/community', async (importOriginal) => ({
   fetchCommunityLeaderboard: mockFetchLeaderboard,
 }))
 vi.mock('@/hooks/useIngredients', () => ({ useIngredients: mockUseIngredients }))
+vi.mock('@/analytics/userProperties', () => ({ setPreferredSortMode: mockPreferredSort }))
 vi.mock('@/analytics/events', () => ({
   captureCommunityViewed: mockViewed,
   captureCommunitySorted: mockSorted,
@@ -325,6 +327,7 @@ describe('CommunityIndex analytics', () => {
     await user.click(screen.getByRole('button', { name: 'Trending' }))
 
     expect(mockSorted).toHaveBeenCalledWith({ sort: 'trending' })
+    expect(mockPreferredSort).toHaveBeenCalledWith('trending')
   })
 
   it('does not record picking the sort that is already chosen', async () => {

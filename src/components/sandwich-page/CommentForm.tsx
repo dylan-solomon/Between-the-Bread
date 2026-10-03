@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { useAuthPrompt } from '@/context/AuthPromptContext'
 import { useUsername } from '@/context/UsernameContext'
+import { captureCommentPosted } from '@/analytics/events'
 import { postComment } from '@/api/sandwichPage'
 import type { Comment, CommentTargetType } from '@/api/sandwichPage'
 
@@ -44,6 +45,7 @@ export default function CommentForm({ targetType, slug, targetId, parentId, onPo
     try {
       const comment = await postComment(session.access_token, { targetType, slug, targetId, body: trimmed, parentId })
       onPosted(comment)
+      captureCommentPosted({ targetType, slug, isReply: parentId !== undefined })
       setBody('')
     } catch {
       toast.error('Failed to post comment. Please try again.')

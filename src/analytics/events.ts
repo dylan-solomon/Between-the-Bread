@@ -241,6 +241,20 @@ export const captureCommunityTryThisClicked = (props: { slug: string }): void =>
   posthog.capture('community_try_this_clicked', { slug: props.slug })
 }
 
+type ContributionTarget = 'database' | 'community' | 'blog'
+
+export const captureSandwichRated = (props: { targetType: ContributionTarget; slug: string; score: number }): void => {
+  posthog.capture('sandwich_rated', { target_type: props.targetType, slug: props.slug, score: props.score })
+}
+
+export const captureCommentPosted = (props: { targetType: ContributionTarget; slug: string; isReply: boolean }): void => {
+  posthog.capture('comment_posted', { target_type: props.targetType, slug: props.slug, is_reply: props.isReply })
+}
+
+export const capturePhotoUploaded = (props: { targetType: ContributionTarget; slug: string }): void => {
+  posthog.capture('photo_uploaded', { target_type: props.targetType, slug: props.slug })
+}
+
 type SearchSurface = 'header' | 'page'
 
 export const captureSearchPerformed = (props: {

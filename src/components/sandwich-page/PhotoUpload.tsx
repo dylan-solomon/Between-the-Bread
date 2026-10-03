@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { capturePhotoUploaded } from '@/analytics/events'
 import { registerPhoto } from '@/api/sandwichPage'
 import type { Photo, TargetType } from '@/api/sandwichPage'
 import { resizeImage } from '@/utils/resizeImage'
@@ -80,6 +81,7 @@ export default function PhotoUpload({ targetType, slug, targetId, onUploaded }: 
         caption: caption.trim() === '' ? undefined : caption.trim(),
       })
       onUploaded(photo)
+      capturePhotoUploaded({ targetType, slug })
       toast.success('Photo submitted for review!')
       reset()
     } catch {

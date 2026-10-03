@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { captureSearchPerformed, captureSearchResultClicked } from '@/analytics/events'
+import { setHasUsedSearch } from '@/analytics/userProperties'
 import { searchSite } from '@/api/search'
 import type { SearchCounts, SearchResult, SearchTab } from '@/api/search'
 import SandwichVisual from '@/components/SandwichVisual'
@@ -157,6 +158,7 @@ export default function SearchResults() {
         setTotalCount(page.totalCount)
         setStatus('ready')
         captureSearchPerformed({ query: query.q, source: query.source, resultsCount: page.totalCount, surface: 'page' })
+        setHasUsedSearch()
       })
       .catch(() => { if (!cancelled) setStatus('error') })
     return () => { cancelled = true }

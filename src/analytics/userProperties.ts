@@ -36,3 +36,11 @@ export const setCostContext = (context: 'retail' | 'restaurant'): void => {
 export const setLastActiveAt = (): void => {
   posthog.setPersonProperties({ last_active_at: new Date().toISOString() })
 }
+
+export const setHasUsedSearch = (): void => {
+  posthog.setPersonProperties({ has_used_search: true })
+}
+
+export const setPreferredSortMode = (sort: string): void => {
+  posthog.setPersonProperties({ preferred_sort_mode: sort })
+}

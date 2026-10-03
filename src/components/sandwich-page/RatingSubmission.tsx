@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { useAuthPrompt } from '@/context/AuthPromptContext'
+import { captureSandwichRated } from '@/analytics/events'
 import { submitRating } from '@/api/sandwichPage'
 import type { TargetType } from '@/api/sandwichPage'
 import StarRating from '@/components/StarRating'
@@ -28,6 +29,7 @@ export default function RatingSubmission({ targetType, slug, targetId }: Props) 
     try {
       await submitRating(session.access_token, { targetType, slug, targetId, score })
       setMyRating(score)
+      captureSandwichRated({ targetType, slug, score })
       toast.success('Thanks for rating!')
     } catch {
       toast.error('Failed to save your rating. Please try again.')

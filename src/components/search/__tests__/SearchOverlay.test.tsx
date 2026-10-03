@@ -3,7 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 
-const { mockSearch, mockUseAuth, mockPerformed, mockClicked } = vi.hoisted(() => ({
+const { mockSearch, mockUseAuth, mockPerformed, mockClicked, mockHasUsedSearch } = vi.hoisted(() => ({
+  mockHasUsedSearch: vi.fn(),
   mockSearch: vi.fn(),
   mockUseAuth: vi.fn(),
   mockPerformed: vi.fn(),
@@ -13,6 +14,7 @@ const { mockSearch, mockUseAuth, mockPerformed, mockClicked } = vi.hoisted(() =>
 vi.mock('@/api/search', () => ({ searchSite: mockSearch }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/analytics/events', () => ({ captureSearchPerformed: mockPerformed, captureSearchResultClicked: mockClicked }))
+vi.mock('@/analytics/userProperties', () => ({ setHasUsedSearch: mockHasUsedSearch }))
 
 import SearchOverlay from '@/components/search/SearchOverlay'
 
@@ -209,6 +211,7 @@ describe('SearchOverlay analytics', () => {
 
     expect(mockPerformed).toHaveBeenCalledTimes(1)
     expect(mockPerformed).toHaveBeenCalledWith({ query: 'reuben', source: 'all', resultsCount: 4, surface: 'header' })
+    expect(mockHasUsedSearch).toHaveBeenCalled()
   })
 
   it('records which match was clicked and where it was in the list', async () => {

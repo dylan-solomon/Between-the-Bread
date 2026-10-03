@@ -15,7 +15,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "import:encyclopedia": "tsx scripts/importEncyclopedia.ts",
-    "seed:blog": "tsx scripts/generateBlogSeed.ts"
+    "seed:blog": "tsx scripts/generateBlogSeed.ts",
+    "posthog:setup": "tsx --env-file-if-exists=.env.local scripts/posthog/main.ts"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.2.8",

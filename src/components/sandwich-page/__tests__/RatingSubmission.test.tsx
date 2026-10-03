@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-const { mockUseAuth, mockPrompt, mockSubmitRating } = vi.hoisted(() => ({
+const { mockUseAuth, mockPrompt, mockSubmitRating, mockRated } = vi.hoisted(() => ({
+  mockRated: vi.fn(),
   mockUseAuth: vi.fn(),
   mockPrompt: vi.fn(),
   mockSubmitRating: vi.fn(),
@@ -12,6 +13,7 @@ const { mockUseAuth, mockPrompt, mockSubmitRating } = vi.hoisted(() => ({
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/context/AuthPromptContext', () => ({ useAuthPrompt: () => ({ prompt: mockPrompt }) }))
 vi.mock('@/api/sandwichPage', () => ({ submitRating: mockSubmitRating }))
+vi.mock('@/analytics/events', () => ({ captureSandwichRated: mockRated }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import RatingSubmission from '@/components/sandwich-page/RatingSubmission'
@@ -56,6 +58,7 @@ describe('RatingSubmission', () => {
       score: 4,
     })
     expect(toast.success).toHaveBeenCalled()
+    expect(mockRated).toHaveBeenCalledWith({ targetType: 'database', slug: 'reuben', score: 4 })
   })
 
   it('shows an error toast when submission fails', async () => {
@@ -66,5 +69,6 @@ describe('RatingSubmission', () => {
     await userEvent.click(screen.getAllByRole('button')[3])
 
     expect(toast.error).toHaveBeenCalled()
+    expect(mockRated).not.toHaveBeenCalled()
   })
 })

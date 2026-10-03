@@ -4,7 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
-const { mockSearch, mockUseAuth, mockPerformed, mockClicked } = vi.hoisted(() => ({
+const { mockSearch, mockUseAuth, mockPerformed, mockClicked, mockHasUsedSearch } = vi.hoisted(() => ({
+  mockHasUsedSearch: vi.fn(),
   mockSearch: vi.fn(),
   mockUseAuth: vi.fn(),
   mockPerformed: vi.fn(),
@@ -14,6 +15,7 @@ const { mockSearch, mockUseAuth, mockPerformed, mockClicked } = vi.hoisted(() =>
 vi.mock('@/api/search', () => ({ searchSite: mockSearch }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/analytics/events', () => ({ captureSearchPerformed: mockPerformed, captureSearchResultClicked: mockClicked }))
+vi.mock('@/analytics/userProperties', () => ({ setHasUsedSearch: mockHasUsedSearch }))
 
 import SearchResults from '@/pages/SearchResults'
 
@@ -289,6 +291,7 @@ describe('SearchResults analytics', () => {
     await screen.findByText('Reuben')
 
     expect(mockPerformed).toHaveBeenCalledWith({ query: 'reuben', source: 'blog', resultsCount: 7, surface: 'page' })
+    expect(mockHasUsedSearch).toHaveBeenCalled()
   })
 
   it('does not count loading more as a new search', async () => {

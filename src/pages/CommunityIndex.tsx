@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { captureCommunityFiltered, captureCommunitySorted, captureCommunityViewed } from '@/analytics/events'
+import { setPreferredSortMode } from '@/analytics/userProperties'
 import { fetchCommunityLeaderboard, isCommunityPage } from '@/api/community'
 import type { CommunityPage, CommunitySandwichSummary, CommunitySort } from '@/api/community'
 import SandwichVisual from '@/components/SandwichVisual'
@@ -136,6 +137,7 @@ export default function CommunityIndex() {
   const changeSort = (sort: CommunitySort) => {
     if (sort === filters.sort) return
     captureCommunitySorted({ sort })
+    setPreferredSortMode(sort)
     updateParams({ sort: sort === DEFAULT_SORT ? '' : sort })
   }
 

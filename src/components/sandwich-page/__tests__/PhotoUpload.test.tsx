@@ -3,7 +3,8 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-const { mockUseAuth, mockResizeImage, mockUpload, mockRegisterPhoto } = vi.hoisted(() => ({
+const { mockUseAuth, mockResizeImage, mockUpload, mockRegisterPhoto, mockPhotoUploaded } = vi.hoisted(() => ({
+  mockPhotoUploaded: vi.fn(),
   mockUseAuth: vi.fn(),
   mockResizeImage: vi.fn(),
   mockUpload: vi.fn(),
@@ -16,6 +17,7 @@ vi.mock('@/api/sandwichPage', () => ({ registerPhoto: mockRegisterPhoto }))
 vi.mock('@/lib/supabase', () => ({
   supabase: { storage: { from: () => ({ upload: mockUpload }) } },
 }))
+vi.mock('@/analytics/events', () => ({ capturePhotoUploaded: mockPhotoUploaded }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import PhotoUpload from '@/components/sandwich-page/PhotoUpload'
@@ -76,6 +78,7 @@ describe('PhotoUpload', () => {
       targetType: 'database', slug: 'reuben', targetId: 'target-1', caption: 'Yum',
     }))
     expect(screen.queryByRole('img', { name: /preview/i })).not.toBeInTheDocument()
+    expect(mockPhotoUploaded).toHaveBeenCalledWith({ targetType: 'database', slug: 'reuben' })
   })
 
   it('shows an error toast when the storage upload fails', async () => {
@@ -102,6 +105,7 @@ describe('PhotoUpload', () => {
     await userEvent.click(screen.getByRole('button', { name: /^upload$/i }))
 
     await waitFor(() => { expect(toast.error).toHaveBeenCalled() })
+    expect(mockPhotoUploaded).not.toHaveBeenCalled()
   })
 
   it('clears the preview when Cancel is clicked, without uploading', async () => {
