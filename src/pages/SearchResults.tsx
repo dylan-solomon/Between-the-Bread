@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { searchSite } from '@/api/search'
 import type { SearchCounts, SearchResult, SearchTab } from '@/api/search'
 import SandwichVisual from '@/components/SandwichVisual'
+import { resultLink, SOURCE_LABELS } from '@/components/search/resultLinks'
 import { useAuth } from '@/context/AuthContext'
 import { DIETARY_TAGS } from '@/data/dietaryTags'
 import { madeLabel } from '@/seo/communitySandwich'
@@ -21,13 +22,6 @@ const TABS: { value: SearchTab; label: string }[] = [
   { value: 'blog', label: 'Blog' },
   { value: 'saved', label: 'My History' },
 ]
-
-const SOURCE_LABELS: Record<SearchResult['source'], string> = {
-  database: 'Classic Sandwich',
-  community: 'Community',
-  blog: 'Blog',
-  saved: 'My History',
-}
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -48,19 +42,6 @@ const ratingText = (avgRating: number | null, ratingCount: number): string =>
 const tabCount = (counts: SearchCounts, tab: SearchTab): number | null => {
   if (tab === 'all') return counts.database + counts.community + counts.blog + (counts.saved ?? 0)
   return counts[tab]
-}
-
-const resultLink = (result: SearchResult): string => {
-  switch (result.source) {
-    case 'database':
-      return `/sandwiches/${result.slug}`
-    case 'community':
-      return `/community/${result.slug}`
-    case 'blog':
-      return `/blog/${result.slug}`
-    case 'saved':
-      return `/account/history?${new URLSearchParams({ q: result.title }).toString()}`
-  }
 }
 
 const Emoji = ({ children }: { children: string }) => (

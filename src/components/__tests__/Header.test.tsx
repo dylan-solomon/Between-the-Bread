@@ -88,6 +88,26 @@ describe('Header', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument()
   })
 
+  it('opens the site search from the magnifying glass', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+
+    expect(screen.getByRole('dialog', { name: 'Search' })).toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: 'Search the site' })).toHaveFocus()
+  })
+
+  it('closes the site search', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('dialog', { name: 'Search' })).not.toBeInTheDocument()
+  })
+
   it('links to the blog regardless of login state', () => {
     renderHeader()
     expect(screen.getByRole('link', { name: 'Blog' })).toHaveAttribute('href', '/blog')
