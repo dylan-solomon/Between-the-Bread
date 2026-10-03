@@ -8,6 +8,7 @@ export const siteShell = (content: string): string =>
     '<nav class="flex items-center gap-6">',
     '<a href="/" class="font-display text-lg font-bold text-neutral-900">Between the Bread</a>',
     `<a href="/sandwiches" class="${NAV_LINK_CLASS}">Sandwiches</a>`,
+    `<a href="/community" class="${NAV_LINK_CLASS}">Community</a>`,
     `<a href="/blog" class="${NAV_LINK_CLASS}">Blog</a>`,
     '</nav>',
     '</div>',

@@ -10,3 +10,6 @@ export const categoryTitle = (category: BlogCategory): string => `${category.nam
 
 export const categoryDescription = (category: BlogCategory): string =>
   category.description ?? `${category.name} posts from Between the Bread.`
+
+export const COMMUNITY_TITLE = 'Community Leaderboard | Between the Bread'
+export const COMMUNITY_DESCRIPTION = 'The sandwiches people have made most on Between the Bread, ranked by the community.'

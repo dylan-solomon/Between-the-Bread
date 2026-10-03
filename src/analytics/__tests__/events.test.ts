@@ -38,6 +38,11 @@ import {
   captureEncyclopediaSearched,
   captureEncyclopediaFiltered,
   captureEncyclopediaTryThisClicked,
+  captureCommunityViewed,
+  captureCommunityEntryViewed,
+  captureCommunitySorted,
+  captureCommunityFiltered,
+  captureCommunityTryThisClicked,
   captureBlogViewed,
   captureBlogCategorySelected,
   captureBlogPostViewed,
@@ -499,6 +504,33 @@ describe('blog events', () => {
       post_slug: 'vegan-builds',
       sandwich_slug: 'reuben',
     })
+  })
+})
+
+describe('community events', () => {
+  it('captureCommunityViewed fires community_viewed', () => {
+    captureCommunityViewed()
+    expect(mockCapture).toHaveBeenCalledWith('community_viewed')
+  })
+
+  it('captureCommunityEntryViewed fires community_entry_viewed with the slug', () => {
+    captureCommunityEntryViewed({ slug: 'ham-abc12345' })
+    expect(mockCapture).toHaveBeenCalledWith('community_entry_viewed', { slug: 'ham-abc12345' })
+  })
+
+  it('captureCommunitySorted fires community_sorted with the sort mode', () => {
+    captureCommunitySorted({ sort: 'trending' })
+    expect(mockCapture).toHaveBeenCalledWith('community_sorted', { sort: 'trending' })
+  })
+
+  it('captureCommunityFiltered fires community_filtered with the filter values', () => {
+    captureCommunityFiltered({ diet: ['vegan'], ingredient: 'ham', sort: 'top_rated' })
+    expect(mockCapture).toHaveBeenCalledWith('community_filtered', { diet: ['vegan'], ingredient: 'ham', sort: 'top_rated' })
+  })
+
+  it('captureCommunityTryThisClicked fires community_try_this_clicked with the slug', () => {
+    captureCommunityTryThisClicked({ slug: 'ham-abc12345' })
+    expect(mockCapture).toHaveBeenCalledWith('community_try_this_clicked', { slug: 'ham-abc12345' })
   })
 })
 

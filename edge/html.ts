@@ -28,6 +28,8 @@ export const twitterTags = (props: {
 export const descriptionTag = (description: string): string =>
   `<meta name="description" content="${escapeHtml(description)}" data-rh="true" />`
 
+export const robotsNoindexTag = '<meta name="robots" content="noindex" data-rh="true" />'
+
 export const canonicalTag = (href: string): string =>
   `<link rel="canonical" href="${escapeHtml(href)}" data-rh="true" />`
 

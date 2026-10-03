@@ -1,16 +1,20 @@
 import { next } from '@vercel/edge'
 import { isBlogPost } from './src/api/blog'
 import type { BlogCategory, BlogListing } from './src/api/blog'
+import { isCommunitySandwich } from './src/api/community'
+import type { CommunitySandwichSummary } from './src/api/community'
 import { isSandwichEntry } from './src/api/database'
 import type { SandwichSummary } from './src/api/database'
 import { scriptJson } from './src/seo/scriptJson'
 import { blogPostPage } from './edge/blogPostPage'
 import { sandwichEntryPage } from './edge/sandwichEntryPage'
 import { blogCategoryPage, blogIndexPage, encyclopediaPage } from './edge/listPages'
+import { communityIndexPage, communitySandwichPage } from './edge/communityPages'
 import {
   canonicalTag,
   descriptionTag,
   metaTag,
+  robotsNoindexTag,
   structuredDataTag,
   titleTag,
   twitterTags,
@@ -21,6 +25,8 @@ import { siteShell } from './edge/shell'
 const SHARE_PATTERN = /^\/s\/([a-zA-Z0-9]{8})$/
 const ENCYCLOPEDIA_PATTERN = /^\/sandwiches$/
 const BLOG_INDEX_PATTERN = /^\/blog$/
+const COMMUNITY_INDEX_PATTERN = /^\/community$/
+const COMMUNITY_PATTERN = /^\/community\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
 const SANDWICH_PATTERN = /^\/sandwiches\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
 const BLOG_POST_PATTERN = /^\/blog\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
 const BLOG_CATEGORY_PATTERN = /^\/blog\/category\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
@@ -32,6 +38,7 @@ type ShareApiResponse = {
 type ListResponse<T> = { data: T[]; meta: { total_count: number } }
 
 const ENCYCLOPEDIA_FILTERS = ['q', 'region', 'sort', 'diet']
+const COMMUNITY_FILTERS = ['sort', 'diet', 'ingredient']
 const ENCYCLOPEDIA_PAGE_SIZE = 24
 const BLOG_PAGE_SIZE = 12
 
@@ -47,6 +54,7 @@ const searchTags = (search: NonNullable<Page['search']>): string[] => [
   descriptionTag(search.description),
   canonicalTag(search.canonical),
   ...(search.structuredData === undefined ? [] : [structuredDataTag(search.structuredData)]),
+  ...(search.noindex === true ? [robotsNoindexTag] : []),
 ]
 
 const withContent = (html: string, content: Page['content']): string =>
@@ -157,6 +165,31 @@ const encyclopediaPageFor = async (url: URL): Promise<Page | null> => {
   })
 }
 
+const communityIndexPageFor = async (url: URL): Promise<Outcome> => {
+  if (COMMUNITY_FILTERS.some((filter) => url.searchParams.has(filter))) return null
+
+  const body = await fetchJson(
+    `${url.origin}/api/community?limit=${String(ENCYCLOPEDIA_PAGE_SIZE)}&offset=0`,
+  )
+  if (!isList<CommunitySandwichSummary>(body)) return null
+
+  return communityIndexPage({
+    page: { items: body.data, totalCount: body.meta.total_count },
+    origin: url.origin,
+  })
+}
+
+const communitySandwichPageFor = async (url: URL, slug: string): Promise<Outcome> => {
+  const apiRes = await fetch(`${url.origin}/api/community/${slug}`)
+  if (apiRes.status === 404) return NOT_FOUND
+  if (!apiRes.ok) return null
+
+  const { data } = (await apiRes.json()) as { data: unknown }
+  return isCommunitySandwich(data)
+    ? communitySandwichPage({ sandwich: data, origin: url.origin })
+    : null
+}
+
 const blogListing = async (url: URL, category?: string): Promise<BlogListing | null> => {
   const query = new URLSearchParams({
     ...(category === undefined ? {} : { category }),
@@ -197,6 +230,8 @@ const ROUTES: { pattern: RegExp; load: (url: URL, key: string) => Promise<Outcom
   { pattern: ENCYCLOPEDIA_PATTERN, load: encyclopediaPageFor },
   { pattern: SANDWICH_PATTERN, load: sandwichPageFor },
   { pattern: BLOG_INDEX_PATTERN, load: blogIndexPageFor },
+  { pattern: COMMUNITY_INDEX_PATTERN, load: communityIndexPageFor },
+  { pattern: COMMUNITY_PATTERN, load: communitySandwichPageFor },
   { pattern: BLOG_CATEGORY_PATTERN, load: blogCategoryPageFor },
   { pattern: BLOG_POST_PATTERN, load: blogPostPageFor },
 ]
@@ -228,5 +263,7 @@ export const config = {
     '/blog',
     '/blog/:slug',
     '/blog/category/:slug',
+    '/community',
+    '/community/:slug',
   ],
 }

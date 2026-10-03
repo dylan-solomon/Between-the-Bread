@@ -153,6 +153,7 @@ describe('Blog posts in the first response', () => {
 
     expect(root).toMatch(/<header[^>]*>/)
     expect(root).toMatch(/<a href="\/sandwiches"[^>]*>Sandwiches<\/a>/)
+    expect(root).toMatch(/<a href="\/community"[^>]*>Community<\/a>/)
     expect(root).toMatch(/<a href="\/blog"[^>]*>Blog<\/a>/)
     expect(root).toMatch(/<main[^>]*>/)
   })
@@ -678,5 +679,178 @@ describe('Pages that do not exist', () => {
     const res = await middleware(makeRequest('/sandwiches/reuben'))
 
     expect(res.headers.get('x-middleware-next')).toBe('1')
+  })
+})
+
+const communitySandwich = {
+  id: 'c-1',
+  slug: 'turkey-swiss-on-rye-abc12345',
+  name: 'Turkey & Swiss on Rye',
+  fun_name: null,
+  composition: {
+    protein: [{ slug: 'turkey', name: 'Turkey' }],
+    bread: [{ slug: 'rye', name: 'Rye' }],
+    cheese: [{ slug: 'swiss', name: 'Swiss' }],
+  },
+  dietary_tags: ['contains_pork'],
+  generated_count: 47,
+  avg_rating: 4.5,
+  rating_count: 12,
+  created_at: '2026-10-01T12:00:00.000Z',
+  comment_count: 0,
+  photo_count: 0,
+  first_made_by: { username: 'deli_dan', is_admin: true },
+}
+
+describe('Community sandwiches in the first response', () => {
+  const routes = (data: Record<string, unknown> = communitySandwich) => ({ '/api/community/turkey-swiss-on-rye-abc12345': { data } })
+
+  it('writes the sandwich name as the only top-level heading', async () => {
+    respondByAddress(routes())
+
+    const html = await (await middleware(makeRequest('/community/turkey-swiss-on-rye-abc12345'))).text()
+
+    expect(rootContent(html)).toMatch(/<h1[^>]*>Turkey &amp; Swiss on Rye<\/h1>/)
+    expect(count(html, '<h1')).toBe(1)
+  })
+
+  it('leads with the fun name and keeps the descriptive name underneath', async () => {
+    respondByAddress(routes({ ...communitySandwich, fun_name: 'The Rye Guy' }))
+
+    const root = rootContent(await (await middleware(makeRequest('/community/turkey-swiss-on-rye-abc12345'))).text())
+
+    expect(root).toMatch(/<h1[^>]*>The Rye Guy<\/h1>/)
+    expect(root).toContain('Turkey &amp; Swiss on Rye')
+  })
+
+  it('writes the picture, rating, making history, ingredients and dietary tags', async () => {
+    respondByAddress(routes())
+
+    const root = rootContent(await (await middleware(makeRequest('/community/turkey-swiss-on-rye-abc12345'))).text())
+
+    expect(count(root, 'aria-label="Rye"')).toBe(2)
+    expect(root).toContain('Rated 4.5 out of 5 from 12 ratings')
+    expect(root).toContain('Made 47 times')
+    expect(root).toMatch(/First made by <a href="\/u\/deli_dan"[^>]*>@deli_dan<\/a>/)
+    expect(root).toContain('>Admin<')
+    expect(root).toContain('on Oct 1, 2026')
+    expect(root).toMatch(/<h2[^>]*>Ingredients<\/h2>/)
+    expect(root.indexOf('>Bread</dt>')).toBeLessThan(root.indexOf('>Protein</dt>'))
+    expect(root).toContain('Contains Pork')
+  })
+
+  it('gives only the date when the first maker has no username', async () => {
+    respondByAddress(routes({ ...communitySandwich, first_made_by: null }))
+
+    const root = rootContent(await (await middleware(makeRequest('/community/turkey-swiss-on-rye-abc12345'))).text())
+
+    expect(root).toContain('First made on Oct 1, 2026')
+  })
+
+  it('describes the sandwich and names its canonical address', async () => {
+    respondByAddress(routes())
+
+    const head = headContent(await (await middleware(makeRequest('/community/turkey-swiss-on-rye-abc12345'))).text())
+
+    expect(head).toContain('<title>Turkey &amp; Swiss on Rye | Community | Between the Bread</title>')
+    expect(head).toContain(
+      '<meta name="description" content="Turkey &amp; Swiss on Rye: Rye, Turkey and Swiss. Made 47 times by the Between the Bread community." data-rh="true" />',
+    )
+    expect(head).toContain('<link rel="canonical" href="https://betweenbread.co/community/turkey-swiss-on-rye-abc12345" data-rh="true" />')
+    expect(head).not.toContain('noindex')
+  })
+
+  it('asks search engines to skip sandwiches nobody has rated yet', async () => {
+    respondByAddress(routes({ ...communitySandwich, avg_rating: null, rating_count: 0 }))
+
+    const html = await (await middleware(makeRequest('/community/turkey-swiss-on-rye-abc12345'))).text()
+
+    expect(headContent(html)).toContain('<meta name="robots" content="noindex" data-rh="true" />')
+    expect(rootContent(html)).toContain('No ratings yet')
+  })
+
+  it('hands the sandwich to the app', async () => {
+    respondByAddress(routes())
+
+    const html = await (await middleware(makeRequest('/community/turkey-swiss-on-rye-abc12345'))).text()
+
+    expect(initialData(html)).toEqual({ path: '/community/turkey-swiss-on-rye-abc12345', data: communitySandwich })
+  })
+
+  it('escapes special characters in the sandwich text', async () => {
+    respondByAddress(routes({ ...communitySandwich, name: '<b>Bold</b>', composition: { bread: [{ slug: 'rye', name: '<i>Rye</i>' }] } }))
+
+    const root = rootContent(await (await middleware(makeRequest('/community/turkey-swiss-on-rye-abc12345'))).text())
+
+    expect(root).not.toContain('<b>')
+    expect(root).not.toContain('<i>Rye')
+  })
+
+  it('answers not found for a sandwich that does not exist', async () => {
+    respondByAddress({})
+
+    const res = await middleware(makeRequest('/community/made-up-abc12345'))
+
+    expect(res.status).toBe(404)
+  })
+})
+
+describe('Community leaderboard in the first response', () => {
+  const leaderboard = {
+    data: [
+      { ...communitySandwich, rank: 1, comment_count: undefined, photo_count: undefined, first_made_by: undefined },
+      { ...communitySandwich, id: 'c-2', slug: 'ham-abc12345', name: 'Ham on Rye', rank: 2, generated_count: 1, avg_rating: null, rating_count: 0 },
+    ].map((item) => Object.fromEntries(Object.entries(item).filter(([, value]) => value !== undefined))),
+    meta: { total_count: 30 },
+  }
+  const routes = { '/api/community?limit=24&offset=0': leaderboard }
+
+  it('writes the heading and a ranked card for each sandwich on the first page', async () => {
+    respondByAddress(routes)
+
+    const root = rootContent(await (await middleware(makeRequest('/community'))).text())
+
+    expect(root).toMatch(/<h1[^>]*>Community Leaderboard<\/h1>/)
+    expect(root).toMatch(/<a href="\/community\/turkey-swiss-on-rye-abc12345"[^>]*>/)
+    expect(root).toMatch(/<a href="\/community\/ham-abc12345"[^>]*>/)
+    expect(root).toContain('aria-label="1st place"')
+    expect(root).toContain('Made 47 times')
+    expect(root).toContain('Made once')
+    expect(root).toContain('Not yet rated')
+    expect(root).toContain('Load more')
+  })
+
+  it('shows Most Popular as the chosen sort', async () => {
+    respondByAddress(routes)
+
+    const root = rootContent(await (await middleware(makeRequest('/community'))).text())
+
+    expect(root).toMatch(/<button[^>]*aria-pressed="true"[^>]*>Most Popular<\/button>/)
+  })
+
+  it('describes the leaderboard and names its canonical address', async () => {
+    respondByAddress(routes)
+
+    const head = headContent(await (await middleware(makeRequest('/community'))).text())
+
+    expect(head).toContain('<title>Community Leaderboard | Between the Bread</title>')
+    expect(head).toContain('<link rel="canonical" href="https://betweenbread.co/community" data-rh="true" />')
+  })
+
+  it('hands the first page to the app', async () => {
+    respondByAddress(routes)
+
+    const html = await (await middleware(makeRequest('/community'))).text()
+
+    expect(initialData(html)).toEqual({ path: '/community', data: { items: leaderboard.data, totalCount: 30 } })
+  })
+
+  it('serves sorted and filtered views as usual', async () => {
+    const sorted = await middleware(makeRequest('/community?sort=newest'))
+    const filtered = await middleware(makeRequest('/community?diet=vegan'))
+
+    expect(sorted.headers.get('x-middleware-next')).toBe('1')
+    expect(filtered.headers.get('x-middleware-next')).toBe('1')
+    expect(fetch).not.toHaveBeenCalled()
   })
 })

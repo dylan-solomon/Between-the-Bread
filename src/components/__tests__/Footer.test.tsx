@@ -31,6 +31,11 @@ describe('Footer', () => {
     expect(screen.getByRole('link', { name: 'Sandwiches' })).toHaveAttribute('href', '/sandwiches')
   })
 
+  it('renders a Community link to the leaderboard', () => {
+    renderFooter()
+    expect(screen.getByRole('link', { name: 'Community' })).toHaveAttribute('href', '/community')
+  })
+
   it('renders an About link', () => {
     renderFooter()
     expect(screen.getByRole('link', { name: 'About' })).toHaveAttribute('href', '/about')

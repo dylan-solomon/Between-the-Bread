@@ -24,10 +24,18 @@ const isBlogPostRow = (value: unknown): value is BlogPostRow =>
 
 const categoryUrls = (posts: BlogPostRow[]): SitemapUrl[] => {
   const latest = posts
-    .flatMap((post) => post.blog_post_categories.map((link) => ({ slug: link.blog_categories.slug, updatedAt: post.updated_at })))
+    .flatMap((post) =>
+      post.blog_post_categories.map((link) => ({
+        slug: link.blog_categories.slug,
+        updatedAt: post.updated_at,
+      })),
+    )
     .reduce((byCategory, { slug, updatedAt }) => {
       const current = byCategory.get(slug)
-      return new Map(byCategory).set(slug, current === undefined || updatedAt > current ? updatedAt : current)
+      return new Map(byCategory).set(
+        slug,
+        current === undefined || updatedAt > current ? updatedAt : current,
+      )
     }, new Map<string, string>())
 
   return [...latest.entries()]
@@ -43,6 +51,7 @@ const categoryUrls = (posts: BlogPostRow[]): SitemapUrl[] => {
 const STATIC_URLS: SitemapUrl[] = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
   { path: '/sandwiches', changefreq: 'weekly', priority: '0.8' },
+  { path: '/community', changefreq: 'weekly', priority: '0.7' },
   { path: '/blog', changefreq: 'weekly', priority: '0.8' },
   { path: '/about', changefreq: 'monthly', priority: '0.5' },
   { path: '/privacy', changefreq: 'monthly', priority: '0.3' },
@@ -68,36 +77,44 @@ const renderSitemap = (urls: SitemapUrl[]): string =>
     '',
   ].join('\n')
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse,
-): Promise<void> {
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== 'GET') {
     res.status(405).json(err('METHOD_NOT_ALLOWED', 'Method not allowed.', 405))
     return
   }
 
-  const [sandwiches, blog] = await Promise.all([
-    supabase.from('sandwich_database').select('slug, updated_at').eq('published', true).order('slug'),
+  const [sandwiches, blog, community] = await Promise.all([
+    supabase
+      .from('sandwich_database')
+      .select('slug, updated_at')
+      .eq('published', true)
+      .order('slug'),
     supabase
       .from('blog_posts')
       .select('slug, updated_at, blog_post_categories(blog_categories(slug))')
       .eq('published', true)
       .lte('published_at', nowIso())
       .order('slug'),
+    supabase
+      .from('community_sandwiches')
+      .select('slug, updated_at')
+      .gte('rating_count', 1)
+      .order('slug'),
   ])
 
-  if (sandwiches.error !== null || blog.error !== null) {
+  if (sandwiches.error !== null || blog.error !== null || community.error !== null) {
     res.status(500).json(err('INTERNAL_ERROR', 'Failed to build sitemap.', 500))
     return
   }
 
-  const entries: SitemapUrl[] = (sandwiches.data as { slug: string; updated_at: string }[]).map((entry) => ({
-    path: `/sandwiches/${entry.slug}`,
-    lastmod: entry.updated_at.slice(0, 10),
-    changefreq: 'monthly',
-    priority: '0.6',
-  }))
+  const entries: SitemapUrl[] = (sandwiches.data as { slug: string; updated_at: string }[]).map(
+    (entry) => ({
+      path: `/sandwiches/${entry.slug}`,
+      lastmod: entry.updated_at.slice(0, 10),
+      changefreq: 'monthly',
+      priority: '0.6',
+    }),
+  )
 
   const posts = (blog.data as unknown[]).filter(isBlogPostRow)
   const postUrls: SitemapUrl[] = posts.map((post) => ({
@@ -107,7 +124,27 @@ export default async function handler(
     priority: '0.7',
   }))
 
+  const communityRows: unknown = community.data
+  const communityUrls: SitemapUrl[] = (
+    Array.isArray(communityRows) ? (communityRows as { slug: string; updated_at: string }[]) : []
+  ).map((entry) => ({
+    path: `/community/${entry.slug}`,
+    lastmod: entry.updated_at.slice(0, 10),
+    changefreq: 'weekly',
+    priority: '0.5',
+  }))
+
   setPublicCache(res)
   res.setHeader('Content-Type', 'application/xml; charset=utf-8')
-  res.status(200).send(renderSitemap([...STATIC_URLS, ...entries, ...postUrls, ...categoryUrls(posts)]))
+  res
+    .status(200)
+    .send(
+      renderSitemap([
+        ...STATIC_URLS,
+        ...entries,
+        ...postUrls,
+        ...categoryUrls(posts),
+        ...communityUrls,
+      ]),
+    )
 }
