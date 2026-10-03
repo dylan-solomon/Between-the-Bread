@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { ok, err } from '../_lib/response.js'
 import { authenticateRequest } from '../_lib/auth.js'
 import { isDietaryTag } from '../_lib/dietaryTags.js'
+import { isUsernameFormat } from '../_lib/username.js'
 
 const VALID_COST_CONTEXTS = ['retail', 'restaurant']
 const UPDATABLE_FIELDS = [
@@ -12,7 +13,13 @@ const UPDATABLE_FIELDS = [
   'double_protein',
   'double_cheese',
   'cost_context',
+  'username',
 ] as const
+
+const UPDATE_ERRORS: Partial<Record<string, { status: number; code: string; message: string }>> = {
+  '23505': { status: 409, code: 'USERNAME_TAKEN', message: 'That username is already taken.' },
+  '23514': { status: 400, code: 'USERNAME_RESERVED', message: 'That username is not available.' },
+}
 
 const handleGet = async (req: VercelRequest, res: VercelResponse): Promise<void> => {
   const auth = await authenticateRequest(req, res)
@@ -22,7 +29,7 @@ const handleGet = async (req: VercelRequest, res: VercelResponse): Promise<void>
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('display_name, dietary_filters, smart_mode_default, double_protein, double_cheese, cost_context, is_admin, created_at, updated_at')
+    .select('display_name, username, dietary_filters, smart_mode_default, double_protein, double_cheese, cost_context, is_admin, created_at, updated_at')
     .eq('id', user.id)
     .single()
 
@@ -64,6 +71,13 @@ const handlePatch = async (req: VercelRequest, res: VercelResponse): Promise<voi
   const { supabase, user } = auth
   const body = (req.body ?? {}) as Record<string, unknown>
 
+  if ('username' in body && !isUsernameFormat(body.username)) {
+    res
+      .status(400)
+      .json(err('USERNAME_INVALID', 'Usernames are 3 to 20 letters, numbers or underscores.', 400))
+    return
+  }
+
   const validationError = validatePatchBody(body)
   if (validationError !== null) {
     res.status(400).json(err('VALIDATION_ERROR', validationError, 400))
@@ -84,6 +98,11 @@ const handlePatch = async (req: VercelRequest, res: VercelResponse): Promise<voi
     .eq('id', user.id)
 
   if (error !== null) {
+    const known = UPDATE_ERRORS[error.code]
+    if (known !== undefined) {
+      res.status(known.status).json(err(known.code, known.message, known.status))
+      return
+    }
     res.status(500).json(err('UPDATE_FAILED', 'Failed to update profile.', 500))
     return
   }

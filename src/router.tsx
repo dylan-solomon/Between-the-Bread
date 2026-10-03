@@ -1,76 +1,48 @@
-import { lazy, Suspense } from 'react'
+import type { ComponentType } from 'react'
 import type { RouteObject } from 'react-router-dom'
 import RootLayout from '@/components/RootLayout'
 import HomePage from '@/pages/HomePage'
 
-const AboutPage = lazy(() => import('@/pages/AboutPage'))
-const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'))
-const TermsPage = lazy(() => import('@/pages/TermsPage'))
-const LoginPage = lazy(() => import('@/pages/LoginPage'))
-const SignupPage = lazy(() => import('@/pages/SignupPage'))
-const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'))
-const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
-const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
-const HistoryPage = lazy(() => import('@/pages/HistoryPage'))
-const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
-const SandwichIndex = lazy(() => import('@/pages/SandwichIndex'))
-const BlogIndex = lazy(() => import('@/pages/BlogIndex'))
-const BlogPost = lazy(() => import('@/pages/BlogPost'))
-const BlogCategory = lazy(() => import('@/pages/BlogCategory'))
-const SandwichDetail = lazy(() => import('@/pages/SandwichDetail'))
-const SharedSandwich = lazy(() => import('@/pages/SharedSandwich'))
-const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'))
-const DashboardPage = lazy(() => import('@/pages/admin/DashboardPage'))
-const IngredientsAdminPage = lazy(() => import('@/pages/admin/IngredientsPage'))
-const DatabaseManagementPage = lazy(() => import('@/pages/admin/DatabaseManagementPage'))
-const BlogManagementPage = lazy(() => import('@/pages/admin/BlogManagementPage'))
-const BlogCategoriesPage = lazy(() => import('@/pages/admin/BlogCategoriesPage'))
-const CompatMatrixPage = lazy(() => import('@/pages/admin/CompatMatrixPage'))
-const ModerationPage = lazy(() => import('@/pages/admin/ModerationPage'))
-const ConfigPage = lazy(() => import('@/pages/admin/ConfigPage'))
-
-const withSuspense = (Component: React.ComponentType) => (
-  <Suspense>
-    <Component />
-  </Suspense>
-)
+const page = (load: () => Promise<{ default: ComponentType }>) => async () => ({ Component: (await load()).default })
 
 export const routes: RouteObject[] = [
   {
     path: '/',
     element: <RootLayout />,
+    HydrateFallback: () => null,
     children: [
       { path: '/', element: <HomePage /> },
-      { path: '/login', element: withSuspense(LoginPage) },
-      { path: '/signup', element: withSuspense(SignupPage) },
-      { path: '/forgot-password', element: withSuspense(ForgotPasswordPage) },
-      { path: '/reset-password', element: withSuspense(ResetPasswordPage) },
-      { path: '/about', element: withSuspense(AboutPage) },
-      { path: '/privacy', element: withSuspense(PrivacyPage) },
-      { path: '/terms', element: withSuspense(TermsPage) },
-      { path: '/account/settings', element: withSuspense(SettingsPage) },
-      { path: '/account/history', element: withSuspense(HistoryPage) },
-      { path: '/sandwiches', element: withSuspense(SandwichIndex) },
-      { path: '/sandwiches/:slug', element: withSuspense(SandwichDetail) },
-      { path: '/blog', element: withSuspense(BlogIndex) },
-      { path: '/blog/category/:slug', element: withSuspense(BlogCategory) },
-      { path: '/blog/:slug', element: withSuspense(BlogPost) },
-      { path: '/s/:hash', element: withSuspense(SharedSandwich) },
+      { path: '/login', lazy: page(() => import('@/pages/LoginPage')) },
+      { path: '/signup', lazy: page(() => import('@/pages/SignupPage')) },
+      { path: '/forgot-password', lazy: page(() => import('@/pages/ForgotPasswordPage')) },
+      { path: '/reset-password', lazy: page(() => import('@/pages/ResetPasswordPage')) },
+      { path: '/about', lazy: page(() => import('@/pages/AboutPage')) },
+      { path: '/privacy', lazy: page(() => import('@/pages/PrivacyPage')) },
+      { path: '/terms', lazy: page(() => import('@/pages/TermsPage')) },
+      { path: '/account/settings', lazy: page(() => import('@/pages/SettingsPage')) },
+      { path: '/account/history', lazy: page(() => import('@/pages/HistoryPage')) },
+      { path: '/sandwiches', lazy: page(() => import('@/pages/SandwichIndex')) },
+      { path: '/sandwiches/:slug', lazy: page(() => import('@/pages/SandwichDetail')) },
+      { path: '/blog', lazy: page(() => import('@/pages/BlogIndex')) },
+      { path: '/blog/category/:slug', lazy: page(() => import('@/pages/BlogCategory')) },
+      { path: '/blog/:slug', lazy: page(() => import('@/pages/BlogPost')) },
+      { path: '/s/:hash', lazy: page(() => import('@/pages/SharedSandwich')) },
+      { path: '/u/:username', lazy: page(() => import('@/pages/ProfilePage')) },
       {
         path: '/admin',
-        element: withSuspense(AdminLayout),
+        lazy: page(() => import('@/pages/admin/AdminLayout')),
         children: [
-          { index: true, element: withSuspense(DashboardPage) },
-          { path: 'ingredients', element: withSuspense(IngredientsAdminPage) },
-          { path: 'database', element: withSuspense(DatabaseManagementPage) },
-          { path: 'blog', element: withSuspense(BlogManagementPage) },
-          { path: 'blog/categories', element: withSuspense(BlogCategoriesPage) },
-          { path: 'compat-matrix', element: withSuspense(CompatMatrixPage) },
-          { path: 'moderation', element: withSuspense(ModerationPage) },
-          { path: 'config', element: withSuspense(ConfigPage) },
+          { index: true, lazy: page(() => import('@/pages/admin/DashboardPage')) },
+          { path: 'ingredients', lazy: page(() => import('@/pages/admin/IngredientsPage')) },
+          { path: 'database', lazy: page(() => import('@/pages/admin/DatabaseManagementPage')) },
+          { path: 'blog', lazy: page(() => import('@/pages/admin/BlogManagementPage')) },
+          { path: 'blog/categories', lazy: page(() => import('@/pages/admin/BlogCategoriesPage')) },
+          { path: 'compat-matrix', lazy: page(() => import('@/pages/admin/CompatMatrixPage')) },
+          { path: 'moderation', lazy: page(() => import('@/pages/admin/ModerationPage')) },
+          { path: 'config', lazy: page(() => import('@/pages/admin/ConfigPage')) },
         ],
       },
-      { path: '*', element: withSuspense(NotFoundPage) },
+      { path: '*', lazy: page(() => import('@/pages/NotFoundPage')) },
     ],
   },
 ]

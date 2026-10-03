@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
+import { clearSentData, sendWithPage } from '@/test/initialData'
 
 const { mockFetchPosts, mockFetchCategories, mockBlogViewed } = vi.hoisted(() => ({
   mockFetchPosts: vi.fn(),
@@ -9,7 +10,8 @@ const { mockFetchPosts, mockFetchCategories, mockBlogViewed } = vi.hoisted(() =>
   mockBlogViewed: vi.fn(),
 }))
 
-vi.mock('@/api/blog', () => ({
+vi.mock('@/api/blog', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/blog')>()),
   fetchBlogPosts: mockFetchPosts,
   fetchPublicBlogCategories: mockFetchCategories,
 }))
@@ -111,5 +113,30 @@ describe('BlogIndex', () => {
 
     expect(await screen.findByRole('link', { name: 'Vegan builds' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'Blog categories' })).not.toBeInTheDocument()
+  })
+})
+
+describe('BlogIndex sent with the page', () => {
+  afterEach(clearSentData)
+
+  it('shows the categories and posts straight away without asking the server again', () => {
+    sendWithPage('/blog', { categories, posts: { items: [post], totalCount: 1 } })
+
+    renderPage()
+
+    expect(screen.getByRole('link', { name: 'Vegan builds' })).toHaveAttribute('href', '/blog/vegan-builds')
+    expect(screen.getByRole('link', { name: 'Sandwich Ideas' })).toHaveAttribute('href', '/blog/category/sandwich-ideas')
+    expect(mockFetchPosts).not.toHaveBeenCalled()
+    expect(mockFetchCategories).not.toHaveBeenCalled()
+  })
+
+  it('loads everything when the content sent is incomplete', async () => {
+    sendWithPage('/blog', { categories })
+
+    renderPage()
+
+    expect(await screen.findByRole('link', { name: 'Vegan builds' })).toBeInTheDocument()
+    expect(mockFetchPosts).toHaveBeenCalled()
+    expect(mockFetchCategories).toHaveBeenCalled()
   })
 })

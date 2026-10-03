@@ -11,7 +11,9 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate }
 })
 
-const { mockGetSession, mockOnAuthStateChange, mockCaptureAccountDeleted, mockResetIdentity } = vi.hoisted(() => ({
+const { mockGetSession, mockOnAuthStateChange, mockCaptureAccountDeleted, mockResetIdentity, mockUseUsername, mockCheckUsername } = vi.hoisted(() => ({
+  mockUseUsername: vi.fn(),
+  mockCheckUsername: vi.fn(),
   mockGetSession: vi.fn(),
   mockOnAuthStateChange: vi.fn(),
   mockCaptureAccountDeleted: vi.fn(),
@@ -35,6 +37,12 @@ vi.mock('@/lib/supabase', () => ({
       signOut: vi.fn(),
     },
   },
+}))
+
+vi.mock('@/context/UsernameContext', () => ({ useUsername: mockUseUsername }))
+vi.mock('@/api/usernames', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/usernames')>()),
+  checkUsername: mockCheckUsername,
 }))
 
 const mockFetch = vi.fn()
@@ -79,6 +87,9 @@ beforeEach(() => {
   mockOnAuthStateChange.mockReset()
   mockNavigate.mockReset()
   mockFetch.mockReset()
+  mockCheckUsername.mockReset()
+  mockCheckUsername.mockResolvedValue('available')
+  mockUseUsername.mockReturnValue({ username: 'sandwich_fan', needsUsername: false, askForUsername: vi.fn(), saveUsername: vi.fn() })
 
   mockOnAuthStateChange.mockImplementation(() => ({
     data: { subscription: { unsubscribe: vi.fn() } },
@@ -199,7 +210,7 @@ describe('SettingsPage', () => {
       const nameInput = screen.getByLabelText(/display name/i)
       await userEvent.clear(nameInput)
       await userEvent.type(nameInput, 'NewName')
-      await userEvent.click(screen.getByRole('button', { name: /save/i }))
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledTimes(2)
@@ -228,7 +239,7 @@ describe('SettingsPage', () => {
         expect(screen.getByLabelText(/display name/i)).toHaveValue('SandwichFan')
       })
 
-      await userEvent.click(screen.getByRole('button', { name: /save/i }))
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
       await waitFor(() => {
         expect(screen.getByText(/saved/i)).toBeInTheDocument()
@@ -251,7 +262,7 @@ describe('SettingsPage', () => {
         expect(screen.getByLabelText(/display name/i)).toHaveValue('SandwichFan')
       })
 
-      await userEvent.click(screen.getByRole('button', { name: /save/i }))
+      await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
       await waitFor(() => {
         expect(screen.getByRole('alert')).toBeInTheDocument()
@@ -384,5 +395,63 @@ describe('SettingsPage', () => {
         })
       })
     })
+  })
+})
+
+describe('SettingsPage username', () => {
+  beforeEach(() => {
+    mockGetSession.mockResolvedValue({ data: { session: makeSession() }, error: null })
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve(profileResponse) })
+  })
+
+  it('shows the current username', async () => {
+    await renderSettings()
+
+    expect(await screen.findByLabelText('Username')).toHaveValue('sandwich_fan')
+    expect(screen.getByRole('button', { name: 'Save username' })).toBeDisabled()
+  })
+
+  it('changes the username', async () => {
+    const saveUsername = vi.fn().mockResolvedValue(undefined)
+    mockUseUsername.mockReturnValue({ username: 'sandwich_fan', needsUsername: false, askForUsername: vi.fn(), saveUsername })
+    const user = userEvent.setup()
+    await renderSettings()
+
+    const field = await screen.findByLabelText('Username')
+    await user.clear(field)
+    await user.type(field, 'rye_guy')
+    await screen.findByText('Available!')
+    await user.click(screen.getByRole('button', { name: 'Save username' }))
+
+    expect(saveUsername).toHaveBeenCalledWith('rye_guy')
+  })
+
+  it('shows why the username could not be saved', async () => {
+    const saveUsername = vi.fn().mockRejectedValue(new Error('That username is already taken.'))
+    mockUseUsername.mockReturnValue({ username: 'sandwich_fan', needsUsername: false, askForUsername: vi.fn(), saveUsername })
+    const user = userEvent.setup()
+    await renderSettings()
+
+    const field = await screen.findByLabelText('Username')
+    await user.clear(field)
+    await user.type(field, 'rye_guy')
+    await screen.findByText('Available!')
+    await user.click(screen.getByRole('button', { name: 'Save username' }))
+
+    expect(await screen.findByText('That username is already taken.', { selector: '[role="alert"]' })).toBeInTheDocument()
+  })
+
+  it('links to the public profile', async () => {
+    await renderSettings()
+
+    expect(await screen.findByRole('link', { name: 'View your public profile' })).toHaveAttribute('href', '/u/sandwich_fan')
+  })
+
+  it('lets someone without a username choose one', async () => {
+    mockUseUsername.mockReturnValue({ username: null, needsUsername: true, askForUsername: vi.fn(), saveUsername: vi.fn() })
+    await renderSettings()
+
+    expect(await screen.findByLabelText('Username')).toHaveValue('')
+    expect(screen.queryByRole('link', { name: 'View your public profile' })).not.toBeInTheDocument()
   })
 })

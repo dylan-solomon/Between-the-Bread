@@ -6,7 +6,8 @@ import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 
 type AuthCallback = (event: AuthChangeEvent, session: Session | null) => void
 
-const { mockGetSession, mockOnAuthStateChange, mockSignInWithPassword, mockSignUp, mockSignInWithOAuth, mockSignOut, mockCaptureAccountLoggedOut, mockResetIdentity } = vi.hoisted(() => ({
+const { mockGetSession, mockOnAuthStateChange, mockSignInWithPassword, mockSignUp, mockSignInWithOAuth, mockSignOut, mockCaptureAccountLoggedOut, mockResetIdentity, mockSetSession } = vi.hoisted(() => ({
+  mockSetSession: vi.fn(),
   mockGetSession: vi.fn(),
   mockOnAuthStateChange: vi.fn(),
   mockSignInWithPassword: vi.fn(),
@@ -26,6 +27,7 @@ vi.mock('@/lib/supabase', () => ({
       signUp: mockSignUp,
       signInWithOAuth: mockSignInWithOAuth,
       signOut: mockSignOut,
+      setSession: mockSetSession,
     },
   },
 }))
@@ -353,5 +355,78 @@ describe('useAuth', () => {
     expect(() => render(<AuthConsumer />)).toThrow('useAuth must be used within an AuthProvider')
 
     consoleError.mockRestore()
+  })
+})
+
+describe('signing in with a username', () => {
+  const UsernameSignIn = ({ onDone }: { onDone: (result: { user?: User; error?: string }) => void }) => {
+    const { signIn } = useAuth()
+    return (
+      <button
+        onClick={() => {
+          signIn('deli_dan', 'password123')
+            .then((user) => { onDone({ user }) })
+            .catch((error: unknown) => { onDone({ error: error instanceof Error ? error.message : 'unknown' }) })
+        }}
+      >
+        Sign In
+      </button>
+    )
+  }
+
+  const respondWith = (body: unknown, status = 200) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: status < 400, status, json: () => Promise.resolve(body) }))
+  }
+
+  const signInAs = async () => {
+    const onDone = vi.fn()
+    render(<AuthProvider><UsernameSignIn onDone={onDone} /></AuthProvider>)
+    await waitFor(() => { expect(mockGetSession).toHaveBeenCalled() })
+    await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
+    await waitFor(() => { expect(onDone).toHaveBeenCalled() })
+    return onDone.mock.calls[0][0] as { user?: User; error?: string }
+  }
+
+  beforeEach(() => {
+    mockGetSession.mockResolvedValue({ data: { session: null }, error: null })
+    mockOnAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } })
+    mockSetSession.mockReset()
+    mockSignInWithPassword.mockReset()
+    mockSetSession.mockResolvedValue({ data: { user: makeUser(), session: makeSession() }, error: null })
+  })
+
+  it('signs in through the site server and keeps the session', async () => {
+    respondWith({ data: { access_token: 'access-1', refresh_token: 'refresh-1' } })
+
+    const result = await signInAs()
+
+    const [url, init] = vi.mocked(fetch).mock.calls[0]
+    expect(url).toEqual(expect.stringContaining('/api/auth/login'))
+    expect(init).toMatchObject({ method: 'POST' })
+    expect(JSON.parse(typeof init?.body === 'string' ? init.body : '')).toEqual({ username: 'deli_dan', password: 'password123' })
+    expect(mockSetSession).toHaveBeenCalledWith({ access_token: 'access-1', refresh_token: 'refresh-1' })
+    expect(mockSignInWithPassword).not.toHaveBeenCalled()
+    expect(result.user?.id).toBe('user-123')
+  })
+
+  it('passes on the reason a username sign-in failed', async () => {
+    respondWith({ error: { code: 'TOO_MANY_ATTEMPTS', message: 'Too many sign-in attempts. Please try again in 15 minutes.' } }, 429)
+
+    const result = await signInAs()
+
+    expect(result.error).toBe('Too many sign-in attempts. Please try again in 15 minutes.')
+    expect(mockSetSession).not.toHaveBeenCalled()
+  })
+
+  it('still signs in with an email address directly', async () => {
+    vi.stubGlobal('fetch', vi.fn())
+    mockSignInWithPassword.mockResolvedValue({ data: { user: makeUser(), session: makeSession() }, error: null })
+    render(<AuthProvider><SignInButton /></AuthProvider>)
+    await waitFor(() => { expect(mockGetSession).toHaveBeenCalled() })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
+
+    await waitFor(() => { expect(mockSignInWithPassword).toHaveBeenCalled() })
+    expect(fetch).not.toHaveBeenCalled()
   })
 })

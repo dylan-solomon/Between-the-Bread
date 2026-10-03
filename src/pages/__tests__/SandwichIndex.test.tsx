@@ -1,9 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { toast } from 'sonner'
+import { clearSentData, sendWithPage } from '@/test/initialData'
 
 const { mockFetchSandwiches, mockViewed, mockSearched, mockFiltered } = vi.hoisted(() => ({
   mockFetchSandwiches: vi.fn(),
@@ -12,7 +13,10 @@ const { mockFetchSandwiches, mockViewed, mockSearched, mockFiltered } = vi.hoist
   mockFiltered: vi.fn(),
 }))
 
-vi.mock('@/api/database', () => ({ fetchSandwiches: mockFetchSandwiches }))
+vi.mock('@/api/database', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/database')>()),
+  fetchSandwiches: mockFetchSandwiches,
+}))
 vi.mock('@/analytics/events', () => ({
   captureEncyclopediaViewed: mockViewed,
   captureEncyclopediaSearched: mockSearched,
@@ -377,5 +381,53 @@ describe('SandwichIndex analytics', () => {
     await screen.findByText('Reuben')
 
     expect(mockFiltered).not.toHaveBeenCalled()
+  })
+})
+
+describe('SandwichIndex sent with the page', () => {
+  afterEach(clearSentData)
+
+  it('shows the first page of sandwiches straight away without asking the server again', () => {
+    sendWithPage('/sandwiches', { items: [makeSandwich(), banhMi], totalCount: 30 })
+
+    renderAt()
+
+    expect(screen.getByRole('link', { name: /Reuben/ })).toHaveAttribute('href', '/sandwiches/reuben')
+    expect(screen.getByText('30 sandwiches')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Load more' })).toBeInTheDocument()
+    expect(mockFetchSandwiches).not.toHaveBeenCalled()
+  })
+
+  it('loads results when the address has a search or filter', async () => {
+    sendWithPage('/sandwiches', { items: [makeSandwich()], totalCount: 1 })
+
+    renderAt('/sandwiches?q=pork')
+
+    await screen.findByText('Banh Mi')
+    expect(lastQuery()).toMatchObject({ q: 'pork' })
+  })
+
+  it('loads results when the content sent is incomplete', async () => {
+    sendWithPage('/sandwiches', { items: [makeSandwich()] })
+
+    renderAt()
+
+    await screen.findByText('Banh Mi')
+    expect(mockFetchSandwiches).toHaveBeenCalled()
+  })
+})
+
+describe('SandwichIndex search tags', () => {
+  it('describes the encyclopedia and names its canonical address', async () => {
+    renderAt()
+    await screen.findByText('Reuben')
+
+    await waitFor(() => {
+      expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
+        'content',
+        'Iconic sandwiches from around the world, and the stories behind them.',
+      )
+    })
+    expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute('href', 'https://betweenbread.co/sandwiches')
   })
 })

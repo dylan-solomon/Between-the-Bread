@@ -7,6 +7,7 @@ import { routes } from '@/router'
 import { initPostHog } from '@/analytics/posthog'
 import { captureWebVitals } from '@/analytics/performance'
 import { installStaleChunkReload } from '@/utils/staleChunkReload'
+import { whenRouterReady } from '@/utils/routerReady'
 
 installStaleChunkReload({
   target: window,
@@ -22,10 +23,12 @@ const router = createBrowserRouter(routes)
 const rootElement = document.getElementById('root')
 if (!rootElement) throw new Error('Root element not found')
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <HelmetProvider>
-      <RouterProvider router={router} />
-    </HelmetProvider>
-  </StrictMode>,
-)
+void whenRouterReady(router).then(() => {
+  createRoot(rootElement).render(
+    <StrictMode>
+      <HelmetProvider>
+        <RouterProvider router={router} />
+      </HelmetProvider>
+    </StrictMode>,
+  )
+})

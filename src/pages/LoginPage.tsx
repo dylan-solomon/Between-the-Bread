@@ -41,7 +41,7 @@ export default function LoginPage() {
 
     try {
       const user = await signIn(email, password)
-      captureAccountLoggedIn({ method: 'email' })
+      captureAccountLoggedIn({ method: email.includes('@') ? 'email' : 'username' })
       identifyUser({
         userId: user.id,
         email: user.email ?? email,
@@ -77,12 +77,12 @@ export default function LoginPage() {
       <form onSubmit={(e) => void handleSubmit(e)} onKeyDown={handleKeyDown} className="mt-8 space-y-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
-            Email
+            Email or username
           </label>
           <input
             id="email"
-            type="email"
-            autoComplete="email"
+            type="text"
+            autoComplete="username"
             value={email}
             onChange={(e) => { setEmail(e.target.value); }}
             required

@@ -65,7 +65,7 @@ export default tseslint.config([
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked],
-    files: ['middleware.ts', 'middleware.test.ts'],
+    files: ['middleware.ts', 'middleware.test.ts', 'middleware.seo.test.ts', 'edge/**/*.ts'],
     languageOptions: {
       ecmaVersion: 2022,
       globals: globals.browser,

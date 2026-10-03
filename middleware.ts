@@ -1,6 +1,26 @@
 import { next } from '@vercel/edge'
+import { isBlogPost } from './src/api/blog'
+import type { BlogCategory, BlogListing } from './src/api/blog'
+import { isSandwichEntry } from './src/api/database'
+import type { SandwichSummary } from './src/api/database'
+import { scriptJson } from './src/seo/scriptJson'
+import { blogPostPage } from './edge/blogPostPage'
+import { sandwichEntryPage } from './edge/sandwichEntryPage'
+import { blogCategoryPage, blogIndexPage, encyclopediaPage } from './edge/listPages'
+import {
+  canonicalTag,
+  descriptionTag,
+  metaTag,
+  structuredDataTag,
+  titleTag,
+  twitterTags,
+} from './edge/html'
+import type { Page } from './edge/page'
+import { siteShell } from './edge/shell'
 
 const SHARE_PATTERN = /^\/s\/([a-zA-Z0-9]{8})$/
+const ENCYCLOPEDIA_PATTERN = /^\/sandwiches$/
+const BLOG_INDEX_PATTERN = /^\/blog$/
 const SANDWICH_PATTERN = /^\/sandwiches\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
 const BLOG_POST_PATTERN = /^\/blog\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
 const BLOG_CATEGORY_PATTERN = /^\/blog\/category\/([a-z0-9]+(?:-[a-z0-9]+)*)$/
@@ -9,157 +29,204 @@ type ShareApiResponse = {
   data: { hash: string; name: string }
 }
 
-type SandwichApiResponse = {
-  data: { name: string; slug: string; description: string | null; image_url: string | null }
-}
+type ListResponse<T> = { data: T[]; meta: { total_count: number } }
 
-type BlogPostApiResponse = {
-  data: {
-    slug: string
-    title: string
-    excerpt: string
-    meta_description: string | null
-    cover_image_url: string | null
-    published_at: string
-  }
-}
+const ENCYCLOPEDIA_FILTERS = ['q', 'region', 'sort', 'diet']
+const ENCYCLOPEDIA_PAGE_SIZE = 24
+const BLOG_PAGE_SIZE = 12
 
-type BlogCategoriesApiResponse = {
-  data: { slug: string; name: string; description: string | null; post_count: number }[]
-}
+const SHELL_SHARE_TAGS =
+  /<title>[^<]*<\/title>\s*|<meta\s+(?:property="og:[^"]*"|name="twitter:[^"]*")[^>]*>\s*/g
+const SHELL_DESCRIPTION = /<meta\s+name="description"[^>]*>\s*/g
+const EMPTY_ROOT = '<div id="root"></div>'
+const NOT_FOUND = 'not-found'
 
-const escapeHtml = (value: string): string =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
+type Outcome = Page | typeof NOT_FOUND | null
 
-const metaTag = (property: string, content: string): string =>
-  `<meta property="${property}" content="${escapeHtml(content)}" />`
-
-const twitterTag = (name: string, content: string): string =>
-  `<meta name="${name}" content="${escapeHtml(content)}" />`
-
-const twitterTags = (props: { title: string; description: string | null; image: string | null }): string[] => [
-  twitterTag('twitter:card', props.image === null ? 'summary' : 'summary_large_image'),
-  twitterTag('twitter:title', props.title),
-  ...(props.description === null ? [] : [twitterTag('twitter:description', props.description)]),
-  ...(props.image === null ? [] : [twitterTag('twitter:image', props.image)]),
+const searchTags = (search: NonNullable<Page['search']>): string[] => [
+  descriptionTag(search.description),
+  canonicalTag(search.canonical),
+  ...(search.structuredData === undefined ? [] : [structuredDataTag(search.structuredData)]),
 ]
 
-const SHELL_SHARE_TAGS = /<title>[^<]*<\/title>\s*|<meta\s+(?:property="og:[^"]*"|name="twitter:[^"]*")[^>]*>\s*/g
+const withContent = (html: string, content: Page['content']): string =>
+  content === undefined
+    ? html
+    : html.replace(
+        EMPTY_ROOT,
+        `<div id="root">${siteShell(content.html)}</div>\n    <script type="application/json" id="initial-data">${scriptJson({ path: content.path, data: content.data })}</script>`,
+      )
 
-const respondWithTags = async (url: URL, tags: string[]): Promise<Response> => {
+const respond = async (url: URL, page: Page): Promise<Response> => {
   const htmlRes = await fetch(new URL('/', url).toString())
-  const html = (await htmlRes.text()).replace(SHELL_SHARE_TAGS, '')
-  const injected = html.replace('<head>', `<head>\n    ${tags.join('\n    ')}`)
+  const shell = (await htmlRes.text()).replace(SHELL_SHARE_TAGS, '')
+  const html = page.search === undefined ? shell : shell.replace(SHELL_DESCRIPTION, '')
+  const tags = [...page.tags, ...(page.search === undefined ? [] : searchTags(page.search))]
+  const injected = withContent(
+    html.replace('<head>', `<head>\n    ${tags.join('\n    ')}`),
+    page.content,
+  )
 
   return new Response(injected, {
     headers: { 'content-type': 'text/html; charset=utf-8' },
   })
 }
 
-const shareTags = async (url: URL, hash: string): Promise<string[] | null> => {
+const respondNotFound = async (url: URL): Promise<Response> => {
+  const htmlRes = await fetch(new URL('/', url).toString())
+  const html = (await htmlRes.text()).replace(
+    '<head>',
+    '<head>\n    <meta name="robots" content="noindex" />',
+  )
+
+  return new Response(html, {
+    status: 404,
+    headers: { 'content-type': 'text/html; charset=utf-8' },
+  })
+}
+
+const shareTags = async (url: URL, hash: string): Promise<Page | null> => {
   const apiRes = await fetch(`${url.origin}/api/sandwiches/share/${hash}`)
   if (!apiRes.ok) return null
 
   const { data } = (await apiRes.json()) as ShareApiResponse
   const image = `${url.origin}/api/og/sandwich/${hash}`
 
-  return [
-    `<title>${escapeHtml(data.name)} | Between the Bread</title>`,
-    metaTag('og:title', data.name),
-    metaTag('og:url', `${url.origin}/s/${hash}`),
-    metaTag('og:type', 'website'),
-    metaTag('og:image', image),
-    metaTag('og:image:width', '1200'),
-    metaTag('og:image:height', '630'),
-    ...twitterTags({ title: data.name, description: null, image }),
-  ]
+  return {
+    tags: [
+      titleTag(`${data.name} | Between the Bread`),
+      metaTag('og:title', data.name),
+      metaTag('og:url', `${url.origin}/s/${hash}`),
+      metaTag('og:type', 'website'),
+      metaTag('og:image', image),
+      metaTag('og:image:width', '1200'),
+      metaTag('og:image:height', '630'),
+      ...twitterTags({ title: data.name, description: null, image }),
+    ],
+  }
 }
 
-const sandwichTags = async (url: URL, slug: string): Promise<string[] | null> => {
+const sandwichPageFor = async (url: URL, slug: string): Promise<Outcome> => {
   const apiRes = await fetch(`${url.origin}/api/database/${slug}`)
+  if (apiRes.status === 404) return NOT_FOUND
   if (!apiRes.ok) return null
 
-  const { data } = (await apiRes.json()) as SandwichApiResponse
-
-  return [
-    `<title>${escapeHtml(data.name)} | Between the Bread</title>`,
-    metaTag('og:title', data.name),
-    ...(data.description === null ? [] : [metaTag('og:description', data.description)]),
-    ...(data.image_url === null ? [] : [metaTag('og:image', data.image_url)]),
-    metaTag('og:url', `${url.origin}/sandwiches/${slug}`),
-    metaTag('og:type', 'article'),
-    ...twitterTags({ title: data.name, description: data.description, image: data.image_url }),
-  ]
+  const { data } = (await apiRes.json()) as { data: unknown }
+  return isSandwichEntry(data) ? sandwichEntryPage({ entry: data, origin: url.origin }) : null
 }
 
-const blogPostTags = async (url: URL, slug: string): Promise<string[] | null> => {
+const blogPostPageFor = async (url: URL, slug: string): Promise<Outcome> => {
   const apiRes = await fetch(`${url.origin}/api/blog/${slug}`)
+  if (apiRes.status === 404) return NOT_FOUND
   if (!apiRes.ok) return null
 
-  const { data } = (await apiRes.json()) as BlogPostApiResponse
-  const description = data.meta_description ?? data.excerpt
-
-  return [
-    `<title>${escapeHtml(data.title)} | Between the Bread</title>`,
-    metaTag('og:title', data.title),
-    metaTag('og:description', description),
-    ...(data.cover_image_url === null ? [] : [metaTag('og:image', data.cover_image_url)]),
-    metaTag('og:url', `${url.origin}/blog/${slug}`),
-    metaTag('og:type', 'article'),
-    metaTag('article:published_time', data.published_at),
-    ...twitterTags({ title: data.title, description, image: data.cover_image_url }),
-  ]
+  const { data } = (await apiRes.json()) as { data: unknown }
+  return isBlogPost(data) ? blogPostPage({ post: data, origin: url.origin }) : null
 }
 
-const blogCategoryTags = async (url: URL, slug: string): Promise<string[] | null> => {
-  const apiRes = await fetch(`${url.origin}/api/blog/categories`)
-  if (!apiRes.ok) return null
-
-  const { data } = (await apiRes.json()) as BlogCategoriesApiResponse
-  const category = data.find((candidate) => candidate.slug === slug && candidate.post_count > 0)
-  if (category === undefined) return null
-
-  const title = `${category.name} | Blog | Between the Bread`
-  const description = category.description ?? `${category.name} posts from Between the Bread.`
-
-  return [
-    `<title>${escapeHtml(title)}</title>`,
-    metaTag('og:title', title),
-    metaTag('og:description', description),
-    metaTag('og:url', `${url.origin}/blog/category/${slug}`),
-    metaTag('og:type', 'website'),
-    ...twitterTags({ title, description, image: null }),
-  ]
+const fetchJson = async (url: string): Promise<unknown> => {
+  const apiRes = await fetch(url)
+  return apiRes.ok ? apiRes.json() : null
 }
 
-const ROUTES: { pattern: RegExp; tags: (url: URL, key: string) => Promise<string[] | null> }[] = [
-  { pattern: SHARE_PATTERN, tags: shareTags },
-  { pattern: SANDWICH_PATTERN, tags: sandwichTags },
-  { pattern: BLOG_CATEGORY_PATTERN, tags: blogCategoryTags },
-  { pattern: BLOG_POST_PATTERN, tags: blogPostTags },
+const isList = <T>(value: unknown): value is ListResponse<T> =>
+  typeof value === 'object' &&
+  value !== null &&
+  'data' in value &&
+  Array.isArray(value.data) &&
+  'meta' in value &&
+  typeof value.meta === 'object' &&
+  value.meta !== null &&
+  'total_count' in value.meta &&
+  typeof value.meta.total_count === 'number'
+
+const isCategoryList = (value: unknown): value is { data: BlogCategory[] } =>
+  typeof value === 'object' && value !== null && 'data' in value && Array.isArray(value.data)
+
+const encyclopediaPageFor = async (url: URL): Promise<Page | null> => {
+  if (ENCYCLOPEDIA_FILTERS.some((filter) => url.searchParams.has(filter))) return null
+
+  const body = await fetchJson(
+    `${url.origin}/api/database?limit=${String(ENCYCLOPEDIA_PAGE_SIZE)}&offset=0`,
+  )
+  if (!isList<SandwichSummary>(body)) return null
+
+  return encyclopediaPage({
+    page: { items: body.data, totalCount: body.meta.total_count },
+    origin: url.origin,
+  })
+}
+
+const blogListing = async (url: URL, category?: string): Promise<BlogListing | null> => {
+  const query = new URLSearchParams({
+    ...(category === undefined ? {} : { category }),
+    limit: String(BLOG_PAGE_SIZE),
+    offset: '0',
+  })
+  const [categories, posts] = await Promise.all([
+    fetchJson(`${url.origin}/api/blog/categories`),
+    fetchJson(`${url.origin}/api/blog?${query.toString()}`),
+  ])
+  if (!isCategoryList(categories) || !isList<BlogListing['posts']['items'][number]>(posts))
+    return null
+
+  return {
+    categories: categories.data,
+    posts: { items: posts.data, totalCount: posts.meta.total_count },
+  }
+}
+
+const blogIndexPageFor = async (url: URL): Promise<Page | null> => {
+  const listing = await blogListing(url)
+  return listing === null ? null : blogIndexPage({ listing, origin: url.origin })
+}
+
+const blogCategoryPageFor = async (url: URL, slug: string): Promise<Outcome> => {
+  const listing = await blogListing(url, slug)
+  if (listing === null) return null
+  const category = listing.categories.find(
+    (candidate) => candidate.slug === slug && candidate.post_count > 0,
+  )
+  if (category === undefined) return NOT_FOUND
+
+  return blogCategoryPage({ category, listing, origin: url.origin })
+}
+
+const ROUTES: { pattern: RegExp; load: (url: URL, key: string) => Promise<Outcome> }[] = [
+  { pattern: SHARE_PATTERN, load: shareTags },
+  { pattern: ENCYCLOPEDIA_PATTERN, load: encyclopediaPageFor },
+  { pattern: SANDWICH_PATTERN, load: sandwichPageFor },
+  { pattern: BLOG_INDEX_PATTERN, load: blogIndexPageFor },
+  { pattern: BLOG_CATEGORY_PATTERN, load: blogCategoryPageFor },
+  { pattern: BLOG_POST_PATTERN, load: blogPostPageFor },
 ]
 
 export default async function middleware(req: Request): Promise<Response> {
   const url = new URL(req.url)
 
   try {
-    const matches = ROUTES.flatMap(({ pattern, tags }) => {
+    const matches = ROUTES.flatMap(({ pattern, load }) => {
       const match = pattern.exec(url.pathname)
-      return match === null ? [] : [{ tags, key: match[1] }]
+      if (match === null) return []
+      const [, key = ''] = match
+      return [{ load, key }]
     })
-    const tags = matches.length === 0 ? null : await matches[0].tags(url, matches[0].key)
+    const page = matches.length === 0 ? null : await matches[0].load(url, matches[0].key)
 
-    return tags === null ? next() : await respondWithTags(url, tags)
+    if (page === null) return next()
+    return page === NOT_FOUND ? await respondNotFound(url) : await respond(url, page)
   } catch {
     return next()
   }
 }
 
 export const config = {
-  matcher: ['/s/:hash*', '/sandwiches/:slug', '/blog/:slug', '/blog/category/:slug'],
+  matcher: [
+    '/s/:hash*',
+    '/sandwiches',
+    '/sandwiches/:slug',
+    '/blog',
+    '/blog/:slug',
+    '/blog/category/:slug',
+  ],
 }

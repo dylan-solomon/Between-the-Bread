@@ -5,6 +5,8 @@ export type CommentTargetType = TargetType | 'blog'
 export type Comment = {
   id: string
   user_id: string
+  username: string | null
+  author_is_admin: boolean
   body: string
   parent_id: string | null
   like_count: number

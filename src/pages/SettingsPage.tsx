@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext'
 import type { DietaryTag } from '@/types'
 import { DIETARY_TAGS } from '@/data/dietaryTags'
 import { captureAccountDeleted } from '@/analytics/events'
+import UsernameSettings from '@/components/UsernameSettings'
 
 type ProfileFormState = {
   display_name: string
@@ -135,6 +136,11 @@ export default function SettingsPage() {
       )}
 
       {!profileLoading && (<>
+        <section className="mt-8 border-b border-neutral-200 pb-8">
+          <h2 className="mb-3 font-display text-lg font-semibold text-neutral-900">Your username</h2>
+          <UsernameSettings />
+        </section>
+
         <form onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-6">
           <div>
             <label htmlFor="display-name" className="block text-sm font-medium text-neutral-700">

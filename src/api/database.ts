@@ -1,3 +1,4 @@
+import { hasFields } from '../utils/hasFields'
 import type { Region } from '@/data/regions'
 
 export type SandwichSort = 'name' | 'rating' | 'newest'
@@ -35,6 +36,18 @@ export type SandwichEntry = SandwichSummary & {
   blog_posts: BlogPostPreview[]
 }
 
+export const isSandwichEntry = (value: unknown): value is SandwichEntry =>
+  hasFields(value, {
+    id: 'string',
+    name: 'string',
+    slug: 'string',
+    alternative_names: 'array',
+    canonical_ingredients: 'object',
+    dietary_tags: 'array',
+    rating_count: 'number',
+    blog_posts: 'array',
+  })
+
 export type SandwichQuery = {
   q?: string
   region?: Region
@@ -44,7 +57,10 @@ export type SandwichQuery = {
   offset?: number
 }
 
-type SandwichPage = { items: SandwichSummary[]; totalCount: number }
+export type SandwichPage = { items: SandwichSummary[]; totalCount: number }
+
+export const isSandwichPage = (value: unknown): value is SandwichPage =>
+  hasFields(value, { items: 'array', totalCount: 'number' })
 
 const endpoint = (path: string): URL => new URL(path, window.location.origin)
 

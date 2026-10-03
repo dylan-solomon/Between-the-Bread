@@ -1,13 +1,19 @@
+import { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useParams } from 'react-router-dom'
 import BlogCategoryNav from '@/components/blog/BlogCategoryNav'
 import BlogPostList from '@/components/blog/BlogPostList'
 import { SITE_URL } from '@/data/site'
+import { isBlogListing } from '@/api/blog'
 import { useBlogCategories } from '@/hooks/useBlogCategories'
+import { categoryDescription, categoryTitle } from '@/seo/listPages'
+import { readInitialData } from '@/utils/initialData'
 
 export default function BlogCategory() {
   const { slug = '' } = useParams()
-  const { status, categories, retry } = useBlogCategories()
+  const [sentPath] = useState(() => `/blog/category/${slug}`)
+  const [sent] = useState(() => readInitialData({ path: sentPath, isData: isBlogListing }))
+  const { status, categories, retry } = useBlogCategories(sent?.categories)
   const category = categories.find((candidate) => candidate.slug === slug && candidate.post_count > 0)
 
   if (status === 'loading') {
@@ -44,8 +50,8 @@ export default function BlogCategory() {
     )
   }
 
-  const title = `${category.name} | Blog | Between the Bread`
-  const description = category.description ?? `${category.name} posts from Between the Bread.`
+  const title = categoryTitle(category)
+  const description = categoryDescription(category)
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -62,7 +68,7 @@ export default function BlogCategory() {
 
       <BlogCategoryNav categories={categories} activeSlug={category.slug} />
 
-      <BlogPostList category={category.slug} />
+      <BlogPostList category={category.slug} initial={sentPath === `/blog/category/${category.slug}` ? sent?.posts : undefined} />
     </div>
   )
 }

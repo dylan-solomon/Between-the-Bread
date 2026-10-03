@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -13,7 +13,10 @@ const { mockFetchSandwich, mockUseIngredients, mockEntryViewed, mockTryThisClick
   mockTryThisClicked: vi.fn(),
 }))
 
-vi.mock('@/api/database', () => ({ fetchSandwich: mockFetchSandwich }))
+vi.mock('@/api/database', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/database')>()),
+  fetchSandwich: mockFetchSandwich,
+}))
 vi.mock('@/hooks/useIngredients', () => ({ useIngredients: mockUseIngredients }))
 vi.mock('@/analytics/events', () => ({
   captureEncyclopediaEntryViewed: mockEntryViewed,
@@ -113,6 +116,59 @@ const blogPost = (slug: string, title: string) => ({
   reading_time_minutes: 4,
 })
 
+const sendWithPage = (path: string, data: unknown): void => {
+  const script = document.createElement('script')
+  script.type = 'application/json'
+  script.id = 'initial-data'
+  script.textContent = JSON.stringify({ path, data })
+  document.body.appendChild(script)
+}
+
+describe('SandwichDetail sent with the page', () => {
+  afterEach(() => { document.getElementById('initial-data')?.remove() })
+
+  it('shows the entry straight away without asking the server for it again', () => {
+    sendWithPage('/sandwiches/reuben', reuben)
+
+    renderAt()
+
+    expect(screen.getByRole('heading', { name: 'Reuben' })).toBeInTheDocument()
+    expect(mockFetchSandwich).not.toHaveBeenCalled()
+    expect(mockEntryViewed).toHaveBeenCalledWith({ slug: 'reuben' })
+  })
+
+  it('loads the entry when the content sent was for another page', async () => {
+    sendWithPage('/sandwiches/cubano', { ...reuben, slug: 'cubano', name: 'Cubano' })
+
+    renderAt()
+
+    expect(screen.getByRole('status', { name: 'Loading sandwich' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Reuben' })).toBeInTheDocument()
+    expect(mockFetchSandwich).toHaveBeenCalledWith('reuben')
+  })
+
+  it('loads the entry when the content sent is incomplete', async () => {
+    sendWithPage('/sandwiches/reuben', { slug: 'reuben' })
+
+    renderAt()
+
+    expect(await screen.findByRole('heading', { name: 'Reuben' })).toBeInTheDocument()
+    expect(mockFetchSandwich).toHaveBeenCalledWith('reuben')
+  })
+})
+
+describe('SandwichDetail search tags', () => {
+  it('describes the page with the entry description and names its canonical address', async () => {
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    await waitFor(() => {
+      expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute('content', 'Corned beef and sauerkraut on rye.')
+    })
+    expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute('href', 'https://betweenbread.co/sandwiches/reuben')
+  })
+})
+
 describe('SandwichDetail blog posts', () => {
   it('lists the blog posts that mention the sandwich', async () => {
     mockFetchSandwich.mockResolvedValue({
@@ -194,6 +250,15 @@ describe('SandwichDetail', () => {
     await screen.findByTestId('card-page')
 
     expect(screen.queryByText(/Also known as/)).not.toBeInTheDocument()
+  })
+
+  it('names the ingredient categories before the category list has loaded', async () => {
+    mockUseIngredients.mockReturnValue({ categories: [], pools: {}, lookupPools: {}, loading: true, error: null })
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(screen.getByText('Bread')).toBeInTheDocument()
+    expect(screen.getByText('Protein')).toBeInTheDocument()
   })
 
   it('lists the canonical ingredients under their category names', async () => {
