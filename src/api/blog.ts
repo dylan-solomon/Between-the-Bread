@@ -32,6 +32,26 @@ export type BlogPost = BlogPostSummary & {
   more_posts: BlogPostSummary[]
 }
 
+const hasFields = (value: unknown, fields: Record<string, 'string' | 'array'>): boolean =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.entries(fields).every(([field, kind]) => {
+    const fieldValue: unknown = (value as Record<string, unknown>)[field]
+    return kind === 'array' ? Array.isArray(fieldValue) : typeof fieldValue === kind
+  })
+
+export const isBlogPost = (value: unknown): value is BlogPost =>
+  hasFields(value, {
+    id: 'string',
+    slug: 'string',
+    title: 'string',
+    body: 'string',
+    published_at: 'string',
+    categories: 'array',
+    related_sandwiches: 'array',
+    more_posts: 'array',
+  })
+
 export type BlogPostQuery = {
   category?: string
   limit?: number

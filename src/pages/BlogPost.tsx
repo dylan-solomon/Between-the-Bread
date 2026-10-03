@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { captureBlogPostShared, captureBlogPostViewed, captureBlogRelatedSandwichClicked } from '@/analytics/events'
-import { fetchBlogPost } from '@/api/blog'
+import { fetchBlogPost, isBlogPost } from '@/api/blog'
 import type { BlogPost as BlogPostData, RelatedSandwich } from '@/api/blog'
 import BlogPostCard from '@/components/blog/BlogPostCard'
 import CategoryBadge from '@/components/blog/CategoryBadge'
@@ -11,6 +11,9 @@ import MarkdownText from '@/components/MarkdownText'
 import CommentSection from '@/components/sandwich-page/CommentSection'
 import { SITE_URL } from '@/data/site'
 import { formatPostDate } from '@/utils/blogPost'
+import { readInitialData } from '@/utils/initialData'
+import { blogPostingData, postDescription } from '@/seo/blogPosting'
+import { scriptJson } from '@/seo/scriptJson'
 
 type State =
   | { status: 'loading' }
@@ -18,19 +21,12 @@ type State =
   | { status: 'not-found' }
   | { status: 'error' }
 
-const structuredDataFor = (post: BlogPostData, pageUrl: string, description: string): string =>
-  JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title,
-    description,
-    ...(post.cover_image_url === null ? {} : { image: post.cover_image_url }),
-    datePublished: post.published_at,
-    dateModified: post.updated_at,
-    author: { '@type': 'Person', name: post.author_name },
-    publisher: { '@type': 'Organization', name: 'Between the Bread' },
-    mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
-  }).replace(/</g, '\\u003c')
+const postSentWithPage = (slug: string): BlogPostData | undefined =>
+  readInitialData({ path: `/blog/${slug}`, isData: isBlogPost })
+
+const viewed = (post: BlogPostData): void => {
+  captureBlogPostViewed({ slug: post.slug, categories: post.categories.map((category) => category.slug) })
+}
 
 function RelatedSandwichCard({ sandwich, onOpen }: { sandwich: RelatedSandwich; onOpen: () => void }) {
   return (
@@ -58,19 +54,26 @@ function RelatedSandwichCard({ sandwich, onOpen }: { sandwich: RelatedSandwich; 
 
 export default function BlogPost() {
   const { slug = '' } = useParams()
-  const [state, setState] = useState<State>({ status: 'loading' })
+  const [state, setState] = useState<State>(() => {
+    const sent = postSentWithPage(slug)
+    return sent === undefined ? { status: 'loading' } : { status: 'ready', post: sent }
+  })
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
+    const sent = postSentWithPage(slug)
+    if (sent !== undefined) {
+      setState({ status: 'ready', post: sent })
+      viewed(sent)
+      return
+    }
     let cancelled = false
     setState({ status: 'loading' })
     fetchBlogPost(slug)
       .then((post) => {
         if (cancelled) return
         setState(post === null ? { status: 'not-found' } : { status: 'ready', post })
-        if (post !== null) {
-          captureBlogPostViewed({ slug: post.slug, categories: post.categories.map((category) => category.slug) })
-        }
+        if (post !== null) viewed(post)
       })
       .catch(() => { if (!cancelled) setState({ status: 'error' }) })
     return () => { cancelled = true }
@@ -131,7 +134,7 @@ export default function BlogPost() {
 
   const { post } = state
   const pageUrl = `${SITE_URL}/blog/${post.slug}`
-  const description = post.meta_description ?? post.excerpt
+  const description = postDescription(post)
 
   return (
     <div className="mx-auto max-w-[720px] px-4 py-12">
@@ -145,7 +148,7 @@ export default function BlogPost() {
         <meta property="og:url" content={pageUrl} />
         <meta property="og:type" content="article" />
         <meta property="article:published_time" content={post.published_at} />
-        <script type="application/ld+json">{structuredDataFor(post, pageUrl, description)}</script>
+        <script type="application/ld+json">{scriptJson(blogPostingData({ post, pageUrl }))}</script>
       </Helmet>
 
       <article>
@@ -168,7 +171,7 @@ export default function BlogPost() {
           <p className="text-sm text-neutral-500">
             <span>{`By ${post.author_name}`}</span>
             {' · '}
-            <span>{formatPostDate(post.published_at)}</span>
+            <time dateTime={post.published_at}>{formatPostDate(post.published_at)}</time>
             {' · '}
             <span>{`${String(post.reading_time_minutes)} min read`}</span>
           </p>

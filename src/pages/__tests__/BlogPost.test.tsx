@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -13,7 +13,10 @@ const { mockFetchPost, mockPostViewed, mockPostShared, mockRelatedClicked, mockC
   mockCategorySelected: vi.fn(),
 }))
 
-vi.mock('@/api/blog', () => ({ fetchBlogPost: mockFetchPost }))
+vi.mock('@/api/blog', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/blog')>()),
+  fetchBlogPost: mockFetchPost,
+}))
 vi.mock('@/analytics/events', () => ({
   captureBlogPostViewed: mockPostViewed,
   captureBlogPostShared: mockPostShared,
@@ -77,6 +80,47 @@ const headTag = (selector: string): Element | null => document.head.querySelecto
 beforeEach(() => {
   vi.resetAllMocks()
   mockFetchPost.mockResolvedValue(makePost())
+})
+
+const sendWithPage = (path: string, data: unknown): void => {
+  const script = document.createElement('script')
+  script.type = 'application/json'
+  script.id = 'initial-data'
+  script.textContent = JSON.stringify({ path, data })
+  document.body.appendChild(script)
+}
+
+describe('BlogPost sent with the page', () => {
+  afterEach(() => { document.getElementById('initial-data')?.remove() })
+
+  it('shows the post straight away without asking the server for it again', () => {
+    sendWithPage('/blog/vegan-builds', makePost())
+
+    renderAt()
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Vegan builds' })).toBeInTheDocument()
+    expect(mockFetchPost).not.toHaveBeenCalled()
+    expect(mockPostViewed).toHaveBeenCalledWith({ slug: 'vegan-builds', categories: ['dietary', 'sandwich-ideas'] })
+  })
+
+  it('loads the post when the content sent was for another page', async () => {
+    sendWithPage('/blog/other', makePost({ slug: 'other', title: 'Other' }))
+
+    renderAt()
+
+    expect(screen.getByRole('status', { name: 'Loading post' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Vegan builds' })).toBeInTheDocument()
+    expect(mockFetchPost).toHaveBeenCalledWith('vegan-builds')
+  })
+
+  it('loads the post when the content sent is incomplete', async () => {
+    sendWithPage('/blog/vegan-builds', { slug: 'vegan-builds' })
+
+    renderAt()
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Vegan builds' })).toBeInTheDocument()
+    expect(mockFetchPost).toHaveBeenCalledWith('vegan-builds')
+  })
 })
 
 describe('BlogPost article', () => {

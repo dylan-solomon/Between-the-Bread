@@ -14,5 +14,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["middleware.ts", "middleware.test.ts"]
+  "include": ["middleware.ts", "middleware.test.ts", "middleware.seo.test.ts", "edge/**/*.ts"]
 }

@@ -270,12 +270,20 @@ describe('Twitter cards for encyclopedia entries', () => {
 })
 
 const hello = {
+  id: 'p-1',
   slug: 'vegan-builds',
   title: 'Vegan builds',
   excerpt: 'Five builds that skip the meat.',
+  body: 'Body.',
+  author_name: 'Dylan',
+  reading_time_minutes: 3,
   meta_description: null,
   cover_image_url: 'https://cdn.example.com/cover.jpg',
   published_at: '2026-10-01T12:00:00.000Z',
+  updated_at: '2026-10-02T12:00:00.000Z',
+  categories: [],
+  related_sandwiches: [],
+  more_posts: [],
 }
 
 const mockPostAndShell = (overrides: Record<string, unknown> = {}, shell = shellWithStaticTags) => {
@@ -346,7 +354,7 @@ describe('OG middleware for blog posts', () => {
     expect(count(html, 'og:image"')).toBe(1)
     expect(count(html, 'twitter:card')).toBe(1)
     expect(count(html, '<title>')).toBe(1)
-    expect(html).toContain('<meta name="description" content="Keep me" />')
+    expect(html).not.toContain('Keep me')
   })
 
   it('escapes special characters so post text cannot break out of the tags', async () => {
