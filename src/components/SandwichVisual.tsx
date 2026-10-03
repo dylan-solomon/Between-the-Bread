@@ -1,4 +1,4 @@
-import type { CategorySlug, Ingredient, SandwichComposition } from '@/types'
+import type { CategorySlug, Ingredient } from '@/types'
 
 const FLAT_BREAD_SLUGS = new Set(['naan', 'tortilla', 'pita'])
 const NO_CHEESE_SLUG = 'no-cheese'
@@ -11,22 +11,39 @@ const FILLING_ORDER: CategorySlug[] = [
   'protein',
 ]
 
-const LAYER_STYLES: Record<CategorySlug, string> = {
-  bread:           'bg-bread-light border-bread h-5 rounded-full',
-  protein:         'bg-protein-light border-protein h-4',
-  cheese:          'bg-cheese-light border-cheese h-3',
-  toppings:        'bg-toppings-light border-toppings h-3',
-  condiments:      'bg-condiments-light border-condiments h-2',
-  'chefs-special': 'bg-chefs-special-light border-chefs-special h-3',
+type Size = 'regular' | 'compact'
+
+const LAYER_COLORS: Record<CategorySlug, string> = {
+  bread:           'bg-bread-light border-bread rounded-full',
+  protein:         'bg-protein-light border-protein',
+  cheese:          'bg-cheese-light border-cheese',
+  toppings:        'bg-toppings-light border-toppings',
+  condiments:      'bg-condiments-light border-condiments',
+  'chefs-special': 'bg-chefs-special-light border-chefs-special',
 }
+
+const LAYER_HEIGHTS: Record<Size, Record<CategorySlug, string>> = {
+  regular: { bread: 'h-5', protein: 'h-4', cheese: 'h-3', toppings: 'h-3', condiments: 'h-2', 'chefs-special': 'h-3' },
+  compact: { bread: 'h-3', protein: 'h-2.5', cheese: 'h-2', toppings: 'h-2', condiments: 'h-1.5', 'chefs-special': 'h-2' },
+}
+
+const CONTAINER_CLASSES: Record<Size, string> = {
+  regular: 'flex h-48 overflow-hidden flex-col items-stretch justify-center gap-0.5 px-4',
+  compact: 'flex h-24 overflow-hidden flex-col items-stretch justify-center gap-px px-6',
+}
+
+type VisualIngredient = Pick<Ingredient, 'slug' | 'name'>
+
+export type VisualComposition = { bread: VisualIngredient[] } & Partial<Record<Exclude<CategorySlug, 'bread'>, VisualIngredient[]>>
 
 type Props = {
-  composition: SandwichComposition | null
+  composition: VisualComposition | null
+  size?: Size
 }
 
-type Layer = { ingredient: Ingredient; slug: CategorySlug; position: 'top' | 'middle' | 'bottom' }
+type Layer = { ingredient: VisualIngredient; slug: CategorySlug; position: 'top' | 'middle' | 'bottom' }
 
-const buildLayers = (composition: SandwichComposition): Layer[] => {
+const buildLayers = (composition: VisualComposition): Layer[] => {
   const breadIngredients = composition.bread
   const isFlat = breadIngredients.some((b) => FLAT_BREAD_SLUGS.has(b.slug))
 
@@ -47,7 +64,7 @@ const buildLayers = (composition: SandwichComposition): Layer[] => {
   return [...topBread, ...fillings, ...bottomBread]
 }
 
-export default function SandwichVisual({ composition }: Props) {
+export default function SandwichVisual({ composition, size = 'regular' }: Props) {
   if (composition === null) {
     return (
       <div className="flex h-48 overflow-hidden items-center justify-center">
@@ -61,12 +78,12 @@ export default function SandwichVisual({ composition }: Props) {
   const layers = buildLayers(composition)
 
   return (
-    <div className="flex h-48 overflow-hidden flex-col items-stretch justify-center gap-0.5 px-4">
+    <div className={CONTAINER_CLASSES[size]}>
       {layers.map(({ ingredient, slug, position }) => (
         <div
           key={`${slug}-${position}-${ingredient.slug}`}
           aria-label={ingredient.name}
-          className={`w-full rounded border animate-spring-in ${LAYER_STYLES[slug]}`}
+          className={`w-full rounded border ${size === 'regular' ? 'animate-spring-in' : ''} ${LAYER_COLORS[slug]} ${LAYER_HEIGHTS[size][slug]}`}
         />
       ))}
     </div>

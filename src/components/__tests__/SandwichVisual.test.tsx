@@ -95,4 +95,26 @@ describe('SandwichVisual', () => {
       })
     })
   })
+
+  describe('compact size for cards', () => {
+    it('draws every layer from ingredients known only by slug and name', () => {
+      render(
+        <SandwichVisual
+          size="compact"
+          composition={{ bread: [{ slug: 'rye', name: 'Rye' }], protein: [{ slug: 'ham', name: 'Ham' }], cheese: [{ slug: 'no-cheese', name: 'No Cheese' }] }}
+        />,
+      )
+
+      expect(screen.getAllByLabelText('Rye')).toHaveLength(2)
+      expect(screen.getByLabelText('Ham')).toBeInTheDocument()
+      expect(screen.queryByLabelText('No Cheese')).not.toBeInTheDocument()
+    })
+
+    it('takes less room than the full-size picture', () => {
+      const { container } = render(<SandwichVisual size="compact" composition={makeComposition()} />)
+
+      expect(container.firstElementChild).toHaveClass('h-24')
+      expect(container.firstElementChild).not.toHaveClass('h-48')
+    })
+  })
 })

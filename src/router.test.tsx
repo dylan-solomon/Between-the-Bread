@@ -79,6 +79,11 @@ describe('Router', () => {
     expect(await screen.findByRole('heading', { name: 'Sandwich Encyclopedia' })).toBeInTheDocument()
   })
 
+  it('renders the community leaderboard at /community', async () => {
+    renderRoute('/community')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Community Leaderboard' })).toBeInTheDocument()
+  })
+
   it('renders a public profile at /u/:username', async () => {
     renderRoute('/u/deli_dan')
     expect(await screen.findByRole('status', { name: 'Loading profile' })).toBeInTheDocument()
