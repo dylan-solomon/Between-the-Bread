@@ -89,7 +89,7 @@ describe('GET /api/[targetType]/[slug]/comments', () => {
     expect(body.data[0].id).toBe('c1')
     expect(body.data[0].like_count).toBe(3)
     expect(body.data[0].reply_count).toBe(1)
-    expect(body.data[0].replies).toEqual([reply])
+    expect(body.data[0].replies).toEqual([{ ...reply, username: null }])
     expect(body.data[1].replies).toEqual([])
     expect(body.meta.total_count).toBe(2)
   })
@@ -211,9 +211,72 @@ describe('GET /api/[targetType]/[slug]/comments', () => {
   })
 })
 
+describe('GET comments usernames', () => {
+  const row = (id: string, userId: string, parentId: string | null = null) => ({
+    id,
+    user_id: userId,
+    body: 'Text',
+    parent_id: parentId,
+    like_count: 0,
+    reply_count: 0,
+    created_at: '2026-01-01T00:00:00Z',
+  })
+
+  const answerRpc = (usernames: { data: unknown; error: unknown }) => {
+    mockRpc.mockImplementation((name: string) =>
+      Promise.resolve(
+        name === 'public_usernames'
+          ? usernames
+          : { data: [{ ...row('c1', 'user-1'), total_count: 2 }, { ...row('c2', 'user-2'), total_count: 2 }], error: null },
+      ),
+    )
+  }
+
+  it('shows each comment and reply author by username', async () => {
+    answerRpc({ data: [{ id: 'user-1', username: 'first_fan' }, { id: 'user-3', username: 'replier' }], error: null })
+    setupRepliesChain({ data: [row('r1', 'user-3', 'c1')], error: null })
+
+    const res = makeRes()
+    await handler(makeReq(), res)
+
+    const body = res._json as { data: { username: string | null; replies: { username: string | null }[] }[] }
+    expect(body.data[0].username).toBe('first_fan')
+    expect(body.data[0].replies[0].username).toBe('replier')
+    expect(body.data[1].username).toBeNull()
+  })
+
+  it('looks up each author once', async () => {
+    answerRpc({ data: [], error: null })
+    setupRepliesChain({ data: [row('r1', 'user-1', 'c1')], error: null })
+
+    const res = makeRes()
+    await handler(makeReq(), res)
+
+    expect(mockRpc).toHaveBeenCalledWith('public_usernames', { p_ids: ['user-1', 'user-2'] })
+  })
+
+  it('still shows the comments when usernames cannot be loaded', async () => {
+    answerRpc({ data: null, error: { message: 'boom' } })
+    setupRepliesChain({ data: [], error: null })
+
+    const res = makeRes()
+    await handler(makeReq(), res)
+
+    expect(res._status).toBe(200)
+    const body = res._json as { data: { username: string | null }[] }
+    expect(body.data.map((comment) => comment.username)).toEqual([null, null])
+  })
+})
+
 describe('POST /api/[targetType]/[slug]/comments', () => {
-  const setupInsertChain = () => {
-    mockFrom.mockReturnValue({ insert: mockInsert })
+  const profileWithUsername = (username: string | null) => ({
+    select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { username }, error: null }) }) }),
+  })
+
+  const setupInsertChain = (username: string | null = 'sandwich_fan') => {
+    mockFrom.mockImplementation((table: string) =>
+      table === 'profiles' ? profileWithUsername(username) : { insert: mockInsert },
+    )
     mockInsert.mockReturnValue({ select: mockInsertSelect })
     mockInsertSelect.mockReturnValue({ single: mockInsertSelectSingle })
   }
@@ -224,6 +287,41 @@ describe('POST /api/[targetType]/[slug]/comments', () => {
       body: { target_id: 'target-uuid-123', body: 'Great sandwich!' },
       ...overrides,
     })
+
+  it('asks the commenter to choose a username first', async () => {
+    setupInsertChain(null)
+
+    const res = makeRes()
+    await handler(postReq(), res)
+
+    expect(res._status).toBe(403)
+    expect((res._json as { error: { code: string } }).error.code).toBe('USERNAME_REQUIRED')
+    expect(mockInsert).not.toHaveBeenCalled()
+  })
+
+  it('fails clearly when the commenter profile cannot be loaded', async () => {
+    mockFrom.mockImplementation((table: string) =>
+      table === 'profiles'
+        ? { select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null, error: { message: 'boom' } }) }) }) }
+        : { insert: mockInsert },
+    )
+
+    const res = makeRes()
+    await handler(postReq(), res)
+
+    expect(res._status).toBe(500)
+    expect(mockInsert).not.toHaveBeenCalled()
+  })
+
+  it('returns the new comment with the commenter username', async () => {
+    setupInsertChain('sandwich_fan')
+    mockInsertSelectSingle.mockResolvedValue({ data: { id: 'c1', user_id: 'user-123', parent_id: null }, error: null })
+
+    const res = makeRes()
+    await handler(postReq(), res)
+
+    expect((res._json as { data: { username: string } }).data.username).toBe('sandwich_fan')
+  })
 
   it('returns 201 with the created comment', async () => {
     setupInsertChain()

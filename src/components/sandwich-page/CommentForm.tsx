@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { useAuthPrompt } from '@/context/AuthPromptContext'
+import { useUsername } from '@/context/UsernameContext'
 import { postComment } from '@/api/sandwichPage'
 import type { Comment, CommentTargetType } from '@/api/sandwichPage'
 
@@ -19,6 +20,7 @@ type Props = {
 export default function CommentForm({ targetType, slug, targetId, parentId, onPosted, onCancel }: Props) {
   const { user, session } = useAuth()
   const { prompt } = useAuthPrompt()
+  const { needsUsername, askForUsername } = useUsername()
   const [body, setBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -30,6 +32,11 @@ export default function CommentForm({ targetType, slug, targetId, parentId, onPo
 
     if (user === null || session === null) {
       prompt('comment on this sandwich')
+      return
+    }
+
+    if (needsUsername) {
+      askForUsername()
       return
     }
 
@@ -47,6 +54,14 @@ export default function CommentForm({ targetType, slug, targetId, parentId, onPo
 
   return (
     <div>
+      {user !== null && needsUsername && (
+        <p className="mb-2 text-sm text-neutral-600">
+          Pick a username to post comments.{' '}
+          <button type="button" onClick={askForUsername} className="font-medium text-primary underline">
+            Choose one
+          </button>
+        </p>
+      )}
       <textarea
         value={body}
         onChange={(e) => { setBody(e.target.value) }}

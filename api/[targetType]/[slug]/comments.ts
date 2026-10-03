@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ok, err } from '../../_lib/response.js'
 import { authenticateRequest } from '../../_lib/auth.js'
 import { createClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const VALID_TARGET_TYPES = ['database', 'community', 'blog'] as const
 type TargetType = (typeof VALID_TARGET_TYPES)[number]
@@ -29,7 +30,24 @@ type Comment = {
 
 type TopLevelRow = Comment & { total_count: number }
 
-type CommentWithReplies = Comment & { replies: Comment[] }
+type NamedComment = Comment & { username: string | null }
+
+type CommentWithReplies = NamedComment & { replies: NamedComment[] }
+
+const isUsernameRow = (value: unknown): value is { id: string; username: string } =>
+  typeof value === 'object' &&
+  value !== null &&
+  'id' in value &&
+  typeof value.id === 'string' &&
+  'username' in value &&
+  typeof value.username === 'string'
+
+const loadUsernames = async (supabase: SupabaseClient, userIds: string[]): Promise<Map<string, string>> => {
+  const response = await supabase.rpc('public_usernames', { p_ids: [...new Set(userIds)] })
+  const data: unknown = response.data
+  if (response.error !== null || !Array.isArray(data)) return new Map()
+  return new Map(data.filter(isUsernameRow).map((row) => [row.id, row.username]))
+}
 
 const handleGet = async (req: VercelRequest, res: VercelResponse, targetType: TargetType): Promise<void> => {
   const { target_id, sort, limit: limitStr, offset: offsetStr } = req.query as Record<string, string | undefined>
@@ -91,16 +109,20 @@ const handleGet = async (req: VercelRequest, res: VercelResponse, targetType: Ta
     return
   }
 
-  const repliesByParent = new Map<string, Comment[]>()
-  for (const reply of replies as Comment[]) {
+  const replyRows = replies as Comment[]
+  const usernames = await loadUsernames(supabase, [...topLevelComments, ...replyRows].map((c) => c.user_id))
+  const named = (comment: Comment): NamedComment => ({ ...comment, username: usernames.get(comment.user_id) ?? null })
+
+  const repliesByParent = new Map<string, NamedComment[]>()
+  for (const reply of replyRows) {
     const parentId = reply.parent_id
     if (parentId === null) continue
     const existing = repliesByParent.get(parentId) ?? []
-    repliesByParent.set(parentId, [...existing, reply])
+    repliesByParent.set(parentId, [...existing, named(reply)])
   }
 
   const nested: CommentWithReplies[] = topLevelComments.map((comment) => ({
-    ...comment,
+    ...named(comment),
     replies: repliesByParent.get(comment.id) ?? [],
   }))
 
@@ -128,6 +150,17 @@ const handlePost = async (req: VercelRequest, res: VercelResponse, targetType: T
 
   const replyParentId = typeof parent_id === 'string' ? parent_id : null
 
+  const profile = await supabase.from('profiles').select('username').eq('id', user.id).single<{ username: string | null }>()
+  if (profile.error !== null) {
+    res.status(500).json(err('INTERNAL_ERROR', 'Failed to create comment.', 500))
+    return
+  }
+  const { username } = profile.data
+  if (username === null) {
+    res.status(403).json(err('USERNAME_REQUIRED', 'Choose a username before commenting.', 403))
+    return
+  }
+
   const { data, error } = await supabase
     .from('comments')
     .insert({
@@ -150,7 +183,7 @@ const handlePost = async (req: VercelRequest, res: VercelResponse, targetType: T
     await supabase.rpc('adjust_comment_reply_count', { p_comment_id: replyParentId, p_delta: 1 })
   }
 
-  res.status(201).json(ok(data))
+  res.status(201).json(ok({ ...data, username }))
 }
 
 export default async function handler(

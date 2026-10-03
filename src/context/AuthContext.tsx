@@ -11,7 +11,7 @@ type AuthContextValue = {
   passwordRecovery: boolean
   clearPasswordRecovery: () => void
   signIn: (email: string, password: string) => Promise<User>
-  signUp: (email: string, password: string) => Promise<User>
+  signUp: (email: string, password: string, username?: string) => Promise<User>
   signInWithOAuth: (provider: Provider) => Promise<void>
   signOut: () => Promise<void>
 }
@@ -53,8 +53,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return data.user
   }
 
-  const signUp = async (email: string, password: string): Promise<User> => {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+  const signUp = async (email: string, password: string, username?: string): Promise<User> => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      ...(username === undefined ? {} : { options: { data: { username } } }),
+    })
     if (error) throw error
     return data.user as User
   }

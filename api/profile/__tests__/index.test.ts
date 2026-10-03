@@ -117,6 +117,16 @@ describe('GET /api/profile', () => {
   })
 })
 
+describe('GET /api/profile username', () => {
+  it('includes the username', async () => {
+    mockSingle.mockResolvedValue({ data: { ...profileRow, username: 'sandwich_fan' }, error: null })
+    const res = makeRes()
+    await handler(makeReq(), res)
+    expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('username'))
+    expect((res._json as { data: { profile: { username: string } } }).data.profile.username).toBe('sandwich_fan')
+  })
+})
+
 describe('PATCH /api/profile', () => {
   it('returns 400 when body is empty', async () => {
     const res = makeRes()
@@ -171,6 +181,50 @@ describe('PATCH /api/profile', () => {
     const res = makeRes()
     await handler(makeReq({ method: 'PATCH', body: { display_name: 'Test' } }), res)
     expect(res._status).toBe(500)
+  })
+})
+
+describe('PATCH /api/profile username', () => {
+  const patch = async (body: Record<string, unknown>) => {
+    const res = makeRes()
+    await handler(makeReq({ method: 'PATCH', body }), res)
+    return res
+  }
+  const errorCode = (res: { _json: unknown }) => (res._json as { error: { code: string } }).error.code
+
+  it('saves a valid username', async () => {
+    mockUpdateEq.mockResolvedValue({ error: null })
+
+    const res = await patch({ username: 'Sandwich_Fan1' })
+
+    expect(res._status).toBe(200)
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ username: 'Sandwich_Fan1' }))
+  })
+
+  it.each(['ab', 'a'.repeat(21), 'has space', 'dash-name', 42, null])('rejects %s without saving', async (username) => {
+    const res = await patch({ username })
+
+    expect(res._status).toBe(400)
+    expect(errorCode(res)).toBe('USERNAME_INVALID')
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('says when the username is already taken', async () => {
+    mockUpdateEq.mockResolvedValue({ error: { code: '23505', message: 'duplicate key' } })
+
+    const res = await patch({ username: 'taken_name' })
+
+    expect(res._status).toBe(409)
+    expect(errorCode(res)).toBe('USERNAME_TAKEN')
+  })
+
+  it('says when the username is not allowed', async () => {
+    mockUpdateEq.mockResolvedValue({ error: { code: '23514', message: 'check constraint' } })
+
+    const res = await patch({ username: 'admin' })
+
+    expect(res._status).toBe(400)
+    expect(errorCode(res)).toBe('USERNAME_RESERVED')
   })
 })
 

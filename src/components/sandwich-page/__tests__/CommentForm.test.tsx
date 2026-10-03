@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-const { mockUseAuth, mockPrompt, mockPostComment } = vi.hoisted(() => ({
+const { mockUseAuth, mockPrompt, mockPostComment, mockUseUsername } = vi.hoisted(() => ({
+  mockUseUsername: vi.fn(),
   mockUseAuth: vi.fn(),
   mockPrompt: vi.fn(),
   mockPostComment: vi.fn(),
@@ -12,6 +13,7 @@ const { mockUseAuth, mockPrompt, mockPostComment } = vi.hoisted(() => ({
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/context/AuthPromptContext', () => ({ useAuthPrompt: () => ({ prompt: mockPrompt }) }))
 vi.mock('@/api/sandwichPage', () => ({ postComment: mockPostComment }))
+vi.mock('@/context/UsernameContext', () => ({ useUsername: mockUseUsername }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import CommentForm from '@/components/sandwich-page/CommentForm'
@@ -21,6 +23,7 @@ const loggedInAuth = { user: { id: 'user-1' }, session: { access_token: 'token-a
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockUseUsername.mockReturnValue({ needsUsername: false, askForUsername: vi.fn() })
 })
 
 describe('CommentForm', () => {
@@ -115,5 +118,22 @@ describe('CommentForm', () => {
     render(<CommentForm targetType="database" slug="reuben" targetId="target-1" onPosted={vi.fn()} />)
 
     expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('CommentForm usernames', () => {
+  it('asks for a username instead of posting when the commenter has none', async () => {
+    const askForUsername = vi.fn()
+    mockUseUsername.mockReturnValue({ needsUsername: true, askForUsername })
+    mockUseAuth.mockReturnValue(loggedInAuth)
+    render(<CommentForm targetType="database" slug="reuben" targetId="target-1" onPosted={vi.fn()} />)
+
+    expect(screen.getByText('Pick a username to post comments.')).toBeInTheDocument()
+    await userEvent.type(screen.getByRole('textbox'), 'Tasty')
+    await userEvent.click(screen.getByRole('button', { name: /post/i }))
+
+    expect(askForUsername).toHaveBeenCalled()
+    expect(mockPostComment).not.toHaveBeenCalled()
+    expect(screen.getByRole('textbox')).toHaveValue('Tasty')
   })
 })

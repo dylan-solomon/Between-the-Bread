@@ -4,7 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 
-const { mockGetSession, mockOnAuthStateChange, mockSignUp, mockCaptureAccountSignedUp, mockIdentifyUser } = vi.hoisted(() => ({
+const { mockGetSession, mockOnAuthStateChange, mockSignUp, mockCaptureAccountSignedUp, mockIdentifyUser, mockCheckUsername } = vi.hoisted(() => ({
+  mockCheckUsername: vi.fn(),
   mockGetSession: vi.fn(),
   mockOnAuthStateChange: vi.fn(),
   mockSignUp: vi.fn(),
@@ -32,6 +33,11 @@ vi.mock('@/analytics/events', () => ({
   resetIdentity: vi.fn(),
 }))
 
+vi.mock('@/api/usernames', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/usernames')>()),
+  checkUsername: mockCheckUsername,
+}))
+
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom')
@@ -56,12 +62,22 @@ beforeEach(() => {
   mockNavigate.mockReset()
   mockCaptureAccountSignedUp.mockReset()
   mockIdentifyUser.mockReset()
+  mockCheckUsername.mockReset()
+  mockCheckUsername.mockResolvedValue('available')
 
   mockGetSession.mockResolvedValue({ data: { session: null }, error: null })
   mockOnAuthStateChange.mockImplementation(() => ({
     data: { subscription: { unsubscribe: vi.fn() } },
   }))
 })
+
+const fillForm = async ({ username = 'sandwich_fan', confirm = 'password123' } = {}) => {
+  await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
+  if (username !== '') await userEvent.type(screen.getByLabelText('Username'), username)
+  await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
+  await userEvent.type(screen.getByLabelText(/confirm password/i), confirm)
+  if (username !== '') await screen.findByText(/Available!|already taken|isn't available|characters|letters/)
+}
 
 describe('SignupPage', () => {
   it('renders a heading', () => {
@@ -94,14 +110,13 @@ describe('SignupPage', () => {
     mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
     renderPage()
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await fillForm()
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     expect(mockSignUp).toHaveBeenCalledWith({
       email: 'test@example.com',
       password: 'password123',
+      options: { data: { username: 'sandwich_fan' } },
     })
   })
 
@@ -109,9 +124,7 @@ describe('SignupPage', () => {
     mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
     renderPage()
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await fillForm()
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -122,9 +135,7 @@ describe('SignupPage', () => {
   it('shows error when passwords do not match', async () => {
     renderPage()
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'different')
+    await fillForm({ confirm: 'different' })
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     expect(screen.getByRole('alert')).toHaveTextContent(/passwords do not match/i)
@@ -138,9 +149,7 @@ describe('SignupPage', () => {
     })
     renderPage()
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await fillForm()
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -152,9 +161,7 @@ describe('SignupPage', () => {
     mockSignUp.mockReturnValue(new Promise(() => undefined))
     renderPage()
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await fillForm()
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     expect(screen.getByRole('button', { name: /sign up/i })).toBeDisabled()
@@ -164,9 +171,7 @@ describe('SignupPage', () => {
     mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
     renderPage('/signup?redirect=%2Faccount%2Fsettings')
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await fillForm()
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -178,9 +183,7 @@ describe('SignupPage', () => {
     mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
     renderPage()
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await fillForm()
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -192,9 +195,7 @@ describe('SignupPage', () => {
     mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
     renderPage()
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await fillForm()
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -212,9 +213,7 @@ describe('SignupPage', () => {
     mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
     renderPage('/signup?redirect=%2F&trigger=save_prompt')
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await fillForm()
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -231,9 +230,7 @@ describe('SignupPage', () => {
     })
     renderPage()
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await fillForm()
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -241,5 +238,62 @@ describe('SignupPage', () => {
     })
     expect(mockCaptureAccountSignedUp).not.toHaveBeenCalled()
     expect(mockIdentifyUser).not.toHaveBeenCalled()
+  })
+})
+
+describe('SignupPage usernames', () => {
+  it('asks for a username and explains where it appears', () => {
+    renderPage()
+
+    expect(screen.getByLabelText('Username')).toBeInTheDocument()
+    expect(screen.getByText(/appears on your comments and on community sandwiches/)).toBeInTheDocument()
+  })
+
+  it('says whether the username is free as it is typed', async () => {
+    renderPage()
+
+    await userEvent.type(screen.getByLabelText('Username'), 'sandwich_fan')
+
+    expect(await screen.findByText('Available!')).toBeInTheDocument()
+    expect(mockCheckUsername).toHaveBeenCalledWith('sandwich_fan')
+  })
+
+  it.each([
+    ['taken', 'taken_name', 'That username is already taken.'],
+    ['badly formed', 'a b', 'Use only letters, numbers and underscores.'],
+  ])('will not sign up with a %s username', async (_label, username, message) => {
+    mockCheckUsername.mockResolvedValue('taken')
+    renderPage()
+
+    await fillForm({ username })
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(message)
+    expect(mockSignUp).not.toHaveBeenCalled()
+  })
+
+  it('will not sign up without a username', async () => {
+    renderPage()
+
+    await fillForm({ username: '' })
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Choose a username.')
+    expect(mockSignUp).not.toHaveBeenCalled()
+  })
+
+  it('still signs up when the availability check could not be done', async () => {
+    mockCheckUsername.mockRejectedValue(new Error('offline'))
+    mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1', email: 'test@example.com', created_at: '2026-01-01T00:00:00Z' }, session: {} }, error: null })
+    renderPage()
+
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await userEvent.type(screen.getByLabelText('Username'), 'sandwich_fan')
+    await userEvent.type(screen.getByLabelText(/^password$/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await screen.findByText(/Couldn't check/)
+    await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
+
+    expect(mockSignUp).toHaveBeenCalled()
   })
 })

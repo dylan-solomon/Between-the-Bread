@@ -20,6 +20,7 @@ const {
 
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/context/AuthPromptContext', () => ({ useAuthPrompt: () => ({ prompt: vi.fn() }) }))
+vi.mock('@/context/UsernameContext', () => ({ useUsername: () => ({ needsUsername: false, askForUsername: vi.fn() }) }))
 vi.mock('@/api/sandwichPage', () => ({
   fetchComments: mockFetchComments,
   postComment: mockPostComment,
@@ -34,9 +35,10 @@ import CommentSection from '@/components/sandwich-page/CommentSection'
 const loggedInAuth = { user: { id: 'user-1' }, session: { access_token: 'token-abc' } }
 const guestAuth = { user: null, session: null }
 
-const makeComment = (overrides: Partial<{ id: string; user_id: string; body: string; like_count: number; reply_count: number; replies: unknown[] }> = {}) => ({
+const makeComment = (overrides: Partial<{ id: string; user_id: string; username: string | null; body: string; like_count: number; reply_count: number; replies: unknown[] }> = {}) => ({
   id: 'c1',
   user_id: 'user-2',
+  username: 'deli_dan',
   body: 'Great sandwich!',
   parent_id: null,
   like_count: 0,
@@ -189,5 +191,29 @@ describe('CommentSection', () => {
     await userEvent.click(screen.getByRole('button', { name: /^like/i }))
 
     expect(mockLikeComment).not.toHaveBeenCalled()
+  })
+})
+
+describe('CommentSection authors', () => {
+  it('shows each comment and reply author by username', async () => {
+    mockFetchComments.mockResolvedValue({
+      data: [makeComment({ replies: [{ id: 'r1', user_id: 'user-3', username: 'rye_guy', body: 'Me too', parent_id: 'c1', like_count: 0, reply_count: 0, created_at: '2026-01-01T00:00:00Z' }] })],
+      meta: { total_count: 1, limit: 20, offset: 0 },
+    })
+    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+
+    expect(await screen.findByText('@deli_dan')).toBeInTheDocument()
+    expect(screen.getByText('@rye_guy')).toBeInTheDocument()
+    expect(screen.queryByText(/^User /)).not.toBeInTheDocument()
+  })
+
+  it('calls an author without a username a member', async () => {
+    mockFetchComments.mockResolvedValue({
+      data: [makeComment({ username: null })],
+      meta: { total_count: 1, limit: 20, offset: 0 },
+    })
+    render(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+
+    expect(await screen.findByText('Member')).toBeInTheDocument()
   })
 })
