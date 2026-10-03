@@ -5,7 +5,16 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { clearSentData, sendWithPage } from '@/test/initialData'
 
-const { mockFetchSandwich } = vi.hoisted(() => ({ mockFetchSandwich: vi.fn() }))
+const { mockFetchSandwich, mockEntryViewed, mockTryThisClicked } = vi.hoisted(() => ({
+  mockFetchSandwich: vi.fn(),
+  mockEntryViewed: vi.fn(),
+  mockTryThisClicked: vi.fn(),
+}))
+
+vi.mock('@/analytics/events', () => ({
+  captureCommunityEntryViewed: mockEntryViewed,
+  captureCommunityTryThisClicked: mockTryThisClicked,
+}))
 
 vi.mock('@/api/community', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/community')>()),
@@ -35,8 +44,8 @@ vi.mock('@/components/sandwich-page/SandwichCardPage', () => ({
   ),
 }))
 vi.mock('@/components/sandwich-page/TryThisSandwich', () => ({
-  default: (props: { composition: Record<string, { name: string; slug?: string }[]>; exact: boolean }) => (
-    <button type="button" data-exact={String(props.exact)} data-composition={JSON.stringify(props.composition)}>
+  default: (props: { composition: Record<string, { name: string; slug?: string }[]>; exact: boolean; onTry?: () => void }) => (
+    <button type="button" onClick={props.onTry} data-exact={String(props.exact)} data-composition={JSON.stringify(props.composition)}>
       Try This Sandwich
     </button>
   ),
@@ -249,5 +258,39 @@ describe('CommunityDetail search engines', () => {
 
     await waitFor(() => { expect(document.title).toContain('Turkey & Swiss on Rye') })
     expect(document.head.querySelector('meta[name="robots"]')).toBeNull()
+  })
+})
+
+describe('CommunityDetail analytics', () => {
+  it('records a view once the sandwich has loaded', async () => {
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(mockEntryViewed).toHaveBeenCalledWith({ slug: 'turkey-swiss-on-rye-abc12345' })
+  })
+
+  it('records a view of a sandwich sent with the page', () => {
+    sendWithPage('/community/turkey-swiss-on-rye-abc12345', makeSandwich())
+
+    renderAt()
+
+    expect(mockEntryViewed).toHaveBeenCalledWith({ slug: 'turkey-swiss-on-rye-abc12345' })
+    clearSentData()
+  })
+
+  it('does not record a view of a missing sandwich', async () => {
+    mockFetchSandwich.mockResolvedValue(null)
+    renderAt('nope')
+    await screen.findByRole('heading', { name: 'Sandwich not found' })
+
+    expect(mockEntryViewed).not.toHaveBeenCalled()
+  })
+
+  it('records when Try This Sandwich is clicked', async () => {
+    renderAt()
+
+    ;(await screen.findByRole('button', { name: 'Try This Sandwich' })).click()
+
+    expect(mockTryThisClicked).toHaveBeenCalledWith({ slug: 'turkey-swiss-on-rye-abc12345' })
   })
 })

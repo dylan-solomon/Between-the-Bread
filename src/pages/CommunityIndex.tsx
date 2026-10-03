@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { captureCommunityFiltered, captureCommunitySorted, captureCommunityViewed } from '@/analytics/events'
 import { fetchCommunityLeaderboard, isCommunityPage } from '@/api/community'
 import type { CommunityComposition, CommunityPage, CommunitySandwichSummary, CommunitySort } from '@/api/community'
 import SandwichVisual from '@/components/SandwichVisual'
@@ -108,6 +109,8 @@ export default function CommunityIndex() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [attempt, setAttempt] = useState(0)
 
+  useEffect(() => { captureCommunityViewed() }, [])
+
   useEffect(() => {
     const sentPage = attempt === 0 ? pageSentWithPage(paramsKey) : undefined
     if (sentPage !== undefined) {
@@ -139,9 +142,22 @@ export default function CommunityIndex() {
     setParams(next)
   }
 
+  const changeSort = (sort: CommunitySort) => {
+    if (sort === filters.sort) return
+    captureCommunitySorted({ sort })
+    updateParams({ sort: sort === DEFAULT_SORT ? '' : sort })
+  }
+
+  const changeFilters = (changes: Partial<Pick<Filters, 'diet' | 'ingredient'>>) => {
+    const next = { ...filters, ...changes }
+    captureCommunityFiltered({ diet: next.diet, ingredient: next.ingredient ?? null, sort: next.sort })
+    updateParams({ diet: next.diet.join(','), ingredient: next.ingredient ?? '' })
+  }
+
   const toggleDiet = (tag: string) => {
-    const diet = filters.diet.includes(tag) ? filters.diet.filter((existing) => existing !== tag) : [...filters.diet, tag]
-    updateParams({ diet: diet.join(',') })
+    changeFilters({
+      diet: filters.diet.includes(tag) ? filters.diet.filter((existing) => existing !== tag) : [...filters.diet, tag],
+    })
   }
 
   const loadMore = () => {
@@ -178,7 +194,7 @@ export default function CommunityIndex() {
               key={option.value}
               type="button"
               aria-pressed={active}
-              onClick={() => { updateParams({ sort: option.value === DEFAULT_SORT ? '' : option.value }) }}
+              onClick={() => { changeSort(option.value) }}
               className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
                 active
                   ? 'border-primary bg-primary text-white'
@@ -196,7 +212,7 @@ export default function CommunityIndex() {
           Ingredient
           <select
             value={filters.ingredient ?? ''}
-            onChange={(e) => { updateParams({ ingredient: e.target.value }) }}
+            onChange={(e) => { changeFilters({ ingredient: e.target.value === '' ? undefined : e.target.value }) }}
             className={inputClass}
           >
             <option value="">Any ingredient</option>

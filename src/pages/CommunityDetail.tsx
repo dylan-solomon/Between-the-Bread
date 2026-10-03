@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useParams } from 'react-router-dom'
+import { captureCommunityEntryViewed, captureCommunityTryThisClicked } from '@/analytics/events'
 import { fetchCommunitySandwich, isCommunitySandwich } from '@/api/community'
 import type { CommunitySandwich } from '@/api/community'
 import AdminBadge from '@/components/AdminBadge'
@@ -96,13 +97,16 @@ export default function CommunityDetail() {
     const sent = sandwichSentWithPage(slug)
     if (sent !== undefined) {
       setState({ status: 'ready', sandwich: sent })
+      captureCommunityEntryViewed({ slug: sent.slug })
       return
     }
     let cancelled = false
     setState({ status: 'loading' })
     fetchCommunitySandwich(slug)
       .then((sandwich) => {
-        if (!cancelled) setState(sandwich === null ? { status: 'not-found' } : { status: 'ready', sandwich })
+        if (cancelled) return
+        setState(sandwich === null ? { status: 'not-found' } : { status: 'ready', sandwich })
+        if (sandwich !== null) captureCommunityEntryViewed({ slug: sandwich.slug })
       })
       .catch(() => { if (!cancelled) setState({ status: 'error' }) })
     return () => { cancelled = true }
@@ -181,7 +185,13 @@ export default function CommunityDetail() {
           />
         }
         infoSection={<Info sandwich={sandwich} />}
-        actionBar={<TryThisSandwich composition={composition} exact />}
+        actionBar={
+          <TryThisSandwich
+            composition={composition}
+            exact
+            onTry={() => { captureCommunityTryThisClicked({ slug: sandwich.slug }) }}
+          />
+        }
       />
     </>
   )

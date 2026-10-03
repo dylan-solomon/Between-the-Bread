@@ -6,7 +6,10 @@ import { HelmetProvider } from 'react-helmet-async'
 import { makeCategories, makeIngredient } from '@/test/factories'
 import { clearSentData, sendWithPage } from '@/test/initialData'
 
-const { mockFetchLeaderboard, mockUseIngredients } = vi.hoisted(() => ({
+const { mockFetchLeaderboard, mockUseIngredients, mockViewed, mockSorted, mockFiltered } = vi.hoisted(() => ({
+  mockViewed: vi.fn(),
+  mockSorted: vi.fn(),
+  mockFiltered: vi.fn(),
   mockFetchLeaderboard: vi.fn(),
   mockUseIngredients: vi.fn(),
 }))
@@ -16,6 +19,11 @@ vi.mock('@/api/community', async (importOriginal) => ({
   fetchCommunityLeaderboard: mockFetchLeaderboard,
 }))
 vi.mock('@/hooks/useIngredients', () => ({ useIngredients: mockUseIngredients }))
+vi.mock('@/analytics/events', () => ({
+  captureCommunityViewed: mockViewed,
+  captureCommunitySorted: mockSorted,
+  captureCommunityFiltered: mockFiltered,
+}))
 
 import CommunityIndex from '@/pages/CommunityIndex'
 
@@ -298,5 +306,46 @@ describe('CommunityIndex sent with the page', () => {
 
     await screen.findByText('Turkey & Swiss on Rye')
     expect(mockFetchLeaderboard).toHaveBeenCalled()
+  })
+})
+
+describe('CommunityIndex analytics', () => {
+  it('records that the leaderboard was viewed, once', async () => {
+    renderAt()
+    await screen.findByText('Turkey & Swiss on Rye')
+
+    expect(mockViewed).toHaveBeenCalledTimes(1)
+  })
+
+  it('records a change of sort', async () => {
+    const user = userEvent.setup()
+    renderAt()
+    await screen.findByText('Turkey & Swiss on Rye')
+
+    await user.click(screen.getByRole('button', { name: 'Trending' }))
+
+    expect(mockSorted).toHaveBeenCalledWith({ sort: 'trending' })
+  })
+
+  it('does not record picking the sort that is already chosen', async () => {
+    const user = userEvent.setup()
+    renderAt()
+    await screen.findByText('Turkey & Swiss on Rye')
+
+    await user.click(screen.getByRole('button', { name: 'Most Popular' }))
+
+    expect(mockSorted).not.toHaveBeenCalled()
+  })
+
+  it('records filter changes with the resulting filters', async () => {
+    const user = userEvent.setup()
+    renderAt('/community?sort=top_rated')
+    await screen.findByText('Turkey & Swiss on Rye')
+
+    await user.click(screen.getByRole('checkbox', { name: 'Vegan' }))
+    await user.selectOptions(screen.getByLabelText('Ingredient'), 'ham')
+
+    expect(mockFiltered).toHaveBeenNthCalledWith(1, { diet: ['vegan'], ingredient: null, sort: 'top_rated' })
+    expect(mockFiltered).toHaveBeenNthCalledWith(2, { diet: ['vegan'], ingredient: 'ham', sort: 'top_rated' })
   })
 })
