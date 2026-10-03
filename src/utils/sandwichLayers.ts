@@ -66,3 +66,25 @@ export const sandwichLayers = ({
       .filter((part) => part !== '')
       .join(' '),
   }))
+
+type LooseComposition = Partial<Record<string, unknown[]>>
+
+const isVisualIngredient = (value: unknown): value is VisualIngredient =>
+  typeof value === 'object' &&
+  value !== null &&
+  'slug' in value &&
+  typeof value.slug === 'string' &&
+  'name' in value &&
+  typeof value.name === 'string'
+
+const itemsOf = (composition: LooseComposition, category: CategorySlug): VisualIngredient[] =>
+  (composition[category] ?? []).filter(isVisualIngredient)
+
+export const toVisualComposition = (composition: LooseComposition): VisualComposition => ({
+  bread: itemsOf(composition, 'bread'),
+  protein: itemsOf(composition, 'protein'),
+  cheese: itemsOf(composition, 'cheese'),
+  toppings: itemsOf(composition, 'toppings'),
+  condiments: itemsOf(composition, 'condiments'),
+  'chefs-special': itemsOf(composition, 'chefs-special'),
+})

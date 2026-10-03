@@ -89,6 +89,11 @@ describe('Router', () => {
     expect(await screen.findByRole('status', { name: 'Loading sandwich' })).toBeInTheDocument()
   })
 
+  it('renders search results at /search', async () => {
+    renderRoute('/search')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Search' })).toBeInTheDocument()
+  })
+
   it('renders a public profile at /u/:username', async () => {
     renderRoute('/u/deli_dan')
     expect(await screen.findByRole('status', { name: 'Loading profile' })).toBeInTheDocument()

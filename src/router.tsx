@@ -29,6 +29,7 @@ export const routes: RouteObject[] = [
       { path: '/s/:hash', lazy: page(() => import('@/pages/SharedSandwich')) },
       { path: '/community', lazy: page(() => import('@/pages/CommunityIndex')) },
       { path: '/community/:slug', lazy: page(() => import('@/pages/CommunityDetail')) },
+      { path: '/search', lazy: page(() => import('@/pages/SearchResults')) },
       { path: '/u/:username', lazy: page(() => import('@/pages/ProfilePage')) },
       {
         path: '/admin',

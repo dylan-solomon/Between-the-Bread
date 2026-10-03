@@ -14,6 +14,7 @@ import { SITE_URL } from '@/data/site'
 import { communityDescription, communityGroups, madeLabel } from '@/seo/communitySandwich'
 import { formatPostDate } from '@/utils/blogPost'
 import { readInitialData } from '@/utils/initialData'
+import { toVisualComposition } from '@/utils/sandwichLayers'
 
 type State =
   | { status: 'loading' }
@@ -173,16 +174,7 @@ export default function CommunityDetail() {
         avgRating={sandwich.avg_rating}
         ratingCount={sandwich.rating_count}
         heroVisual={
-          <SandwichVisual
-            composition={{
-              bread: sandwich.composition.bread ?? [],
-              protein: sandwich.composition.protein,
-              cheese: sandwich.composition.cheese,
-              toppings: sandwich.composition.toppings,
-              condiments: sandwich.composition.condiments,
-              'chefs-special': sandwich.composition['chefs-special'],
-            }}
-          />
+          <SandwichVisual composition={toVisualComposition(sandwich.composition)} />
         }
         infoSection={<Info sandwich={sandwich} />}
         actionBar={
