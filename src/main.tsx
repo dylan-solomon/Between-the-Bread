@@ -16,7 +16,7 @@ installStaleChunkReload({
   now: Date.now,
 })
 initPostHog()
-captureWebVitals()
+void captureWebVitals()
 
 const router = createBrowserRouter(routes)
 

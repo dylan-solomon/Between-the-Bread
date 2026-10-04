@@ -18,8 +18,10 @@ const { mockSetPersonProperties } = vi.hoisted(() => ({
   mockSetPersonProperties: vi.fn(),
 }))
 
-vi.mock('posthog-js', () => ({
-  default: { setPersonProperties: mockSetPersonProperties },
+vi.mock('@/analytics/client', () => ({
+  withPostHog: (call: (posthog: unknown) => void) => {
+    call({ setPersonProperties: mockSetPersonProperties })
+  },
 }))
 
 beforeEach(() => {

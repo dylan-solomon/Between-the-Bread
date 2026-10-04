@@ -65,8 +65,10 @@ const { mockCapture, mockIdentify, mockReset } = vi.hoisted(() => ({
   mockReset: vi.fn(),
 }))
 
-vi.mock('posthog-js', () => ({
-  default: { capture: mockCapture, identify: mockIdentify, reset: mockReset },
+vi.mock('@/analytics/client', () => ({
+  withPostHog: (call: (posthog: unknown) => void) => {
+    call({ capture: mockCapture, identify: mockIdentify, reset: mockReset })
+  },
 }))
 
 beforeEach(() => {
