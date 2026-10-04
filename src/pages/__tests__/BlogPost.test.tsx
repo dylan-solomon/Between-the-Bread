@@ -31,6 +31,7 @@ vi.mock('@/components/sandwich-page/CommentSection', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import BlogPost from '@/pages/BlogPost'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const makePost = (overrides: Record<string, unknown> = {}) => ({
   id: 'p-1',
@@ -412,5 +413,14 @@ describe('BlogPost problems', () => {
     await user.click(screen.getByRole('button', { name: 'Try again' }))
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Vegan builds' })).toBeInTheDocument()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt()
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

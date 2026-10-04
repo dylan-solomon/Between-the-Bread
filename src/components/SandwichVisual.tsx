@@ -22,7 +22,7 @@ export default function SandwichVisual({ composition, size = 'regular' }: Props)
   return (
     <div className={SANDWICH_CONTAINER_CLASSES[size]}>
       {sandwichLayers({ composition, size, animate: size === 'regular' }).map((layer) => (
-        <div key={layer.key} aria-label={layer.label} className={layer.className} />
+        <div key={layer.key} role="img" aria-label={layer.label} className={layer.className} />
       ))}
     </div>
   )

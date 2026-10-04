@@ -14,6 +14,7 @@ vi.mock('@/api/admin', () => ({ fetchModerationQueue: mockFetchModerationQueue, 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import ModerationPage from '@/pages/admin/ModerationPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const comment1 = { id: 'c1', user_id: 'user-1', target_type: 'database', target_id: 'target-1', parent_id: null, body: 'Flagged comment', is_flagged: true, is_approved: true, created_at: '2026-01-01T00:00:00Z' }
 const comment2 = { id: 'c2', user_id: 'user-2', target_type: 'database', target_id: 'target-2', parent_id: null, body: 'Another one', is_flagged: false, is_approved: false, created_at: '2026-01-02T00:00:00Z' }
@@ -88,5 +89,15 @@ describe('ModerationPage', () => {
     expect(mockModerateItem).toHaveBeenCalledWith('token-abc', 'comments', 'c1', 'approve')
     expect(mockModerateItem).toHaveBeenCalledWith('token-abc', 'comments', 'c2', 'approve')
     await waitFor(() => { expect(toast.success).toHaveBeenCalled() })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    mockFetchModerationQueue.mockResolvedValue([comment1, comment2])
+    render(<ModerationPage />)
+    await screen.findByText('Flagged comment')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

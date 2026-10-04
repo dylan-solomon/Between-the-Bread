@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import Header from '@/components/Header'
 import type { User, Session } from '@supabase/supabase-js'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
@@ -248,5 +249,14 @@ describe('Header', () => {
         expect(screen.getByText('SandwichFan')).toBeInTheDocument()
       })
     })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderHeader()
+    await screen.findByRole('banner')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

@@ -47,7 +47,7 @@ const sandwichPicture = (composition: CommunityComposition, size: LayerSize): st
   })
   return `<div class="${SANDWICH_CONTAINER_CLASSES[size]}">${layers
     .map(
-      (layer) => `<div aria-label="${escapeHtml(layer.label)}" class="${layer.className}"></div>`,
+      (layer) => `<div role="img" aria-label="${escapeHtml(layer.label)}" class="${layer.className}"></div>`,
     )
     .join('')}</div>`
 }

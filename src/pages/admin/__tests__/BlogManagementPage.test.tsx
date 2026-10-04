@@ -39,6 +39,7 @@ vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import BlogManagementPage from '@/pages/admin/BlogManagementPage'
 import { toDateTimeLocal } from '@/utils/blogPost'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const makePost = (overrides: Record<string, unknown> = {}) => ({
   id: 'p-1',
@@ -759,5 +760,17 @@ describe('BlogManagementPage unsaved changes', () => {
 
     expect(await screen.findByText('Other page')).toBeInTheDocument()
     expect(window.confirm).not.toHaveBeenCalled()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems on the post list or the post editor', async () => {
+    const user = userEvent.setup()
+    await renderPage()
+    expect(await accessibilityProblems(document.body)).toEqual([])
+
+    await user.click(screen.getByRole('button', { name: 'New post' }))
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

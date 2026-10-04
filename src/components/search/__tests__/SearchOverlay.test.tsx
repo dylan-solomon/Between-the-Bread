@@ -18,6 +18,7 @@ vi.mock('@/analytics/userProperties', () => ({ setHasUsedSearch: mockHasUsedSear
 
 import { TooManyRequestsError } from '@/api/errors'
 import SearchOverlay from '@/components/search/SearchOverlay'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const results = [
   { source: 'database', slug: 'reuben', title: 'Reuben', details: {} },
@@ -233,5 +234,16 @@ describe('SearchOverlay analytics', () => {
     await user.click(await screen.findByRole('link', { name: 'Best Reuben Variations Blog' }))
 
     expect(mockClicked).toHaveBeenCalledWith({ query: 'reuben', resultSource: 'blog', slug: 'best-reubens', position: 3, surface: 'header' })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    const user = userEvent.setup()
+    renderOverlay()
+    await user.type(box(), 'reuben')
+    await screen.findByText('Reuben Melt')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

@@ -41,6 +41,7 @@ vi.mock('react-router-dom', async () => {
 })
 
 import LoginPage from '@/pages/LoginPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const renderPage = (initialRoute = '/login') =>
   render(
@@ -286,5 +287,14 @@ describe('LoginPage with a username', () => {
 
     await waitFor(() => { expect(mockCaptureAccountLoggedIn).toHaveBeenCalledWith({ method: 'username' }) })
     expect(mockSignInWithPassword).not.toHaveBeenCalled()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderPage()
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

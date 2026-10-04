@@ -15,6 +15,7 @@ vi.mock('@/api/admin', () => ({ updateCompatMatrix: mockUpdateCompatMatrix }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import CompatMatrixPage from '@/pages/admin/CompatMatrixPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -70,5 +71,14 @@ describe('CompatMatrixPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /save/i }))
 
     await waitFor(() => { expect(toast.error).toHaveBeenCalled() })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    render(<CompatMatrixPage />)
+    await screen.findByLabelText('italian to mediterranean affinity')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

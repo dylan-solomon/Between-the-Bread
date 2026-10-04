@@ -7,6 +7,7 @@ import { AuthPromptProvider } from '@/context/AuthPromptContext'
 import HomePage from '@/pages/HomePage'
 import { makeCategories, makeIngredient, makePool } from '@/test/factories'
 import type { CompatMatrixRow } from '@/types'
+import { accessibilityProblems } from '@/test/accessibility'
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -332,5 +333,14 @@ describe('HomePage', () => {
       const saveButton = await screen.findByRole('button', { name: /saved/i })
       expect(saveButton).toBeDisabled()
     })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderPage()
+    await screen.findByRole('button', { name: /roll the dice/i })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

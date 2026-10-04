@@ -25,6 +25,7 @@ vi.mock('@/lib/supabase', () => ({
 }))
 
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const renderPage = () =>
   render(
@@ -102,4 +103,13 @@ describe('ForgotPasswordPage', () => {
     })
   })
 
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderPage()
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
+  })
 })

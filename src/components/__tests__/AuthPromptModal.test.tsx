@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import AuthPromptModal from '@/components/AuthPromptModal'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const defaultProps = {
   isOpen: true,
@@ -84,5 +85,14 @@ describe('AuthPromptModal', () => {
     renderModal({ onDismiss })
     await userEvent.click(screen.getByRole('link', { name: /log in/i }))
     expect(onDismiss).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderModal()
+    await screen.findByRole('dialog')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

@@ -492,7 +492,7 @@ export default function DatabaseManagementPage() {
               <SortableHeader label="Country" sortKey="country" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} />
               <SortableHeader label="Rating" sortKey="rating" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} />
               <SortableHeader label="Published" sortKey="published" sort={sort} onSort={(key) => { setSort((prev) => nextSort(prev, key)) }} centered />
-              <th className="p-2" />
+              <th className="p-2"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>

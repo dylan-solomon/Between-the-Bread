@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import SharedSandwich from '@/pages/SharedSandwich'
 import { makeComposition } from '@/test/factories'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const { mockFetchShare, mockCaptureVisited, mockCaptureCta } = vi.hoisted(() => ({
   mockFetchShare: vi.fn(),
@@ -113,5 +114,15 @@ describe('SharedSandwich page', () => {
         expect(ogUrl?.getAttribute('content')).toContain('/s/abc12345')
       })
     })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    mockFetchShare.mockResolvedValue(stubRecord)
+    renderAtHash()
+    await screen.findByRole('link', { name: /make your own/i })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

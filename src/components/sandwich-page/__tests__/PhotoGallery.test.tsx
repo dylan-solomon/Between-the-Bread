@@ -19,6 +19,7 @@ vi.mock('@/components/sandwich-page/PhotoUpload', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import PhotoGallery from '@/components/sandwich-page/PhotoGallery'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const loggedInAuth = { user: { id: 'user-1' }, session: { access_token: 'token-abc' } }
 const guestAuth = { user: null, session: null }
@@ -95,5 +96,17 @@ describe('PhotoGallery', () => {
 
     await userEvent.click(uploadTrigger)
     expect(screen.queryByText('Mock upload success')).not.toBeInTheDocument()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    const user = userEvent.setup()
+    mockFetchPhotos.mockResolvedValue({ data: [makePhoto()], meta: { total_count: 1, limit: 20, offset: 0 } })
+    render(<PhotoGallery targetType="database" slug="reuben" targetId="target-1" />)
+    await user.click(await screen.findByRole('img', { name: 'Yum' }))
+    await screen.findByRole('dialog')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

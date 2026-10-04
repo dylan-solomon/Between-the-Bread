@@ -19,6 +19,7 @@ vi.mock('@/analytics/userProperties', () => ({ setHasUsedSearch: mockHasUsedSear
 
 import { TooManyRequestsError } from '@/api/errors'
 import SearchResults from '@/pages/SearchResults'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const encyclopediaResult = {
   source: 'database',
@@ -336,5 +337,14 @@ describe('SearchResults analytics', () => {
       position: 2,
       surface: 'page',
     })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt()
+    await screen.findByText('Reuben')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

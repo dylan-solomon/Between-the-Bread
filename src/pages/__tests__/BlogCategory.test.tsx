@@ -20,6 +20,7 @@ vi.mock('@/api/blog', async (importOriginal) => ({
 vi.mock('@/analytics/events', () => ({ captureBlogCategorySelected: mockCategorySelected }))
 
 import BlogCategory from '@/pages/BlogCategory'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const post = {
   slug: 'vegan-builds',
@@ -155,5 +156,14 @@ describe('BlogCategory sent with the page', () => {
 
     expect(await screen.findByRole('link', { name: 'Vegan builds' })).toBeInTheDocument()
     expect(mockFetchPosts).toHaveBeenCalledWith({ category: 'dietary', limit: 12, offset: 0 })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt('dietary')
+    await screen.findByRole('link', { name: 'Vegan builds' })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

@@ -202,7 +202,7 @@ export default function BlogCategoriesPage() {
               <th className="p-2">Slug</th>
               <th className="p-2">Posts</th>
               <th className="p-2">Description</th>
-              <th className="p-2" />
+              <th className="p-2"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>

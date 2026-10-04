@@ -28,6 +28,7 @@ vi.mock('@/analytics/events', () => ({
 }))
 
 import CommunityIndex from '@/pages/CommunityIndex'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const makeSandwich = (overrides: Record<string, unknown> = {}) => ({
   id: 'c-1',
@@ -350,5 +351,14 @@ describe('CommunityIndex analytics', () => {
 
     expect(mockFiltered).toHaveBeenNthCalledWith(1, { diet: ['vegan'], ingredient: null, sort: 'top_rated' })
     expect(mockFiltered).toHaveBeenNthCalledWith(2, { diet: ['vegan'], ingredient: 'ham', sort: 'top_rated' })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt()
+    await screen.findByText('Turkey & Swiss on Rye')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

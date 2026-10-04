@@ -6,6 +6,7 @@ const { mockUseRequireAdmin } = vi.hoisted(() => ({ mockUseRequireAdmin: vi.fn()
 vi.mock('@/hooks/useRequireAdmin', () => ({ useRequireAdmin: mockUseRequireAdmin }))
 
 import AdminLayout from '@/pages/admin/AdminLayout'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const renderLayout = () =>
   render(
@@ -53,5 +54,15 @@ describe('AdminLayout', () => {
     renderLayout()
 
     expect(screen.queryByRole('main')).not.toBeInTheDocument()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    mockUseRequireAdmin.mockReturnValue({ loading: false, authorized: true })
+    renderLayout()
+    await screen.findByRole('link', { name: 'Dashboard' })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

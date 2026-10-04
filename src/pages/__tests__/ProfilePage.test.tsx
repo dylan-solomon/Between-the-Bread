@@ -8,6 +8,7 @@ const { mockFetchProfile } = vi.hoisted(() => ({ mockFetchProfile: vi.fn() }))
 vi.mock('@/api/profiles', () => ({ fetchPublicProfile: mockFetchProfile }))
 
 import ProfilePage from '@/pages/ProfilePage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const makeProfile = (overrides: Record<string, unknown> = {}) => ({
   username: 'deli_dan',
@@ -97,5 +98,14 @@ describe('ProfilePage', () => {
     renderAt()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong loading this profile.')
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt()
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

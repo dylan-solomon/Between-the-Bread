@@ -18,6 +18,7 @@ vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import { TooManyRequestsError } from '@/api/errors'
 import RatingSubmission from '@/components/sandwich-page/RatingSubmission'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const guestAuth = { user: null, session: null }
 const loggedInAuth = { user: { id: 'user-1' }, session: { access_token: 'token-abc' } }
@@ -81,5 +82,15 @@ describe('RatingSubmission', () => {
 
     expect(toast.error).toHaveBeenCalled()
     expect(mockRated).not.toHaveBeenCalled()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    mockUseAuth.mockReturnValue(loggedInAuth)
+    render(<RatingSubmission targetType="database" slug="reuben" targetId="target-1" />)
+    await screen.findAllByRole('button')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

@@ -14,6 +14,7 @@ vi.mock('@/api/admin', () => ({ fetchConfig: mockFetchConfig, updateConfig: mock
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import ConfigPage from '@/pages/admin/ConfigPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -68,5 +69,14 @@ describe('ConfigPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /save site notice/i }))
 
     await waitFor(() => { expect(mockUpdateConfig).toHaveBeenCalledWith('token-abc', 'site_notice', null) })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    render(<ConfigPage />)
+    await waitFor(() => { expect(screen.getByLabelText(/cost data last updated/i)).toHaveValue('2026-03-01') })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

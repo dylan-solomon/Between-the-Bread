@@ -25,6 +25,7 @@ vi.mock('@/api/admin', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import IngredientsPage from '@/pages/admin/IngredientsPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const ingredient1 = {
   id: 'ing-1',
@@ -668,5 +669,14 @@ describe('IngredientsPage category changes', () => {
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
 
     await waitFor(() => { expect(toast.error).toHaveBeenCalledWith('Failed to move ingredient. Nothing was changed.') })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    render(<IngredientsPage />)
+    await screen.findByDisplayValue('Sourdough')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import AboutPage from '@/pages/AboutPage'
 import { AuthProvider } from '@/context/AuthContext'
+import { accessibilityProblems } from '@/test/accessibility'
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -45,5 +46,14 @@ describe('AboutPage', () => {
     renderPage()
     expect(screen.getByText(/Generate boldly/)).toBeInTheDocument()
     expect(screen.getByText(/The bread is waiting/)).toBeInTheDocument()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderPage()
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

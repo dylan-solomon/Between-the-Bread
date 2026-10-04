@@ -21,6 +21,7 @@ vi.mock('@/api/usernames', async (importOriginal) => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import { UsernameProvider, useUsername } from '@/context/UsernameContext'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const signedIn = () => {
   mockUseAuth.mockReturnValue({ user: { id: 'user-1' }, session: { access_token: 'token-abc' }, loading: false })
@@ -198,5 +199,15 @@ describe('UsernameProvider when the profile cannot be loaded', () => {
     await act(async () => { await Promise.resolve() })
     expect(dialog()).not.toBeInTheDocument()
     expect(screen.getByTestId('needs')).toHaveTextContent('false')
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    signedIn()
+    renderAt()
+    await screen.findByRole('dialog', { name: 'Pick a username' })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

@@ -21,6 +21,7 @@ vi.mock('@/api/admin', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import BlogCategoriesPage from '@/pages/admin/BlogCategoriesPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const makeCategory = (overrides: Record<string, unknown> = {}) => ({
   id: 'c-1',
@@ -310,5 +311,13 @@ describe('BlogCategoriesPage deleting', () => {
     await user.click(screen.getByRole('button', { name: 'Delete Dietary' }))
 
     await waitFor(() => { expect(toast.error).toHaveBeenCalledWith('Failed to delete category.') })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    await renderPage()
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

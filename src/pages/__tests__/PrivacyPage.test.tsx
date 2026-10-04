@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import PrivacyPage from '@/pages/PrivacyPage'
 import { CONTACT_EMAIL } from '@/data/site'
 import { AuthProvider } from '@/context/AuthContext'
+import { accessibilityProblems } from '@/test/accessibility'
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -75,5 +76,14 @@ describe('PrivacyPage', () => {
     const links = screen.getAllByRole('link', { name: CONTACT_EMAIL })
     expect(links.length).toBeGreaterThan(0)
     links.forEach((link) => { expect(link).toHaveAttribute('href', `mailto:${CONTACT_EMAIL}`) })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderPage()
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

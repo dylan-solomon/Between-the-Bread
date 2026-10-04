@@ -33,6 +33,7 @@ vi.mock('@/api/sandwichPage', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import CommentSection from '@/components/sandwich-page/CommentSection'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const renderSection = (ui: ReactElement) => render(ui, { wrapper: MemoryRouter })
 
@@ -239,5 +240,18 @@ describe('CommentSection authors', () => {
     renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
 
     expect(await screen.findByText('Member')).toBeInTheDocument()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    mockFetchComments.mockResolvedValue({
+      data: [makeComment({ replies: [{ id: 'r1', user_id: 'user-3', username: 'rye_guy', author_is_admin: true, body: 'Me too', parent_id: 'c1', like_count: 0, reply_count: 0, created_at: '2026-01-01T00:00:00Z' }] })],
+      meta: { total_count: 1, limit: 20, offset: 0 },
+    })
+    renderSection(<CommentSection targetType="database" slug="reuben" targetId="target-1" />)
+    await screen.findByText('Me too')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

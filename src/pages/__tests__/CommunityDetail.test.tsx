@@ -52,6 +52,7 @@ vi.mock('@/components/sandwich-page/TryThisSandwich', () => ({
 }))
 
 import CommunityDetail from '@/pages/CommunityDetail'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const makeSandwich = (overrides: Record<string, unknown> = {}) => ({
   id: 'c-1',
@@ -292,5 +293,14 @@ describe('CommunityDetail analytics', () => {
     ;(await screen.findByRole('button', { name: 'Try This Sandwich' })).click()
 
     expect(mockTryThisClicked).toHaveBeenCalledWith({ slug: 'turkey-swiss-on-rye-abc12345' })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })
