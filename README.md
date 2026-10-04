@@ -46,6 +46,10 @@ The wave files show what was imported; they go out of date as soon as entries ar
 | `pnpm images:fix` | **Needs keys.** Shrinks large photos already uploaded for the encyclopedia and blog. A dry run by default; add `--apply` to make the changes, then optionally `--delete-originals`. |
 | `pnpm posthog:setup` | Creates the PostHog dashboards, insights and cohorts. Needs `POSTHOG_PERSONAL_API_KEY` and `POSTHOG_PROJECT_ID` in `.env.local`. Safe to run again; anything already there is skipped. |
 
+## Checking Supabase usage
+
+Paste `supabase/checks/plan_usage.sql` into the Supabase SQL editor and run it. It is read-only and shows the database size, file storage, people signed in during the last 30 days and the biggest tables, next to the free plan's limits. Data sent to visitors (egress) is not visible to SQL; read it from Organization > Usage in the Supabase dashboard.
+
 ## Rebuilding the database from scratch
 
 For a new staging copy, or to recover from a lost database. Run each file in the Supabase SQL editor, in this order:
