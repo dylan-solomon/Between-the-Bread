@@ -39,7 +39,7 @@ function RelatedSandwichCard({ sandwich, onOpen }: { sandwich: RelatedSandwich; 
         {sandwich.image_url === null ? (
           <div aria-hidden="true" className="flex h-28 items-center justify-center bg-neutral-100 text-4xl">🥪</div>
         ) : (
-          <img src={sandwich.image_url} alt="" className="h-28 w-full object-cover" />
+          <img src={sandwich.image_url} alt="" loading="lazy" decoding="async" className="h-28 w-full object-cover" />
         )}
         <div className="p-3">
           <h3 className="font-display text-base font-bold text-neutral-900">{sandwich.name}</h3>
@@ -185,7 +185,7 @@ export default function BlogPost() {
         </div>
 
         {post.cover_image_url !== null && (
-          <img src={post.cover_image_url} alt="" className="mt-6 w-full rounded-lg object-cover" />
+          <img src={post.cover_image_url} alt="" className="mt-6 aspect-video w-full rounded-lg object-cover" />
         )}
 
         <div className="mt-8">

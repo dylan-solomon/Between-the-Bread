@@ -11,7 +11,7 @@ export default function BlogPostCard({ post }: Props) {
       {post.cover_image_url === null ? (
         <div aria-hidden="true" className="flex h-40 items-center justify-center bg-neutral-100 text-5xl">🥪</div>
       ) : (
-        <img src={post.cover_image_url} alt="" className="h-40 w-full object-cover" />
+        <img src={post.cover_image_url} alt="" loading="lazy" decoding="async" className="h-40 w-full object-cover" />
       )}
       <div className="flex flex-1 flex-col gap-2 p-4">
         <h2 className="font-display text-lg font-bold text-neutral-900">

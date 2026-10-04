@@ -84,6 +84,8 @@ export default function PhotoGallery({ targetType, slug, targetId }: Props) {
                 <img
                   src={photo.signed_url}
                   alt={photo.caption ?? ''}
+                  loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-cover"
                 />
               )}

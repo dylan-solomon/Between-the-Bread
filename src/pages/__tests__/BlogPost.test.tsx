@@ -134,6 +134,7 @@ describe('BlogPost article', () => {
     expect(screen.getByRole('link', { name: 'Dietary' })).toHaveAttribute('href', '/blog/category/dietary')
     expect(screen.getByRole('link', { name: 'Sandwich Ideas' })).toHaveAttribute('href', '/blog/category/sandwich-ideas')
     expect(document.querySelector('img')).toHaveAttribute('src', 'https://cdn.example.com/cover.jpg')
+    expect(document.querySelector('img')).not.toHaveAttribute('loading', 'lazy')
   })
 
   it('asks for the post named in the address', async () => {
@@ -216,6 +217,7 @@ describe('BlogPost related content', () => {
     expect(within(section).getByRole('link', { name: /Reuben/ })).toHaveAttribute('href', '/sandwiches/reuben')
     expect(within(section).getByRole('link', { name: /Cubano/ })).toHaveAttribute('href', '/sandwiches/cubano')
     expect(within(section).getByText('Corned beef on rye.')).toBeInTheDocument()
+    expect(section.querySelector('img')).toHaveAttribute('loading', 'lazy')
   })
 
   it('leaves the sandwiches section out when the post links to none', async () => {

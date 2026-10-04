@@ -1,4 +1,6 @@
-export const resizeImage = (file: File, maxWidth: number): Promise<Blob> =>
+type Output = { type?: string; quality?: number }
+
+export const resizeImage = (file: File, maxWidth: number, output: Output = {}): Promise<Blob> =>
   new Promise((resolve, reject) => {
     const img = new Image()
     const objectUrl = URL.createObjectURL(file)
@@ -27,7 +29,7 @@ export const resizeImage = (file: File, maxWidth: number): Promise<Blob> =>
           return
         }
         resolve(blob)
-      }, file.type)
+      }, output.type ?? file.type, output.quality)
     }
 
     img.onerror = () => {

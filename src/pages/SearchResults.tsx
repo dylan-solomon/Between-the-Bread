@@ -58,11 +58,11 @@ const thumbnail = (result: SearchResult): ReactNode => {
     case 'database':
       return result.details.image_url === null
         ? <Emoji>🥪</Emoji>
-        : <img src={result.details.image_url} alt="" className="h-full w-full object-cover" />
+        : <img src={result.details.image_url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
     case 'blog':
       return result.details.cover_image_url === null
         ? <Emoji>📝</Emoji>
-        : <img src={result.details.cover_image_url} alt="" className="h-full w-full object-cover" />
+        : <img src={result.details.cover_image_url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
     case 'community':
     case 'saved':
       return <SandwichVisual size="compact" composition={toVisualComposition(result.details.composition)} />

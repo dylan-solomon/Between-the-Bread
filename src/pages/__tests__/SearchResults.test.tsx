@@ -141,6 +141,14 @@ describe('SearchResults', () => {
     expect(within(link).getByText('United States · ★ 4.5 (12)')).toBeInTheDocument()
   })
 
+  it('loads result pictures only when they scroll into view', async () => {
+    mockSearch.mockResolvedValue(page([{ ...encyclopediaResult, details: { ...encyclopediaResult.details, image_url: 'https://cdn.example.com/reuben.jpg' } }]))
+    renderAt()
+
+    const link = await screen.findByRole('link', { name: /^Reuben/ })
+    expect(link.querySelector('img')).toHaveAttribute('loading', 'lazy')
+  })
+
   it('shows a community result', async () => {
     renderAt()
 

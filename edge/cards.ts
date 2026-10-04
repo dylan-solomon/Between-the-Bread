@@ -11,7 +11,7 @@ export const blogPostCard = (post: BlogPostSummary): string =>
     '<li class="relative flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white transition hover:shadow-md">',
     post.cover_image_url === null
       ? '<div aria-hidden="true" class="flex h-40 items-center justify-center bg-neutral-100 text-5xl">🥪</div>'
-      : `<img src="${escapeHtml(post.cover_image_url)}" alt="" class="h-40 w-full object-cover" />`,
+      : `<img src="${escapeHtml(post.cover_image_url)}" alt="" loading="lazy" decoding="async" class="h-40 w-full object-cover" />`,
     '<div class="flex flex-1 flex-col gap-2 p-4">',
     `<h2 class="font-display text-lg font-bold text-neutral-900"><a href="/blog/${escapeHtml(post.slug)}" class="after:absolute after:inset-0">${escapeHtml(post.title)}</a></h2>`,
     `<p class="line-clamp-3 text-sm text-neutral-600">${escapeHtml(post.excerpt)}</p>`,
@@ -35,7 +35,7 @@ export const sandwichCard = (sandwich: SandwichSummary): string =>
     `<li><a href="/sandwiches/${escapeHtml(sandwich.slug)}" class="flex h-full flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white transition hover:shadow-md">`,
     sandwich.image_url === null
       ? '<div aria-hidden="true" class="flex h-40 items-center justify-center bg-neutral-100 text-5xl">🥪</div>'
-      : `<img src="${escapeHtml(sandwich.image_url)}" alt="${escapeHtml(sandwich.name)}" class="h-40 w-full object-cover" />`,
+      : `<img src="${escapeHtml(sandwich.image_url)}" alt="${escapeHtml(sandwich.name)}" loading="lazy" decoding="async" class="h-40 w-full object-cover" />`,
     '<div class="flex flex-1 flex-col gap-1 p-4">',
     `<h2 class="font-display text-lg font-bold text-neutral-900">${escapeHtml(sandwich.name)}</h2>`,
     sandwich.alternative_names.length === 0

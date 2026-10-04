@@ -40,6 +40,18 @@ describe('resizeImage', () => {
     expect(mockDrawImage).toHaveBeenCalledWith(expect.anything(), 0, 0, 1200, 600)
   })
 
+  it('keeps the original format by default', async () => {
+    await resizeImage(makeFile(), 1200)
+
+    expect(mockToBlob).toHaveBeenCalledWith(expect.any(Function), 'image/jpeg', undefined)
+  })
+
+  it('can save in another format at a chosen quality', async () => {
+    await resizeImage(makeFile(), 1600, { type: 'image/webp', quality: 0.85 })
+
+    expect(mockToBlob).toHaveBeenCalledWith(expect.any(Function), 'image/webp', 0.85)
+  })
+
   it('keeps the original size when the image is already narrower than maxWidth', async () => {
     vi.stubGlobal('Image', class extends MockImage {
       width = 800

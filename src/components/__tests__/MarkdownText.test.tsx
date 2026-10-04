@@ -41,6 +41,7 @@ describe('MarkdownText', () => {
     expect(container.querySelector('ol')?.children).toHaveLength(2)
     expect(container.querySelector('blockquote')).toHaveTextContent('Keep it simple')
     expect(screen.getByRole('img', { name: 'Toasted rye' })).toHaveAttribute('src', 'https://cdn.example.com/rye.png')
+    expect(screen.getByRole('img', { name: 'Toasted rye' })).toHaveAttribute('loading', 'lazy')
   })
 
   it('does not load a picture from a javascript address', () => {

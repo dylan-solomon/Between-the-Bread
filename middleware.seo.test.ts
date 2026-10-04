@@ -854,3 +854,41 @@ describe('Community leaderboard in the first response', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 })
+
+describe('Images in the first response', () => {
+  it('loads the blog cover straight away in a fixed frame', async () => {
+    const root = rootContent(await pageFor('/blog/vegan-builds', post))
+
+    expect(root).toMatch(/<img src="https:\/\/cdn\.example\.com\/cover\.jpg" alt="" class="[^"]*aspect-video[^"]*" \/>/)
+  })
+
+  it('loads pictures inside a post and on related cards only when scrolled to', async () => {
+    const root = rootContent(
+      await pageFor('/blog/vegan-builds', {
+        ...post,
+        body: 'Look:\n\n![Toasted rye](https://cdn.example.com/rye.png)',
+        related_sandwiches: [{ name: 'Cubano', slug: 'cubano', image_url: 'https://cdn.example.com/cubano.jpg', description: null }],
+      }),
+    )
+
+    expect(root).toMatch(/<img [^>]*src="https:\/\/cdn\.example\.com\/rye\.png"[^>]*>/)
+    expect(root).toMatch(/<img loading="lazy" decoding="async" src="https:\/\/cdn\.example\.com\/rye\.png"/)
+    expect(root).toMatch(/<img src="https:\/\/cdn\.example\.com\/cubano\.jpg" alt="" loading="lazy" decoding="async"/)
+  })
+
+  it('loads the encyclopedia photo straight away in a fixed frame', async () => {
+    const root = rootContent(await pageFor('/sandwiches/reuben', entry))
+
+    expect(root).toContain('<img src="https://cdn.example.com/reuben.jpg" alt="Reuben" class="h-72 w-full rounded-lg object-cover" />')
+  })
+
+  it('loads list card pictures only when scrolled to', async () => {
+    respondByAddress({
+      '/api/database?limit=24&offset=0': { data: [{ ...summary('Reuben', 'reuben'), image_url: 'https://cdn.example.com/reuben.jpg' }], meta: { total_count: 1 } },
+    })
+
+    const root = rootContent(await (await middleware(makeRequest('/sandwiches'))).text())
+
+    expect(root).toMatch(/<img src="https:\/\/cdn\.example\.com\/reuben\.jpg" alt="Reuben" loading="lazy" decoding="async"/)
+  })
+})

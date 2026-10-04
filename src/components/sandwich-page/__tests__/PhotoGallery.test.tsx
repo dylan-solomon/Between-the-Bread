@@ -49,6 +49,7 @@ describe('PhotoGallery', () => {
     render(<PhotoGallery targetType="database" slug="reuben" targetId="target-1" />)
 
     await waitFor(() => { expect(screen.getByRole('img', { name: 'Yum' })).toBeInTheDocument() })
+    expect(screen.getByRole('img', { name: 'Yum' })).toHaveAttribute('loading', 'lazy')
   })
 
   it('shows an empty state when there are no photos', async () => {

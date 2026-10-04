@@ -13,7 +13,7 @@ const SECTION_HEADING_CLASS = 'font-display text-lg font-bold text-neutral-900'
 const hero = (entry: SandwichEntry): string =>
   entry.image_url === null
     ? '<div role="img" aria-label="No image available" class="text-center text-6xl">🥪</div>'
-    : `<img src="${escapeHtml(entry.image_url)}" alt="${escapeHtml(entry.name)}" class="mx-auto max-h-72 rounded-lg object-cover" />`
+    : `<img src="${escapeHtml(entry.image_url)}" alt="${escapeHtml(entry.name)}" class="h-72 w-full rounded-lg object-cover" />`
 
 const origin = (entry: SandwichEntry): string => {
   const text = [entry.origin_country, entry.origin_region]

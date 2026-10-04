@@ -116,6 +116,7 @@ describe('SandwichIndex results', () => {
     renderAt()
 
     expect(await screen.findByRole('img', { name: 'Reuben' })).toHaveAttribute('src', 'https://example.com/reuben.jpg')
+    expect(screen.getByRole('img', { name: 'Reuben' })).toHaveAttribute('loading', 'lazy')
   })
 
   it('shows how many sandwiches were found', async () => {

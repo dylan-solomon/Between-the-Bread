@@ -308,6 +308,7 @@ describe('SandwichDetail', () => {
 
     const image = await screen.findByRole('img', { name: 'Reuben' })
     expect(image).toHaveAttribute('src', 'https://example.com/reuben.jpg')
+    expect(image).not.toHaveAttribute('loading', 'lazy')
   })
 
   it('draws a sandwich from matching ingredients when there is no image', async () => {

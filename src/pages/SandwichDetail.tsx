@@ -56,7 +56,7 @@ const buildVisualComposition = (ingredients: CanonicalIngredients, pools: Pools)
 
 function Hero({ entry, pools }: { entry: SandwichEntry; pools: Pools }) {
   if (entry.image_url !== null) {
-    return <img src={entry.image_url} alt={entry.name} className="mx-auto max-h-72 rounded-lg object-cover" />
+    return <img src={entry.image_url} alt={entry.name} className="h-72 w-full rounded-lg object-cover" />
   }
 
   const composition = buildVisualComposition(entry.canonical_ingredients, pools)
