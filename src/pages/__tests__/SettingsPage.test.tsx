@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import type { User, Session } from '@supabase/supabase-js'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
@@ -445,6 +446,13 @@ describe('SettingsPage username', () => {
     await renderSettings()
 
     expect(await screen.findByRole('link', { name: 'View your public profile' })).toHaveAttribute('href', '/u/sandwich_fan')
+  })
+
+  it('has no accessibility problems', async () => {
+    await renderSettings()
+    await screen.findByLabelText('Username')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 
   it('lets someone without a username choose one', async () => {

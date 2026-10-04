@@ -1,4 +1,3 @@
-import { onLCP, onCLS, onTTFB } from 'web-vitals'
 import { capturePerformance } from '@/analytics/events'
 
 type NavigatorWithConnection = Navigator & {
@@ -8,7 +7,8 @@ type NavigatorWithConnection = Navigator & {
 const getConnectionType = (): string | null =>
   (navigator as NavigatorWithConnection).connection?.effectiveType ?? null
 
-export const captureWebVitals = (): void => {
+export const captureWebVitals = async (): Promise<void> => {
+  const { onLCP, onCLS, onTTFB } = await import('web-vitals')
   onLCP((m) => {
     capturePerformance({
       lcpMs: Math.round(m.value),

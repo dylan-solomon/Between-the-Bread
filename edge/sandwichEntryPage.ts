@@ -13,7 +13,7 @@ const SECTION_HEADING_CLASS = 'font-display text-lg font-bold text-neutral-900'
 const hero = (entry: SandwichEntry): string =>
   entry.image_url === null
     ? '<div role="img" aria-label="No image available" class="text-center text-6xl">🥪</div>'
-    : `<img src="${escapeHtml(entry.image_url)}" alt="${escapeHtml(entry.name)}" class="mx-auto max-h-72 rounded-lg object-cover" />`
+    : `<img src="${escapeHtml(entry.image_url)}" alt="${escapeHtml(entry.name)}" class="h-72 w-full rounded-lg object-cover" />`
 
 const origin = (entry: SandwichEntry): string => {
   const text = [entry.origin_country, entry.origin_region]
@@ -55,7 +55,7 @@ const dietaryTags = (entry: SandwichEntry): string => {
         `<li class="rounded-full px-3 py-1 text-xs ${kind === 'avoid' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-100 text-neutral-600'}">${escapeHtml(label)}</li>`,
     )
     .join('')
-  return `<div><ul class="flex flex-wrap gap-2">${items}</ul><p class="mt-2 text-xs text-neutral-400">${escapeHtml(DIETARY_DISCLAIMER)}</p></div>`
+  return `<div><ul class="flex flex-wrap gap-2">${items}</ul><p class="mt-2 text-xs text-neutral-500">${escapeHtml(DIETARY_DISCLAIMER)}</p></div>`
 }
 
 const blogPostLink = (post: BlogPostPreview): string =>

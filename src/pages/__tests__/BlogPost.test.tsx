@@ -31,6 +31,7 @@ vi.mock('@/components/sandwich-page/CommentSection', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import BlogPost from '@/pages/BlogPost'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const makePost = (overrides: Record<string, unknown> = {}) => ({
   id: 'p-1',
@@ -134,6 +135,7 @@ describe('BlogPost article', () => {
     expect(screen.getByRole('link', { name: 'Dietary' })).toHaveAttribute('href', '/blog/category/dietary')
     expect(screen.getByRole('link', { name: 'Sandwich Ideas' })).toHaveAttribute('href', '/blog/category/sandwich-ideas')
     expect(document.querySelector('img')).toHaveAttribute('src', 'https://cdn.example.com/cover.jpg')
+    expect(document.querySelector('img')).not.toHaveAttribute('loading', 'lazy')
   })
 
   it('asks for the post named in the address', async () => {
@@ -216,6 +218,7 @@ describe('BlogPost related content', () => {
     expect(within(section).getByRole('link', { name: /Reuben/ })).toHaveAttribute('href', '/sandwiches/reuben')
     expect(within(section).getByRole('link', { name: /Cubano/ })).toHaveAttribute('href', '/sandwiches/cubano')
     expect(within(section).getByText('Corned beef on rye.')).toBeInTheDocument()
+    expect(section.querySelector('img')).toHaveAttribute('loading', 'lazy')
   })
 
   it('leaves the sandwiches section out when the post links to none', async () => {
@@ -410,5 +413,14 @@ describe('BlogPost problems', () => {
     await user.click(screen.getByRole('button', { name: 'Try again' }))
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Vegan builds' })).toBeInTheDocument()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt()
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

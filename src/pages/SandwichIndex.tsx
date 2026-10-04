@@ -60,7 +60,7 @@ function SandwichCard({ sandwich }: { sandwich: SandwichSummary }) {
         {sandwich.image_url === null ? (
           <div aria-hidden="true" className="flex h-40 items-center justify-center bg-neutral-100 text-5xl">🥪</div>
         ) : (
-          <img src={sandwich.image_url} alt={sandwich.name} className="h-40 w-full object-cover" />
+          <img src={sandwich.image_url} alt={sandwich.name} loading="lazy" decoding="async" className="h-40 w-full object-cover" />
         )}
         <div className="flex flex-1 flex-col gap-1 p-4">
           <h2 className="font-display text-lg font-bold text-neutral-900">{sandwich.name}</h2>
@@ -220,11 +220,11 @@ export default function SandwichIndex() {
           ))}
         </fieldset>
       </div>
-      <p className="mt-2 text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
+      <p className="mt-2 text-xs text-neutral-500">{DIETARY_DISCLAIMER}</p>
 
       <div className="mt-8">
         {status === 'loading' && (
-          <div role="status" aria-label="Loading sandwiches" className="text-center text-neutral-400">Loading…</div>
+          <div role="status" aria-label="Loading sandwiches" className="text-center text-neutral-500">Loading…</div>
         )}
 
         {status === 'error' && (

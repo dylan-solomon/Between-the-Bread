@@ -28,6 +28,7 @@ vi.mock('@/api/images', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import DatabaseManagementPage from '@/pages/admin/DatabaseManagementPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const reuben = {
   id: 's-1',
@@ -604,5 +605,16 @@ describe('DatabaseManagementPage sorting and filtering', () => {
 
     expect(screen.getByRole('searchbox', { name: 'Search sandwiches' })).toHaveValue('c')
     expect(names()).toEqual(['Cubano', 'Croque Monsieur'])
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    const user = userEvent.setup()
+    await renderPage()
+    expect(await accessibilityProblems(document.body)).toEqual([])
+    await user.click(screen.getByRole('button', { name: 'Edit Reuben' }))
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

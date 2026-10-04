@@ -7,6 +7,7 @@ import { SESSION_HISTORY_KEY } from '@/hooks/useSessionHistory'
 import { makeComposition } from '@/test/factories'
 import type { SavedSandwich } from '@/api/savedSandwiches'
 import type { HistoryEntry } from '@/types'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const {
   mockFetchSavedSandwiches,
@@ -638,5 +639,14 @@ describe('HistoryPage', () => {
       const stored = sessionStorage.getItem('btb_load_sandwich')
       expect(stored).not.toBeNull()
     })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderPage()
+    await screen.findByRole('searchbox')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

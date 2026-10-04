@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import Header from '@/components/Header'
 import type { User, Session } from '@supabase/supabase-js'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
@@ -116,6 +117,7 @@ describe('Header', () => {
     await user.keyboard('{Escape}')
 
     expect(screen.queryByRole('dialog', { name: 'Search' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Search' })).toHaveFocus()
   })
 
   it('records when the site search is opened and closed', async () => {
@@ -137,9 +139,9 @@ describe('Header', () => {
   it('links to the community leaderboard between the encyclopedia and the blog', () => {
     renderHeader()
     expect(screen.getByRole('link', { name: 'Community' })).toHaveAttribute('href', '/community')
-    const nav = screen.getByRole('link', { name: 'Community' }).closest('nav')
-    expect([...(nav?.querySelectorAll('a') ?? [])].map((link) => link.textContent)).toEqual([
-      'Between the Bread',
+    const nav = screen.getByRole('navigation', { name: 'Main' })
+    expect(screen.getByRole('link', { name: 'Between the Bread' })).toHaveAttribute('href', '/')
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual([
       'Sandwiches',
       'Community',
       'Blog',
@@ -248,5 +250,14 @@ describe('Header', () => {
         expect(screen.getByText('SandwichFan')).toBeInTheDocument()
       })
     })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderHeader()
+    await screen.findByRole('banner')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

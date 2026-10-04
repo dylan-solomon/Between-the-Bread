@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-const { mockUseAuth, mockPrompt, mockSubmitRating } = vi.hoisted(() => ({
+const { mockUseAuth, mockPrompt, mockSubmitRating, mockRated } = vi.hoisted(() => ({
+  mockRated: vi.fn(),
   mockUseAuth: vi.fn(),
   mockPrompt: vi.fn(),
   mockSubmitRating: vi.fn(),
@@ -12,9 +13,12 @@ const { mockUseAuth, mockPrompt, mockSubmitRating } = vi.hoisted(() => ({
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/context/AuthPromptContext', () => ({ useAuthPrompt: () => ({ prompt: mockPrompt }) }))
 vi.mock('@/api/sandwichPage', () => ({ submitRating: mockSubmitRating }))
+vi.mock('@/analytics/events', () => ({ captureSandwichRated: mockRated }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
+import { TooManyRequestsError } from '@/api/errors'
 import RatingSubmission from '@/components/sandwich-page/RatingSubmission'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const guestAuth = { user: null, session: null }
 const loggedInAuth = { user: { id: 'user-1' }, session: { access_token: 'token-abc' } }
@@ -56,6 +60,17 @@ describe('RatingSubmission', () => {
       score: 4,
     })
     expect(toast.success).toHaveBeenCalled()
+    expect(mockRated).toHaveBeenCalledWith({ targetType: 'database', slug: 'reuben', score: 4 })
+  })
+
+  it('tells people when they are rating too quickly', async () => {
+    mockUseAuth.mockReturnValue(loggedInAuth)
+    mockSubmitRating.mockRejectedValue(new TooManyRequestsError("You're rating too quickly."))
+    render(<RatingSubmission targetType="database" slug="reuben" targetId="target-1" />)
+
+    await userEvent.click(screen.getAllByRole('button')[3])
+
+    expect(toast.error).toHaveBeenCalledWith("You're rating too quickly.")
   })
 
   it('shows an error toast when submission fails', async () => {
@@ -66,5 +81,16 @@ describe('RatingSubmission', () => {
     await userEvent.click(screen.getAllByRole('button')[3])
 
     expect(toast.error).toHaveBeenCalled()
+    expect(mockRated).not.toHaveBeenCalled()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    mockUseAuth.mockReturnValue(loggedInAuth)
+    render(<RatingSubmission targetType="database" slug="reuben" targetId="target-1" />)
+    await screen.findAllByRole('button')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

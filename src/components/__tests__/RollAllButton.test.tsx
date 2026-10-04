@@ -56,17 +56,17 @@ describe('RollAllButton', () => {
   describe('pulse animation', () => {
     it('has the pulse class before the first roll', () => {
       renderButton({ hasRolled: false, isRolling: false })
-      expect(screen.getByRole('button')).toHaveClass('animate-pulse')
+      expect(screen.getByRole('button')).toHaveClass('animate-glow')
     })
 
     it('does not pulse after the first roll', () => {
       renderButton({ hasRolled: true })
-      expect(screen.getByRole('button')).not.toHaveClass('animate-pulse')
+      expect(screen.getByRole('button')).not.toHaveClass('animate-glow')
     })
 
     it('does not pulse while rolling', () => {
       renderButton({ hasRolled: false, isRolling: true })
-      expect(screen.getByRole('button')).not.toHaveClass('animate-pulse')
+      expect(screen.getByRole('button')).not.toHaveClass('animate-glow')
     })
   })
 })

@@ -12,6 +12,7 @@ vi.mock('@/api/admin', () => ({ fetchDashboardMetrics: mockFetchDashboardMetrics
 vi.mock('sonner', () => ({ toast: { error: vi.fn() } }))
 
 import DashboardPage from '@/pages/admin/DashboardPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -47,5 +48,21 @@ describe('DashboardPage', () => {
     render(<DashboardPage />)
 
     await waitFor(() => { expect(toast.error).toHaveBeenCalled() })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    mockFetchDashboardMetrics.mockResolvedValue({
+      total_users: 10,
+      total_saved_sandwiches: 25,
+      total_shared_links: 5,
+      total_ratings: 40,
+      pending_moderation_count: 3,
+    })
+    render(<DashboardPage />)
+    await screen.findByText('10')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

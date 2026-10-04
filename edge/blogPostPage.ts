@@ -35,14 +35,14 @@ const byline = (post: BlogPost): string =>
 const coverImage = (post: BlogPost): string =>
   post.cover_image_url === null
     ? ''
-    : `<img src="${escapeHtml(post.cover_image_url)}" alt="" class="mt-6 w-full rounded-lg object-cover" />`
+    : `<img src="${escapeHtml(post.cover_image_url)}" alt="" class="mt-6 aspect-video w-full rounded-lg object-cover" />`
 
 const sandwichCard = (sandwich: RelatedSandwich): string =>
   [
     `<li><a href="/sandwiches/${escapeHtml(sandwich.slug)}" class="${CARD_CLASS}">`,
     sandwich.image_url === null
       ? '<div aria-hidden="true" class="flex h-28 items-center justify-center bg-neutral-100 text-4xl">🥪</div>'
-      : `<img src="${escapeHtml(sandwich.image_url)}" alt="" class="h-28 w-full object-cover" />`,
+      : `<img src="${escapeHtml(sandwich.image_url)}" alt="" loading="lazy" decoding="async" class="h-28 w-full object-cover" />`,
     `<div class="p-3"><h3 class="font-display text-base font-bold text-neutral-900">${escapeHtml(sandwich.name)}</h3>`,
     sandwich.description === null
       ? ''

@@ -418,15 +418,29 @@ describe('POST /api/[targetType]/[slug]/comments', () => {
     expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ parent_id: 'c1' }))
   })
 
-  it("increments the parent comment's reply_count when creating a reply", async () => {
+  it('leaves the reply count to the database when creating a reply', async () => {
     setupInsertChain()
     mockInsertSelectSingle.mockResolvedValue({ data: { id: 'r1', parent_id: 'c1' }, error: null })
-    mockRpc.mockResolvedValue({ data: 4, error: null })
 
     const res = makeRes()
     await handler(postReq({ body: { target_id: 'target-uuid-123', body: 'Me too!', parent_id: 'c1' } }), res)
 
-    expect(mockRpc).toHaveBeenCalledWith('adjust_comment_reply_count', { p_comment_id: 'c1', p_delta: 1 })
+    expect(res._status).toBe(201)
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('says when someone is commenting too fast', async () => {
+    setupInsertChain()
+    mockInsertSelectSingle.mockResolvedValue({ data: null, error: { code: 'P0429', message: 'Too many comments. Please wait a minute.' } })
+
+    const res = makeRes()
+    await handler(postReq(), res)
+
+    expect(res._status).toBe(429)
+    expect((res._json as { error: { code: string; message: string } }).error).toMatchObject({
+      code: 'RATE_LIMITED',
+      message: "You're commenting too quickly. Please wait a minute and try again.",
+    })
   })
 
   it('does not adjust any reply_count when creating a top-level comment', async () => {

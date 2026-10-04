@@ -56,7 +56,7 @@ export default function NutritionPanel({ composition }: Props) {
             ))}
           </div>
 
-          <p className="mt-2 text-xs text-neutral-400">
+          <p className="mt-2 text-xs text-neutral-500">
             Nutritional information is estimated based on USDA standard serving sizes and may not reflect actual nutritional content.
           </p>
         </div>

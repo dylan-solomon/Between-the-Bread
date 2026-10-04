@@ -7,3 +7,5 @@ dist
 md_files
 CLAUDE.MD
 .claude
+test-results
+playwright-report

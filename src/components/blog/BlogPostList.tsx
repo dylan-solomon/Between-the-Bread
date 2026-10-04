@@ -51,7 +51,7 @@ export default function BlogPostList({ category, initial }: Props) {
   return (
     <div className="mt-8">
       {status === 'loading' && (
-        <div role="status" aria-label="Loading posts" className="text-center text-neutral-400">Loading…</div>
+        <div role="status" aria-label="Loading posts" className="text-center text-neutral-500">Loading…</div>
       )}
 
       {status === 'error' && (

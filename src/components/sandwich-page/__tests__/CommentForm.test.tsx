@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-const { mockUseAuth, mockPrompt, mockPostComment, mockUseUsername } = vi.hoisted(() => ({
+const { mockUseAuth, mockPrompt, mockPostComment, mockUseUsername, mockCommentPosted } = vi.hoisted(() => ({
+  mockCommentPosted: vi.fn(),
   mockUseUsername: vi.fn(),
   mockUseAuth: vi.fn(),
   mockPrompt: vi.fn(),
@@ -14,8 +15,10 @@ vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/context/AuthPromptContext', () => ({ useAuthPrompt: () => ({ prompt: mockPrompt }) }))
 vi.mock('@/api/sandwichPage', () => ({ postComment: mockPostComment }))
 vi.mock('@/context/UsernameContext', () => ({ useUsername: mockUseUsername }))
+vi.mock('@/analytics/events', () => ({ captureCommentPosted: mockCommentPosted }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
+import { TooManyRequestsError } from '@/api/errors'
 import CommentForm from '@/components/sandwich-page/CommentForm'
 
 const guestAuth = { user: null, session: null }
@@ -80,6 +83,18 @@ describe('CommentForm', () => {
     })
     expect(onPosted).toHaveBeenCalledWith(created)
     expect(screen.getByRole('textbox')).toHaveValue('')
+    expect(mockCommentPosted).toHaveBeenCalledWith({ targetType: 'database', slug: 'reuben', isReply: false })
+  })
+
+  it('records a reply as a reply', async () => {
+    mockUseAuth.mockReturnValue(loggedInAuth)
+    mockPostComment.mockResolvedValue({ id: 'r1', user_id: 'user-1', body: 'Me too', parent_id: 'c1', like_count: 0, reply_count: 0, created_at: '2026-01-01T00:00:00Z' })
+
+    render(<CommentForm targetType="blog" slug="vegan-builds" targetId="target-1" parentId="c1" onPosted={vi.fn()} />)
+    await userEvent.type(screen.getByRole('textbox'), 'Me too')
+    await userEvent.click(screen.getByRole('button', { name: /post/i }))
+
+    expect(mockCommentPosted).toHaveBeenCalledWith({ targetType: 'blog', slug: 'vegan-builds', isReply: true })
   })
 
   it('passes parentId through when replying', async () => {
@@ -93,6 +108,18 @@ describe('CommentForm', () => {
     expect(mockPostComment).toHaveBeenCalledWith('token-abc', expect.objectContaining({ parentId: 'c1' }))
   })
 
+  it('tells people when they are commenting too quickly and keeps their words', async () => {
+    mockUseAuth.mockReturnValue(loggedInAuth)
+    mockPostComment.mockRejectedValue(new TooManyRequestsError("You're commenting too quickly."))
+
+    render(<CommentForm targetType="database" slug="reuben" targetId="target-1" onPosted={vi.fn()} />)
+    await userEvent.type(screen.getByRole('textbox'), 'Great sandwich!')
+    await userEvent.click(screen.getByRole('button', { name: /post/i }))
+
+    expect(toast.error).toHaveBeenCalledWith("You're commenting too quickly.")
+    expect(screen.getByRole('textbox')).toHaveValue('Great sandwich!')
+  })
+
   it('shows an error toast when posting fails', async () => {
     mockUseAuth.mockReturnValue(loggedInAuth)
     mockPostComment.mockRejectedValue(new Error('boom'))
@@ -102,6 +129,7 @@ describe('CommentForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /post/i }))
 
     expect(toast.error).toHaveBeenCalled()
+    expect(mockCommentPosted).not.toHaveBeenCalled()
   })
 
   it('shows a cancel button only when onCancel is provided, and calls it when clicked', async () => {

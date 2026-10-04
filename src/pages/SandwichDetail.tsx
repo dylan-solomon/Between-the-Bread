@@ -56,7 +56,7 @@ const buildVisualComposition = (ingredients: CanonicalIngredients, pools: Pools)
 
 function Hero({ entry, pools }: { entry: SandwichEntry; pools: Pools }) {
   if (entry.image_url !== null) {
-    return <img src={entry.image_url} alt={entry.name} className="mx-auto max-h-72 rounded-lg object-cover" />
+    return <img src={entry.image_url} alt={entry.name} className="h-72 w-full rounded-lg object-cover" />
   }
 
   const composition = buildVisualComposition(entry.canonical_ingredients, pools)
@@ -116,7 +116,7 @@ function Info({ entry, categoryNames }: { entry: SandwichEntry; categoryNames: M
               )
             })}
           </ul>
-          <p className="mt-2 text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
+          <p className="mt-2 text-xs text-neutral-500">{DIETARY_DISCLAIMER}</p>
         </div>
       )}
 
@@ -174,7 +174,7 @@ export default function SandwichDetail() {
   if (state.status === 'loading') {
     return (
       <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-label="Loading sandwich">
-        <div className="text-neutral-400">Loading…</div>
+        <div className="text-neutral-500">Loading…</div>
       </div>
     )
   }

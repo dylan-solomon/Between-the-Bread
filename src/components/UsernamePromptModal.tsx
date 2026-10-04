@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import UsernameField from '@/components/UsernameField'
+import { useDialogFocus } from '@/hooks/useDialogFocus'
 import { canSaveUsername, useUsernameCheck } from '@/hooks/useUsernameCheck'
 
 type Props = {
@@ -12,6 +13,7 @@ export default function UsernamePromptModal({ onSave, onLater }: Props) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const check = useUsernameCheck({ name })
+  const dialogRef = useDialogFocus<HTMLDivElement>()
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') onLater() }
@@ -32,7 +34,7 @@ export default function UsernamePromptModal({ onSave, onLater }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div role="dialog" aria-modal="true" aria-label="Pick a username" className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Pick a username" className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
         <h2 className="font-display text-xl font-bold text-neutral-900">Pick a username</h2>
         <p className="mt-2 text-sm text-neutral-500">Choose the name other sandwich fans will see.</p>
         {error !== null && (

@@ -1,3 +1,4 @@
+import { failureFrom } from './errors'
 export type TargetType = 'database' | 'community'
 
 export type CommentTargetType = TargetType | 'blog'
@@ -55,7 +56,7 @@ export const submitRating = async (
       body: JSON.stringify({ target_id: params.targetId, score: params.score }),
     },
   )
-  if (!response.ok) throw new Error(`Failed to submit rating: ${String(response.status)}`)
+  if (!response.ok) throw await failureFrom(response, 'Failed to submit rating')
   return ((await response.json()) as { data: { id: string; score: number } }).data
 }
 
@@ -85,7 +86,7 @@ export const postComment = async (
       body: JSON.stringify({ target_id: params.targetId, body: params.body, parent_id: params.parentId }),
     },
   )
-  if (!response.ok) throw new Error(`Failed to post comment: ${String(response.status)}`)
+  if (!response.ok) throw await failureFrom(response, 'Failed to post comment')
   return ((await response.json()) as { data: Comment }).data
 }
 
@@ -149,6 +150,6 @@ export const registerPhoto = async (
       body: JSON.stringify({ target_id: params.targetId, storage_path: params.storagePath, caption: params.caption }),
     },
   )
-  if (!response.ok) throw new Error(`Failed to register photo: ${String(response.status)}`)
+  if (!response.ok) throw await failureFrom(response, 'Failed to register photo')
   return ((await response.json()) as { data: Photo }).data
 }

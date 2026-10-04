@@ -166,7 +166,7 @@ export default function BlogManagementPage() {
               <th className="p-2">Status</th>
               <th className="p-2">Categories</th>
               <th className="p-2">Publish date</th>
-              <th className="p-2" />
+              <th className="p-2"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>

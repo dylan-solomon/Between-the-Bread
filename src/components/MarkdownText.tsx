@@ -6,6 +6,10 @@ import { MARKDOWN_CLASSES } from '@/styles/markdownClasses'
 const isSiteAddress = (href: string | undefined): href is string =>
   href !== undefined && href.startsWith('/') && !href.startsWith('//')
 
+function MarkdownImage({ src, alt }: ComponentProps<'img'>) {
+  return <img src={src} alt={alt} loading="lazy" decoding="async" />
+}
+
 function MarkdownLink({ href, children }: ComponentProps<'a'>) {
   const inRouter = useInRouterContext()
 
@@ -22,7 +26,7 @@ export default function MarkdownText({ children }: Props) {
 
   return (
     <div className={MARKDOWN_CLASSES}>
-      <Markdown components={{ a: MarkdownLink }}>{children}</Markdown>
+      <Markdown components={{ a: MarkdownLink, img: MarkdownImage }}>{children}</Markdown>
     </div>
   )
 }

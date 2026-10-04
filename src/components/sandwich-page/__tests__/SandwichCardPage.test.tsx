@@ -9,6 +9,7 @@ vi.mock('@/components/sandwich-page/PhotoGallery', () => ({ default: () => <div>
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import SandwichCardPage from '@/components/sandwich-page/SandwichCardPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const mockWriteText = vi.fn()
 
@@ -76,5 +77,14 @@ describe('SandwichCardPage', () => {
 
     expect(mockWriteText).toHaveBeenCalledWith(window.location.href)
     expect(toast.success).toHaveBeenCalled()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    render(<SandwichCardPage {...baseProps} />)
+    await screen.findByRole('heading', { name: 'Classic Reuben' })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

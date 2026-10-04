@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet-async'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { captureSearchPerformed, captureSearchResultClicked } from '@/analytics/events'
+import { setHasUsedSearch } from '@/analytics/userProperties'
+import { messageFor } from '@/api/errors'
 import { searchSite } from '@/api/search'
 import type { SearchCounts, SearchResult, SearchTab } from '@/api/search'
 import SandwichVisual from '@/components/SandwichVisual'
@@ -25,6 +27,8 @@ const TABS: { value: SearchTab; label: string }[] = [
 ]
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
+
+const SEARCH_FAILED = 'Something went wrong with that search.'
 
 const isTab = (value: string | null): value is SearchTab => TABS.some((tab) => tab.value === value)
 
@@ -54,11 +58,11 @@ const thumbnail = (result: SearchResult): ReactNode => {
     case 'database':
       return result.details.image_url === null
         ? <Emoji>🥪</Emoji>
-        : <img src={result.details.image_url} alt="" className="h-full w-full object-cover" />
+        : <img src={result.details.image_url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
     case 'blog':
       return result.details.cover_image_url === null
         ? <Emoji>📝</Emoji>
-        : <img src={result.details.cover_image_url} alt="" className="h-full w-full object-cover" />
+        : <img src={result.details.cover_image_url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
     case 'community':
     case 'saved':
       return <SandwichVisual size="compact" composition={toVisualComposition(result.details.composition)} />
@@ -137,6 +141,7 @@ export default function SearchResults() {
   const [status, setStatus] = useState<Status>(search.q === '' ? 'idle' : 'loading')
   const [loadingMore, setLoadingMore] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  const [failure, setFailure] = useState(SEARCH_FAILED)
 
   useEffect(() => { setDraft(search.q) }, [search.q])
 
@@ -157,8 +162,13 @@ export default function SearchResults() {
         setTotalCount(page.totalCount)
         setStatus('ready')
         captureSearchPerformed({ query: query.q, source: query.source, resultsCount: page.totalCount, surface: 'page' })
+        setHasUsedSearch()
       })
-      .catch(() => { if (!cancelled) setStatus('error') })
+      .catch((error: unknown) => {
+        if (cancelled) return
+        setFailure(messageFor(error, SEARCH_FAILED))
+        setStatus('error')
+      })
     return () => { cancelled = true }
   }, [paramsKey, authLoading, token, attempt])
 
@@ -267,12 +277,12 @@ export default function SearchResults() {
 
           <div className="mt-6">
             {status === 'loading' && (
-              <div role="status" aria-label="Searching" className="text-center text-neutral-400">Searching…</div>
+              <div role="status" aria-label="Searching" className="text-center text-neutral-500">Searching…</div>
             )}
 
             {status === 'error' && (
               <div role="alert" className="text-center text-neutral-600">
-                <p>Something went wrong with that search.</p>
+                <p>{failure}</p>
                 <button
                   type="button"
                   onClick={() => { setAttempt((prev) => prev + 1) }}

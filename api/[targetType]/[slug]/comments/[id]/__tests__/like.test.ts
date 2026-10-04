@@ -52,6 +52,10 @@ const makeRes = (): VercelResponse & { _status: number; _json: unknown; _ended: 
 
 const validUser = { id: 'user-123', email: 'test@example.com' }
 
+const likeCountRead = (result: { data: unknown; error: unknown }) => ({
+  select: () => ({ eq: () => ({ single: () => Promise.resolve(result) }) }),
+})
+
 beforeEach(() => {
   vi.resetAllMocks()
   vi.stubEnv('SUPABASE_URL', 'https://test.supabase.co')
@@ -60,10 +64,11 @@ beforeEach(() => {
 })
 
 describe('POST /api/[targetType]/[slug]/comments/:id/like', () => {
-  it('returns 200 with the updated like_count on success', async () => {
-    mockFrom.mockReturnValue({ insert: mockInsert })
+  it('returns 200 with the like_count the database keeps up to date', async () => {
+    mockFrom.mockImplementation((table: string) =>
+      table === 'comments' ? likeCountRead({ data: { like_count: 4 }, error: null }) : { insert: mockInsert },
+    )
     mockInsert.mockResolvedValue({ error: null })
-    mockRpc.mockResolvedValue({ data: 4, error: null })
 
     const res = makeRes()
     await handler(makeReq(), res)
@@ -71,7 +76,7 @@ describe('POST /api/[targetType]/[slug]/comments/:id/like', () => {
     expect(res._status).toBe(200)
     expect((res._json as { data: { like_count: number } }).data.like_count).toBe(4)
     expect(mockInsert).toHaveBeenCalledWith({ user_id: 'user-123', comment_id: 'comment-1' })
-    expect(mockRpc).toHaveBeenCalledWith('adjust_comment_like_count', { p_comment_id: 'comment-1', p_delta: 1 })
+    expect(mockRpc).not.toHaveBeenCalled()
   })
 
   it('returns 409 when the comment is already liked', async () => {
@@ -106,10 +111,11 @@ describe('POST /api/[targetType]/[slug]/comments/:id/like', () => {
     expect((res._json as { error: { code: string } }).error.code).toBe('INTERNAL_ERROR')
   })
 
-  it('returns 500 when the like_count adjustment fails', async () => {
-    mockFrom.mockReturnValue({ insert: mockInsert })
+  it('returns 500 when the like_count cannot be read', async () => {
+    mockFrom.mockImplementation((table: string) =>
+      table === 'comments' ? likeCountRead({ data: null, error: { message: 'db error' } }) : { insert: mockInsert },
+    )
     mockInsert.mockResolvedValue({ error: null })
-    mockRpc.mockResolvedValue({ data: null, error: { message: 'db error' } })
 
     const res = makeRes()
     await handler(makeReq(), res)
@@ -119,8 +125,10 @@ describe('POST /api/[targetType]/[slug]/comments/:id/like', () => {
 })
 
 describe('DELETE /api/[targetType]/[slug]/comments/:id/like', () => {
-  const setupDeleteChain = () => {
-    mockFrom.mockReturnValue({ delete: mockDelete })
+  const setupDeleteChain = (likeCount = 2) => {
+    mockFrom.mockImplementation((table: string) =>
+      table === 'comments' ? likeCountRead({ data: { like_count: likeCount }, error: null }) : { delete: mockDelete },
+    )
     mockDelete.mockReturnValue({ eq: mockDeleteEqUser })
     mockDeleteEqUser.mockReturnValue({ eq: mockDeleteEqComment })
     mockDeleteEqComment.mockReturnValue({ select: mockDeleteSelect })
@@ -129,7 +137,6 @@ describe('DELETE /api/[targetType]/[slug]/comments/:id/like', () => {
   it('returns 200 with the updated like_count on success', async () => {
     setupDeleteChain()
     mockDeleteSelect.mockResolvedValue({ data: [{ id: 'like-1' }], error: null })
-    mockRpc.mockResolvedValue({ data: 2, error: null })
 
     const res = makeRes()
     await handler(makeReq({ method: 'DELETE' }), res)
@@ -138,7 +145,7 @@ describe('DELETE /api/[targetType]/[slug]/comments/:id/like', () => {
     expect((res._json as { data: { like_count: number } }).data.like_count).toBe(2)
     expect(mockDeleteEqUser).toHaveBeenCalledWith('user_id', 'user-123')
     expect(mockDeleteEqComment).toHaveBeenCalledWith('comment_id', 'comment-1')
-    expect(mockRpc).toHaveBeenCalledWith('adjust_comment_like_count', { p_comment_id: 'comment-1', p_delta: -1 })
+    expect(mockRpc).not.toHaveBeenCalled()
   })
 
   it('returns 404 when the comment was not liked', async () => {

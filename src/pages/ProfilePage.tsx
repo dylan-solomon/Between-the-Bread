@@ -42,7 +42,7 @@ export default function ProfilePage() {
       </Helmet>
 
       {state.status === 'loading' && (
-        <div role="status" aria-label="Loading profile" className="text-center text-neutral-400">Loading…</div>
+        <div role="status" aria-label="Loading profile" className="text-center text-neutral-500">Loading…</div>
       )}
 
       {state.status === 'error' && (

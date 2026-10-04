@@ -9,6 +9,7 @@ const DEFAULT_LIMIT = 20
 const MAX_LIMIT = 50
 const MIN_QUERY_LENGTH = 2
 const MAX_QUERY_LENGTH = 100
+const SEARCHES_PER_MINUTE = 30
 const SOURCES = ['all', 'database', 'community', 'blog', 'saved'] as const
 
 type Source = (typeof SOURCES)[number]
@@ -23,6 +24,25 @@ const firstString = (value: unknown): string | undefined =>
 const parseInteger = (value: string | undefined, fallback: number): number | null => {
   if (value === undefined) return fallback
   return /^\d+$/.test(value) ? Number(value) : null
+}
+
+const clientIp = (req: VercelRequest): string => {
+  const forwarded = req.headers['x-forwarded-for']
+  const first = typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : undefined
+  return first === undefined || first === '' ? 'unknown' : first
+}
+
+const withinRateLimit = async (req: VercelRequest): Promise<boolean> => {
+  const url = process.env.SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !serviceKey) return true
+  const response = await createClient(url, serviceKey).rpc('hit_rate_limit', {
+    p_bucket: 'search',
+    p_subject: clientIp(req),
+    p_limit: SEARCHES_PER_MINUTE,
+    p_window_seconds: 60,
+  })
+  return response.error !== null || response.data !== false
 }
 
 const isSource = (value: string): value is Source => (SOURCES as readonly string[]).includes(value)
@@ -128,6 +148,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     .filter(Boolean)
   if (!dietTags.every(isDietaryTag)) {
     invalid(res, 'diet contains an unsupported dietary tag.')
+    return
+  }
+
+  if (!(await withinRateLimit(req))) {
+    res
+      .status(429)
+      .json(err('RATE_LIMITED', "You're searching very quickly. Please wait a moment.", 429))
     return
   }
 

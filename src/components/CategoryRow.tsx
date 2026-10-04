@@ -3,12 +3,12 @@ import type { Category, CategorySlug, Ingredient } from '@/types'
 import { useCyclingText } from '@/hooks/useCyclingText'
 
 const CATEGORY_STYLES: Record<CategorySlug, string> = {
-  bread:           'border-bread bg-bread-light text-bread',
-  protein:         'border-protein bg-protein-light text-protein',
-  cheese:          'border-cheese bg-cheese-light text-cheese',
-  toppings:        'border-toppings bg-toppings-light text-toppings',
-  condiments:      'border-condiments bg-condiments-light text-condiments',
-  'chefs-special': 'border-chefs-special bg-chefs-special-light text-chefs-special',
+  bread:           'border-bread bg-bread-light text-bread-dark',
+  protein:         'border-protein bg-protein-light text-protein-dark',
+  cheese:          'border-cheese bg-cheese-light text-cheese-dark',
+  toppings:        'border-toppings bg-toppings-light text-toppings-dark',
+  condiments:      'border-condiments bg-condiments-light text-condiments-dark',
+  'chefs-special': 'border-chefs-special bg-chefs-special-light text-chefs-special-dark',
 }
 
 type Props = {
@@ -68,7 +68,7 @@ export default function CategoryRow({
         {!poolEmpty && displayText}
       </span>
       {poolEmpty && (
-        <span className="text-xs font-medium text-amber-600">No options available</span>
+        <span className="text-xs font-medium text-amber-800">No options available</span>
       )}
       {onToggleDouble !== undefined && !poolEmpty && (
         <button
@@ -76,7 +76,7 @@ export default function CategoryRow({
           aria-label={`Two ${category.name}s`}
           aria-pressed={isDouble ?? false}
           onClick={onToggleDouble}
-          className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors ${isDouble === true ? 'opacity-100' : 'opacity-50'}`}
+          className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors border border-current ${isDouble === true ? 'bg-white' : 'border-dashed'}`}
         >
           Two {category.name}s
         </button>

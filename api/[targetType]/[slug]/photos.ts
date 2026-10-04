@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ok, err } from '../../_lib/response.js'
 import { authenticateRequest } from '../../_lib/auth.js'
+import { isRateLimited, respondRateLimited } from '../../_lib/rateLimited.js'
 import { createClient } from '@supabase/supabase-js'
 
 const VALID_TARGET_TYPES = ['database', 'community'] as const
@@ -120,6 +121,11 @@ const handlePost = async (req: VercelRequest, res: VercelResponse, targetType: T
     })
     .select('id, user_id, target_type, target_id, storage_path, caption, is_approved, created_at')
     .single()
+
+  if (isRateLimited(error)) {
+    respondRateLimited(res, "You're uploading photos too quickly. Please wait a minute and try again.")
+    return
+  }
 
   if (error !== null) {
     res.status(500).json(err('INTERNAL_ERROR', 'Failed to create photo record.', 500))

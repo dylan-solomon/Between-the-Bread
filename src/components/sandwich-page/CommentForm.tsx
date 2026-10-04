@@ -3,6 +3,8 @@ import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { useAuthPrompt } from '@/context/AuthPromptContext'
 import { useUsername } from '@/context/UsernameContext'
+import { captureCommentPosted } from '@/analytics/events'
+import { messageFor } from '@/api/errors'
 import { postComment } from '@/api/sandwichPage'
 import type { Comment, CommentTargetType } from '@/api/sandwichPage'
 
@@ -44,9 +46,10 @@ export default function CommentForm({ targetType, slug, targetId, parentId, onPo
     try {
       const comment = await postComment(session.access_token, { targetType, slug, targetId, body: trimmed, parentId })
       onPosted(comment)
+      captureCommentPosted({ targetType, slug, isReply: parentId !== undefined })
       setBody('')
-    } catch {
-      toast.error('Failed to post comment. Please try again.')
+    } catch (error) {
+      toast.error(messageFor(error, 'Failed to post comment. Please try again.'))
     } finally {
       setSubmitting(false)
     }
@@ -68,10 +71,10 @@ export default function CommentForm({ targetType, slug, targetId, parentId, onPo
         maxLength={MAX_LENGTH}
         placeholder="Share your thoughts..."
         rows={3}
-        className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
       />
       <div className="mt-1 flex items-center justify-between">
-        <span className="text-xs text-neutral-400">{body.length}/{MAX_LENGTH}</span>
+        <span className="text-xs text-neutral-500">{body.length}/{MAX_LENGTH}</span>
         <div className="flex gap-2">
           {onCancel !== undefined && (
             <button

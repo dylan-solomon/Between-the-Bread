@@ -44,6 +44,9 @@ import {
   captureCommunityFiltered,
   captureCommunityTryThisClicked,
   captureSearchPerformed,
+  captureSandwichRated,
+  captureCommentPosted,
+  capturePhotoUploaded,
   captureSearchResultClicked,
   captureSearchHeaderOpened,
   captureSearchHeaderClosed,
@@ -62,8 +65,10 @@ const { mockCapture, mockIdentify, mockReset } = vi.hoisted(() => ({
   mockReset: vi.fn(),
 }))
 
-vi.mock('posthog-js', () => ({
-  default: { capture: mockCapture, identify: mockIdentify, reset: mockReset },
+vi.mock('@/analytics/client', () => ({
+  withPostHog: (call: (posthog: unknown) => void) => {
+    call({ capture: mockCapture, identify: mockIdentify, reset: mockReset })
+  },
 }))
 
 beforeEach(() => {
@@ -508,6 +513,23 @@ describe('blog events', () => {
       post_slug: 'vegan-builds',
       sandwich_slug: 'reuben',
     })
+  })
+})
+
+describe('sandwich page contribution events', () => {
+  it('captureSandwichRated fires sandwich_rated with the page type, slug and score', () => {
+    captureSandwichRated({ targetType: 'community', slug: 'ham-abc12345', score: 4 })
+    expect(mockCapture).toHaveBeenCalledWith('sandwich_rated', { target_type: 'community', slug: 'ham-abc12345', score: 4 })
+  })
+
+  it('captureCommentPosted fires comment_posted saying whether it was a reply', () => {
+    captureCommentPosted({ targetType: 'blog', slug: 'vegan-builds', isReply: true })
+    expect(mockCapture).toHaveBeenCalledWith('comment_posted', { target_type: 'blog', slug: 'vegan-builds', is_reply: true })
+  })
+
+  it('capturePhotoUploaded fires photo_uploaded with the page type and slug', () => {
+    capturePhotoUploaded({ targetType: 'database', slug: 'reuben' })
+    expect(mockCapture).toHaveBeenCalledWith('photo_uploaded', { target_type: 'database', slug: 'reuben' })
   })
 })
 

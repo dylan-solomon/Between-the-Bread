@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import AuthPromptModal from '@/components/AuthPromptModal'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const defaultProps = {
   isOpen: true,
@@ -79,10 +80,30 @@ describe('AuthPromptModal', () => {
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
   })
 
+  it('keeps keyboard focus inside the prompt', async () => {
+    const user = userEvent.setup()
+    renderModal()
+
+    expect(screen.getByRole('link', { name: /log in/i })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('button', { name: /not now/i })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('link', { name: /log in/i })).toHaveFocus()
+  })
+
   it('calls onDismiss when the Log in link is clicked', async () => {
     const onDismiss = vi.fn()
     renderModal({ onDismiss })
     await userEvent.click(screen.getByRole('link', { name: /log in/i }))
     expect(onDismiss).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderModal()
+    await screen.findByRole('dialog')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

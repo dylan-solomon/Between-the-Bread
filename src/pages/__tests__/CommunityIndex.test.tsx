@@ -6,7 +6,8 @@ import { HelmetProvider } from 'react-helmet-async'
 import { makeCategories, makeIngredient } from '@/test/factories'
 import { clearSentData, sendWithPage } from '@/test/initialData'
 
-const { mockFetchLeaderboard, mockUseIngredients, mockViewed, mockSorted, mockFiltered } = vi.hoisted(() => ({
+const { mockFetchLeaderboard, mockUseIngredients, mockViewed, mockSorted, mockFiltered, mockPreferredSort } = vi.hoisted(() => ({
+  mockPreferredSort: vi.fn(),
   mockViewed: vi.fn(),
   mockSorted: vi.fn(),
   mockFiltered: vi.fn(),
@@ -19,6 +20,7 @@ vi.mock('@/api/community', async (importOriginal) => ({
   fetchCommunityLeaderboard: mockFetchLeaderboard,
 }))
 vi.mock('@/hooks/useIngredients', () => ({ useIngredients: mockUseIngredients }))
+vi.mock('@/analytics/userProperties', () => ({ setPreferredSortMode: mockPreferredSort }))
 vi.mock('@/analytics/events', () => ({
   captureCommunityViewed: mockViewed,
   captureCommunitySorted: mockSorted,
@@ -26,6 +28,7 @@ vi.mock('@/analytics/events', () => ({
 }))
 
 import CommunityIndex from '@/pages/CommunityIndex'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const makeSandwich = (overrides: Record<string, unknown> = {}) => ({
   id: 'c-1',
@@ -325,6 +328,7 @@ describe('CommunityIndex analytics', () => {
     await user.click(screen.getByRole('button', { name: 'Trending' }))
 
     expect(mockSorted).toHaveBeenCalledWith({ sort: 'trending' })
+    expect(mockPreferredSort).toHaveBeenCalledWith('trending')
   })
 
   it('does not record picking the sort that is already chosen', async () => {
@@ -347,5 +351,14 @@ describe('CommunityIndex analytics', () => {
 
     expect(mockFiltered).toHaveBeenNthCalledWith(1, { diet: ['vegan'], ingredient: null, sort: 'top_rated' })
     expect(mockFiltered).toHaveBeenNthCalledWith(2, { diet: ['vegan'], ingredient: 'ham', sort: 'top_rated' })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt()
+    await screen.findByText('Turkey & Swiss on Rye')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

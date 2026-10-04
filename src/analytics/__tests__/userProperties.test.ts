@@ -9,6 +9,8 @@ import {
   setUsesDoubleCheese,
   setCostContext,
   setLastActiveAt,
+  setHasUsedSearch,
+  setPreferredSortMode,
 } from '@/analytics/userProperties'
 import type { DietaryTag } from '@/types'
 
@@ -16,8 +18,10 @@ const { mockSetPersonProperties } = vi.hoisted(() => ({
   mockSetPersonProperties: vi.fn(),
 }))
 
-vi.mock('posthog-js', () => ({
-  default: { setPersonProperties: mockSetPersonProperties },
+vi.mock('@/analytics/client', () => ({
+  withPostHog: (call: (posthog: unknown) => void) => {
+    call({ setPersonProperties: mockSetPersonProperties })
+  },
 }))
 
 beforeEach(() => {
@@ -88,5 +92,17 @@ describe('setLastActiveAt', () => {
     const call = mockSetPersonProperties.mock.calls[0][0] as { last_active_at: string }
     expect(call.last_active_at).toBeDefined()
     expect(call.last_active_at >= before).toBe(true)
+  })
+})
+
+describe('search and leaderboard properties', () => {
+  it('setHasUsedSearch marks the person as having searched', () => {
+    setHasUsedSearch()
+    expect(mockSetPersonProperties).toHaveBeenCalledWith({ has_used_search: true })
+  })
+
+  it('setPreferredSortMode remembers the leaderboard sort they picked last', () => {
+    setPreferredSortMode('trending')
+    expect(mockSetPersonProperties).toHaveBeenCalledWith({ preferred_sort_mode: 'trending' })
   })
 })

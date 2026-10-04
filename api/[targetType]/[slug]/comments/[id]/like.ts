@@ -1,8 +1,24 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ok, err } from '../../../../_lib/response.js'
 import { authenticateRequest } from '../../../../_lib/auth.js'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const UNIQUE_VIOLATION = '23505'
+
+const respondWithLikeCount = async (res: VercelResponse, supabase: SupabaseClient, commentId: string): Promise<void> => {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('like_count')
+    .eq('id', commentId)
+    .single<{ like_count: number }>()
+
+  if (error !== null) {
+    res.status(500).json(err('INTERNAL_ERROR', 'Failed to read like count.', 500))
+    return
+  }
+
+  res.status(200).json(ok({ like_count: data.like_count }))
+}
 
 const handlePost = async (req: VercelRequest, res: VercelResponse): Promise<void> => {
   const auth = await authenticateRequest(req, res)
@@ -24,17 +40,7 @@ const handlePost = async (req: VercelRequest, res: VercelResponse): Promise<void
     return
   }
 
-  const likeCountResult = await supabase.rpc('adjust_comment_like_count', {
-    p_comment_id: id,
-    p_delta: 1,
-  })
-
-  if (likeCountResult.error !== null) {
-    res.status(500).json(err('INTERNAL_ERROR', 'Failed to update like count.', 500))
-    return
-  }
-
-  res.status(200).json(ok({ like_count: likeCountResult.data as number }))
+  await respondWithLikeCount(res, supabase, id)
 }
 
 const handleDelete = async (req: VercelRequest, res: VercelResponse): Promise<void> => {
@@ -62,17 +68,7 @@ const handleDelete = async (req: VercelRequest, res: VercelResponse): Promise<vo
     return
   }
 
-  const likeCountResult = await supabase.rpc('adjust_comment_like_count', {
-    p_comment_id: id,
-    p_delta: -1,
-  })
-
-  if (likeCountResult.error !== null) {
-    res.status(500).json(err('INTERNAL_ERROR', 'Failed to update like count.', 500))
-    return
-  }
-
-  res.status(200).json(ok({ like_count: likeCountResult.data as number }))
+  await respondWithLikeCount(res, supabase, id)
 }
 
 export default async function handler(

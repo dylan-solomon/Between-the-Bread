@@ -45,6 +45,7 @@ vi.mock('react-router-dom', async () => {
 })
 
 import SignupPage from '@/pages/SignupPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const renderPage = (initialRoute = '/signup') =>
   render(
@@ -295,5 +296,14 @@ describe('SignupPage usernames', () => {
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }))
 
     expect(mockSignUp).toHaveBeenCalled()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderPage()
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

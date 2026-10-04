@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { toast } from 'sonner'
 import type { AdminIngredient } from '@/api/admin'
+import { useDialogFocus } from '@/hooks/useDialogFocus'
 import { COST_FIELDS, NUTRITION_FIELDS } from '@/utils/ingredientData'
 import type { DataField } from '@/utils/ingredientData'
 
@@ -25,6 +26,7 @@ type Props = {
 
 export default function IngredientDetailsDialog({ ingredient, saving, onSave, onCancel }: Props) {
   const [values, setValues] = useState<Record<string, string>>(() => initialValues(ingredient))
+  const dialogRef = useDialogFocus<HTMLDivElement>()
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -57,6 +59,7 @@ export default function IngredientDetailsDialog({ ingredient, saving, onSave, on
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label={`Nutrition and cost: ${ingredient.name}`}

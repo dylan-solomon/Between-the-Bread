@@ -33,7 +33,7 @@ export default function SharedSandwich() {
   if (state.status === 'loading') {
     return (
       <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-label="Loading sandwich">
-        <div className="text-neutral-400">Loading…</div>
+        <div className="text-neutral-500">Loading…</div>
       </div>
     )
   }

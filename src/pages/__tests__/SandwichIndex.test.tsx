@@ -25,6 +25,7 @@ vi.mock('@/analytics/events', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import SandwichIndex from '@/pages/SandwichIndex'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const makeSandwich = (overrides: Record<string, unknown> = {}) => ({
   name: 'Reuben',
@@ -116,6 +117,7 @@ describe('SandwichIndex results', () => {
     renderAt()
 
     expect(await screen.findByRole('img', { name: 'Reuben' })).toHaveAttribute('src', 'https://example.com/reuben.jpg')
+    expect(screen.getByRole('img', { name: 'Reuben' })).toHaveAttribute('loading', 'lazy')
   })
 
   it('shows how many sandwiches were found', async () => {
@@ -429,5 +431,14 @@ describe('SandwichIndex search tags', () => {
       )
     })
     expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute('href', 'https://betweenbread.co/sandwiches')
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt()
+    await screen.findByText('Reuben')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

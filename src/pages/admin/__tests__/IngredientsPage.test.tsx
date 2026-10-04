@@ -25,6 +25,7 @@ vi.mock('@/api/admin', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import IngredientsPage from '@/pages/admin/IngredientsPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const ingredient1 = {
   id: 'ing-1',
@@ -125,6 +126,18 @@ describe('IngredientsPage', () => {
     expect(toast.success).toHaveBeenCalled()
   })
 
+  it('keeps keyboard focus inside the Add Ingredient modal', async () => {
+    const user = userEvent.setup()
+    render(<IngredientsPage />)
+    await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+
+    await user.click(screen.getByRole('button', { name: /add ingredient/i }))
+    expect(screen.getByLabelText(/^name$/i)).toHaveFocus()
+    await user.tab({ shift: true })
+
+    expect(screen.getByRole('button', { name: 'Create' })).toHaveFocus()
+  })
+
   it('creates new ingredients disabled and says why', async () => {
     mockCreateIngredient.mockResolvedValue({ ...ingredient1, id: 'ing-2', name: 'Havarti', slug: 'havarti', enabled: false })
     render(<IngredientsPage />)
@@ -218,6 +231,18 @@ describe('IngredientsPage', () => {
       expect(screen.getByLabelText('Sodium (mg)')).toHaveValue(210)
       expect(screen.getByLabelText('Retail low ($)')).toHaveValue(0.3)
       expect(screen.getByLabelText('Restaurant high ($)')).toHaveValue(3.6)
+    })
+
+    it('keeps keyboard focus inside the dialog', async () => {
+      const user = userEvent.setup()
+      render(<IngredientsPage />)
+      await waitFor(() => { expect(screen.getByDisplayValue('Sourdough')).toBeInTheDocument() })
+
+      await openDetails()
+      expect(screen.getByLabelText('Calories')).toHaveFocus()
+      await user.tab({ shift: true })
+
+      expect(screen.getByRole('button', { name: 'Save' })).toHaveFocus()
     })
 
     it('explains what one serving is', async () => {
@@ -668,5 +693,14 @@ describe('IngredientsPage category changes', () => {
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Category: Sourdough' }), 'cat-2')
 
     await waitFor(() => { expect(toast.error).toHaveBeenCalledWith('Failed to move ingredient. Nothing was changed.') })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    render(<IngredientsPage />)
+    await screen.findByDisplayValue('Sourdough')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

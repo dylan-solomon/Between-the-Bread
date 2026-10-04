@@ -1,17 +1,20 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { captureSearchPerformed, captureSearchResultClicked } from '@/analytics/events'
+import { setHasUsedSearch } from '@/analytics/userProperties'
+import { messageFor } from '@/api/errors'
 import { searchSite } from '@/api/search'
 import type { SearchResult } from '@/api/search'
 import { resultLink, searchPageLink, SOURCE_LABELS } from '@/components/search/resultLinks'
 import { useAuth } from '@/context/AuthContext'
+import { useDialogFocus } from '@/hooks/useDialogFocus'
 
 const DEBOUNCE_MS = 300
 const MIN_LENGTH = 2
 const INSTANT_LIMIT = 5
 
-type Answer = { query: string; items: SearchResult[] } | { query: string; failed: true }
+type Answer = { query: string; items: SearchResult[] } | { query: string; failed: string }
 
 type Props = { onClose: () => void }
 
@@ -19,14 +22,12 @@ export default function SearchOverlay({ onClose }: Props) {
   const navigate = useNavigate()
   const { session } = useAuth()
   const token = session?.access_token
-  const inputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useDialogFocus<HTMLDivElement>()
   const [text, setText] = useState('')
   const [answer, setAnswer] = useState<Answer | null>(null)
 
   const query = text.trim()
   const searchable = query.length >= MIN_LENGTH
-
-  useEffect(() => { inputRef.current?.focus() }, [])
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
@@ -43,8 +44,11 @@ export default function SearchOverlay({ onClose }: Props) {
           if (cancelled) return
           setAnswer({ query, items: page.items })
           captureSearchPerformed({ query, source: 'all', resultsCount: page.totalCount, surface: 'header' })
+          setHasUsedSearch()
         })
-        .catch(() => { if (!cancelled) setAnswer({ query, failed: true }) })
+        .catch((error: unknown) => {
+          if (!cancelled) setAnswer({ query, failed: messageFor(error, "Search isn't working right now. Please try again.") })
+        })
     }, DEBOUNCE_MS)
     return () => {
       cancelled = true
@@ -64,11 +68,10 @@ export default function SearchOverlay({ onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50">
       <div data-testid="search-backdrop" className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-label="Search" className="relative mx-auto mt-16 w-full max-w-xl px-4">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Search" className="relative mx-auto mt-16 w-full max-w-xl px-4">
         <div className="overflow-hidden rounded-xl bg-white shadow-xl">
           <form role="search" onSubmit={handleSubmit} className="border-b border-neutral-200 p-3">
             <input
-              ref={inputRef}
               type="search"
               aria-label="Search the site"
               value={text}
@@ -81,10 +84,10 @@ export default function SearchOverlay({ onClose }: Props) {
           <div className="p-3 text-sm">
             {!searchable && <p className="text-neutral-500">Type at least 2 letters to search.</p>}
 
-            {searchable && current === null && <p role="status" className="text-neutral-400">Searching…</p>}
+            {searchable && current === null && <p role="status" className="text-neutral-500">Searching…</p>}
 
             {current !== null && 'failed' in current && (
-              <p className="text-neutral-600">Search isn&apos;t working right now. Please try again.</p>
+              <p className="text-neutral-600">{current.failed}</p>
             )}
 
             {current !== null && 'items' in current && current.items.length === 0 && (

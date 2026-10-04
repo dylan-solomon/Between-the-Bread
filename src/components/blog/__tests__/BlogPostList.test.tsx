@@ -84,6 +84,7 @@ describe('BlogPostList cards', () => {
     const withoutCover = screen.getByRole('heading', { name: 'No cover' }).closest('li')
     if (withCover === null || withoutCover === null) throw new Error('cards not found')
     expect(withCover.querySelector('img')).toHaveAttribute('src', 'https://example.com/cover.jpg')
+    expect(withCover.querySelector('img')).toHaveAttribute('loading', 'lazy')
     expect(withoutCover.querySelector('img')).toBeNull()
   })
 })

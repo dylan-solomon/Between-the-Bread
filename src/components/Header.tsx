@@ -6,6 +6,8 @@ import { useAuth } from '@/context/AuthContext'
 import SearchOverlay from '@/components/search/SearchOverlay'
 import { captureSearchHeaderClosed, captureSearchHeaderOpened } from '@/analytics/events'
 
+const NAV_LINK_CLASS = 'whitespace-nowrap py-1 text-sm font-medium text-neutral-600 hover:text-primary'
+
 export default function Header() {
   const { user, loading, signOut } = useAuth()
   const navigate = useNavigate()
@@ -48,37 +50,34 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-neutral-200 bg-neutral-50/80 backdrop-blur-sm">
-      <div className="flex h-14 items-center justify-between px-6">
-        <nav className="flex items-center gap-6">
-          <Link to="/" className="font-display text-lg font-bold text-neutral-900">
-            Between the Bread
-          </Link>
-          <Link
-            to="/sandwiches"
-            className="text-sm font-medium text-neutral-600 hover:text-primary"
-          >
+      <div className="flex flex-wrap items-center justify-between gap-x-6 px-4 py-2 sm:h-14 sm:flex-nowrap sm:justify-start sm:px-6 sm:py-0">
+        <Link to="/" className="whitespace-nowrap py-1 font-display text-lg font-bold text-neutral-900">
+          Between the Bread
+        </Link>
+        <nav aria-label="Main" className="order-last flex w-full items-center gap-6 sm:order-none sm:w-auto">
+          <Link to="/sandwiches" className={NAV_LINK_CLASS}>
             Sandwiches
           </Link>
-          <Link to="/community" className="text-sm font-medium text-neutral-600 hover:text-primary">
+          <Link to="/community" className={NAV_LINK_CLASS}>
             Community
           </Link>
-          <Link to="/blog" className="text-sm font-medium text-neutral-600 hover:text-primary">
+          <Link to="/blog" className={NAV_LINK_CLASS}>
             Blog
           </Link>
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 sm:ml-auto">
           <button
             type="button"
             aria-label="Search"
             onClick={openSearch}
-            className="text-neutral-600 hover:text-primary"
+            className="-m-1.5 p-1.5 text-neutral-600 hover:text-primary"
           >
             <Search size={18} />
           </button>
 
           {!loading && user === null && (
-            <Link to="/login" className="text-sm font-medium text-neutral-600 hover:text-primary">
+            <Link to="/login" className={NAV_LINK_CLASS}>
               Log in
             </Link>
           )}
@@ -92,7 +91,7 @@ export default function Header() {
                 aria-label="Account menu"
                 className="flex items-center gap-2 text-sm font-medium text-neutral-600 hover:text-primary"
               >
-                {displayName}
+                <span className="max-w-40 truncate">{displayName}</span>
                 <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path
                     fillRule="evenodd"

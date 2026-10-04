@@ -13,7 +13,7 @@ export default function ChefSpecialRow({ chefsSpecial, isLocked, onToggleLock }:
   const displayText = chefsSpecial.map((i) => i.name).join(' & ')
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-chefs-special bg-chefs-special-light px-4 py-3 text-chefs-special animate-slide-up">
+    <div className="flex items-center gap-3 rounded-lg border border-chefs-special bg-chefs-special-light px-4 py-3 text-chefs-special-dark animate-slide-up">
       <button
         type="button"
         aria-label={isLocked ? "Unlock Chef's Special" : "Lock Chef's Special"}

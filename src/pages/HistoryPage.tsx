@@ -369,11 +369,11 @@ export default function HistoryPage() {
                   </Link>
                   <p
                     data-testid="session-sandwich-description"
-                    className="mt-0.5 text-xs italic text-neutral-400"
+                    className="mt-0.5 text-xs italic text-neutral-500"
                   >
                     {buildSessionDescription(entry.composition as Record<string, Ingredient[]>)}
                   </p>
-                  <p className="text-xs text-neutral-400">{formatTime(entry.timestamp)}</p>
+                  <p className="text-xs text-neutral-500">{formatTime(entry.timestamp)}</p>
                 </li>
               ))}
             </ul>
@@ -403,7 +403,7 @@ export default function HistoryPage() {
               aria-label="Search sandwiches"
               value={query}
               onChange={(e) => { handleSearchChange(e.target.value) }}
-              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
 
             <div className="flex flex-wrap gap-2">
@@ -461,7 +461,7 @@ export default function HistoryPage() {
           )}
 
           {!loading && query !== '' && sandwiches.length > 0 && (
-            <p className="mt-4 text-xs text-neutral-400">
+            <p className="mt-4 text-xs text-neutral-500">
               {total} {total === 1 ? 'result' : 'results'}
             </p>
           )}
@@ -482,11 +482,11 @@ export default function HistoryPage() {
                     </Link>
                     <p
                       data-testid="sandwich-description"
-                      className="mt-0.5 text-xs italic text-neutral-400"
+                      className="mt-0.5 text-xs italic text-neutral-500"
                     >
                       {buildDescription(sandwich.composition)}
                     </p>
-                    <p className="text-xs text-neutral-400">{formatDate(sandwich.created_at)}</p>
+                    <p className="text-xs text-neutral-500">{formatDate(sandwich.created_at)}</p>
                     <div className="mt-1">
                       <StarRating
                         value={sandwich.rating}
@@ -499,7 +499,7 @@ export default function HistoryPage() {
                       type="button"
                       aria-label={sandwich.is_favorite ? 'Unfavorite' : 'Favorite'}
                       onClick={() => { void handleToggleFavorite(sandwich) }}
-                      className="rounded p-1 text-neutral-400 transition hover:text-red-500"
+                      className="rounded p-1 text-neutral-500 transition hover:text-red-500"
                     >
                       <Heart
                         size={16}
@@ -510,7 +510,7 @@ export default function HistoryPage() {
                       type="button"
                       aria-label="Delete"
                       onClick={() => { void handleDelete(sandwich) }}
-                      className="rounded p-1 text-neutral-400 transition hover:text-red-600"
+                      className="rounded p-1 text-neutral-500 transition hover:text-red-600"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -549,7 +549,7 @@ export default function HistoryPage() {
                 <button
                   type="button"
                   onClick={() => { setConfirmClear(true) }}
-                  className="text-xs text-neutral-400 underline transition hover:text-red-500"
+                  className="text-xs text-neutral-500 underline transition hover:text-red-500"
                 >
                   Clear all
                 </button>

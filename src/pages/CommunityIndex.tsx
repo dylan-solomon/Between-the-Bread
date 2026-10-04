@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { captureCommunityFiltered, captureCommunitySorted, captureCommunityViewed } from '@/analytics/events'
+import { setPreferredSortMode } from '@/analytics/userProperties'
 import { fetchCommunityLeaderboard, isCommunityPage } from '@/api/community'
 import type { CommunityPage, CommunitySandwichSummary, CommunitySort } from '@/api/community'
 import SandwichVisual from '@/components/SandwichVisual'
@@ -136,6 +137,7 @@ export default function CommunityIndex() {
   const changeSort = (sort: CommunitySort) => {
     if (sort === filters.sort) return
     captureCommunitySorted({ sort })
+    setPreferredSortMode(sort)
     updateParams({ sort: sort === DEFAULT_SORT ? '' : sort })
   }
 
@@ -230,11 +232,11 @@ export default function CommunityIndex() {
           ))}
         </fieldset>
       </div>
-      <p className="mt-2 text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
+      <p className="mt-2 text-xs text-neutral-500">{DIETARY_DISCLAIMER}</p>
 
       <div className="mt-8">
         {status === 'loading' && (
-          <div role="status" aria-label="Loading sandwiches" className="text-center text-neutral-400">Loading…</div>
+          <div role="status" aria-label="Loading sandwiches" className="text-center text-neutral-500">Loading…</div>
         )}
 
         {status === 'error' && (

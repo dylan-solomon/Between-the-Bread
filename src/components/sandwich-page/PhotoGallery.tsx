@@ -6,11 +6,50 @@ import { useAuthPrompt } from '@/context/AuthPromptContext'
 import { fetchPhotos } from '@/api/sandwichPage'
 import type { Photo, TargetType } from '@/api/sandwichPage'
 import PhotoUpload from '@/components/sandwich-page/PhotoUpload'
+import { useDialogFocus } from '@/hooks/useDialogFocus'
 
 type Props = {
   targetType: TargetType
   slug: string
   targetId: string
+}
+
+function PhotoLightbox({ photo, onClose }: { photo: Photo; onClose: () => void }) {
+  const dialogRef = useDialogFocus<HTMLDivElement>()
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
+    document.addEventListener('keydown', closeOnEscape)
+    return () => { document.removeEventListener('keydown', closeOnEscape) }
+  }, [onClose])
+
+  return (
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Photo"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      onClick={onClose}
+    >
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute right-4 top-4 text-white"
+      >
+        <X size={24} />
+      </button>
+      {photo.signed_url !== null && (
+        <img
+          src={photo.signed_url}
+          alt={photo.caption ?? ''}
+          className="max-h-full max-w-full rounded-md object-contain"
+          onClick={(e) => { e.stopPropagation() }}
+        />
+      )}
+    </div>
+  )
 }
 
 export default function PhotoGallery({ targetType, slug, targetId }: Props) {
@@ -84,6 +123,8 @@ export default function PhotoGallery({ targetType, slug, targetId }: Props) {
                 <img
                   src={photo.signed_url}
                   alt={photo.caption ?? ''}
+                  loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-cover"
                 />
               )}
@@ -93,30 +134,7 @@ export default function PhotoGallery({ targetType, slug, targetId }: Props) {
       )}
 
       {lightboxPhoto !== null && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Photo"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          onClick={() => { setLightboxPhoto(null) }}
-        >
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={() => { setLightboxPhoto(null) }}
-            className="absolute right-4 top-4 text-white"
-          >
-            <X size={24} />
-          </button>
-          {lightboxPhoto.signed_url !== null && (
-            <img
-              src={lightboxPhoto.signed_url}
-              alt={lightboxPhoto.caption ?? ''}
-              className="max-h-full max-w-full rounded-md object-contain"
-              onClick={(e) => { e.stopPropagation() }}
-            />
-          )}
-        </div>
+        <PhotoLightbox photo={lightboxPhoto} onClose={() => { setLightboxPhoto(null) }} />
       )}
     </div>
   )

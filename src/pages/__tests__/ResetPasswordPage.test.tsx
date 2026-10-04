@@ -31,6 +31,7 @@ vi.mock('react-router-dom', async () => {
 })
 
 import ResetPasswordPage from '@/pages/ResetPasswordPage'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const renderPage = () =>
   render(
@@ -121,4 +122,13 @@ describe('ResetPasswordPage', () => {
     })
   })
 
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderPage()
+    await screen.findAllByRole('heading')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
+  })
 })

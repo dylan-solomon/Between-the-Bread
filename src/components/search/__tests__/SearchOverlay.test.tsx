@@ -3,7 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 
-const { mockSearch, mockUseAuth, mockPerformed, mockClicked } = vi.hoisted(() => ({
+const { mockSearch, mockUseAuth, mockPerformed, mockClicked, mockHasUsedSearch } = vi.hoisted(() => ({
+  mockHasUsedSearch: vi.fn(),
   mockSearch: vi.fn(),
   mockUseAuth: vi.fn(),
   mockPerformed: vi.fn(),
@@ -13,8 +14,11 @@ const { mockSearch, mockUseAuth, mockPerformed, mockClicked } = vi.hoisted(() =>
 vi.mock('@/api/search', () => ({ searchSite: mockSearch }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/analytics/events', () => ({ captureSearchPerformed: mockPerformed, captureSearchResultClicked: mockClicked }))
+vi.mock('@/analytics/userProperties', () => ({ setHasUsedSearch: mockHasUsedSearch }))
 
+import { TooManyRequestsError } from '@/api/errors'
 import SearchOverlay from '@/components/search/SearchOverlay'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const results = [
   { source: 'database', slug: 'reuben', title: 'Reuben', details: {} },
@@ -100,6 +104,19 @@ describe('SearchOverlay', () => {
     await waitFor(() => { expect(mockSearch).toHaveBeenCalledWith({ q: 'reuben', limit: 5, token: 'token-abc' }) })
   })
 
+  it('keeps keyboard focus inside the search box and its matches', async () => {
+    const user = userEvent.setup()
+    renderOverlay()
+    await user.type(box(), 'reuben')
+    await screen.findByRole('link', { name: /Reuben Melt/ })
+
+    await user.tab({ shift: true })
+    expect(screen.getByRole('link', { name: 'See all results for "reuben"' })).toHaveFocus()
+    await user.tab()
+
+    expect(box()).toHaveFocus()
+  })
+
   it('closes after a match is picked', async () => {
     const user = userEvent.setup()
     const { onClose } = renderOverlay()
@@ -170,6 +187,16 @@ describe('SearchOverlay', () => {
     expect(await screen.findByText('No results for "xylophone".')).toBeInTheDocument()
   })
 
+  it('asks people to slow down when they search too quickly', async () => {
+    mockSearch.mockRejectedValue(new TooManyRequestsError("You're searching very quickly. Please wait a moment."))
+    const user = userEvent.setup()
+    renderOverlay()
+
+    await user.type(box(), 'reuben')
+
+    expect(await screen.findByText("You're searching very quickly. Please wait a moment.")).toBeInTheDocument()
+  })
+
   it('says when search is not working', async () => {
     mockSearch.mockRejectedValue(new Error('offline'))
     const user = userEvent.setup()
@@ -209,6 +236,7 @@ describe('SearchOverlay analytics', () => {
 
     expect(mockPerformed).toHaveBeenCalledTimes(1)
     expect(mockPerformed).toHaveBeenCalledWith({ query: 'reuben', source: 'all', resultsCount: 4, surface: 'header' })
+    expect(mockHasUsedSearch).toHaveBeenCalled()
   })
 
   it('records which match was clicked and where it was in the list', async () => {
@@ -219,5 +247,16 @@ describe('SearchOverlay analytics', () => {
     await user.click(await screen.findByRole('link', { name: 'Best Reuben Variations Blog' }))
 
     expect(mockClicked).toHaveBeenCalledWith({ query: 'reuben', resultSource: 'blog', slug: 'best-reubens', position: 3, surface: 'header' })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    const user = userEvent.setup()
+    renderOverlay()
+    await user.type(box(), 'reuben')
+    await screen.findByText('Reuben Melt')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

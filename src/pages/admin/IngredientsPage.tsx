@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
+import { useDialogFocus } from '@/hooks/useDialogFocus'
 import { useIngredients } from '@/hooks/useIngredients'
 import { fetchAdminIngredients, fetchAdminSandwiches, moveIngredientCategory, updateIngredient, createIngredient } from '@/api/admin'
 import type { AdminIngredient, AdminSandwich } from '@/api/admin'
@@ -21,6 +23,15 @@ type RowProps = {
   onSave: (id: string, patch: Partial<AdminIngredient>) => void
   onMoveCategory: (ingredient: AdminIngredient, categoryId: string) => void
   onEditDetails: (ingredient: AdminIngredient) => void
+}
+
+function AddIngredientDialog({ children }: { children: ReactNode }) {
+  const dialogRef = useDialogFocus<HTMLDivElement>()
+  return (
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Add Ingredient" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      {children}
+    </div>
+  )
 }
 
 function IngredientRow({ ingredient, categories, onSave, onMoveCategory, onEditDetails }: RowProps) {
@@ -378,7 +389,7 @@ export default function IngredientsPage() {
       )}
 
       {showAddModal && (
-        <div role="dialog" aria-modal="true" aria-label="Add Ingredient" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <AddIngredientDialog>
           <div className="w-full max-w-sm rounded-md bg-white p-5">
             <h2 className="font-display text-lg font-semibold text-neutral-900">Add Ingredient</h2>
             <p className="mt-1 text-xs text-neutral-500">
@@ -436,7 +447,7 @@ export default function IngredientsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </AddIngredientDialog>
       )}
     </div>
   )

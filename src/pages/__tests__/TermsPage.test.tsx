@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import TermsPage from '@/pages/TermsPage'
 import { AuthProvider } from '@/context/AuthContext'
+import { accessibilityProblems } from '@/test/accessibility'
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -29,4 +30,13 @@ describe('TermsPage', () => {
     expect(screen.getByRole('heading', { name: 'Terms of Service' })).toBeInTheDocument()
   })
 
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderPage()
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
+  })
 })

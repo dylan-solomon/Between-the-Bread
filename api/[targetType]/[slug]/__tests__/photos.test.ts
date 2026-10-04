@@ -317,6 +317,20 @@ describe('POST /api/[targetType]/[slug]/photos', () => {
     expect(res._status).toBe(401)
   })
 
+  it('says when someone is uploading too fast', async () => {
+    setupInsertChain()
+    mockInsertSelectSingle.mockResolvedValue({ data: null, error: { code: 'P0429', message: 'Too many photos. Please wait a minute.' } })
+
+    const res = makeRes()
+    await handler(postReq(), res)
+
+    expect(res._status).toBe(429)
+    expect((res._json as { error: { code: string; message: string } }).error).toMatchObject({
+      code: 'RATE_LIMITED',
+      message: "You're uploading photos too quickly. Please wait a minute and try again.",
+    })
+  })
+
   it('returns 500 when the insert fails', async () => {
     setupInsertChain()
     mockInsertSelectSingle.mockResolvedValue({ data: null, error: { message: 'db error' } })

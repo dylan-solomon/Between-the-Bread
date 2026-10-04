@@ -57,6 +57,7 @@ vi.mock('@/components/SandwichVisual', () => ({
 }))
 
 import SandwichDetail from '@/pages/SandwichDetail'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const reuben = {
   id: 's-1',
@@ -308,6 +309,7 @@ describe('SandwichDetail', () => {
 
     const image = await screen.findByRole('img', { name: 'Reuben' })
     expect(image).toHaveAttribute('src', 'https://example.com/reuben.jpg')
+    expect(image).not.toHaveAttribute('loading', 'lazy')
   })
 
   it('draws a sandwich from matching ingredients when there is no image', async () => {
@@ -385,5 +387,14 @@ describe('SandwichDetail', () => {
     await user.click(await screen.findByRole('button', { name: 'Try This Sandwich' }))
 
     expect(mockTryThisClicked).toHaveBeenCalledWith({ slug: 'reuben' })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt()
+    await screen.findByTestId('card-page')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

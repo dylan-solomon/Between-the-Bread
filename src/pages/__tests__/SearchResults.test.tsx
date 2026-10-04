@@ -4,7 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
-const { mockSearch, mockUseAuth, mockPerformed, mockClicked } = vi.hoisted(() => ({
+const { mockSearch, mockUseAuth, mockPerformed, mockClicked, mockHasUsedSearch } = vi.hoisted(() => ({
+  mockHasUsedSearch: vi.fn(),
   mockSearch: vi.fn(),
   mockUseAuth: vi.fn(),
   mockPerformed: vi.fn(),
@@ -14,8 +15,11 @@ const { mockSearch, mockUseAuth, mockPerformed, mockClicked } = vi.hoisted(() =>
 vi.mock('@/api/search', () => ({ searchSite: mockSearch }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/analytics/events', () => ({ captureSearchPerformed: mockPerformed, captureSearchResultClicked: mockClicked }))
+vi.mock('@/analytics/userProperties', () => ({ setHasUsedSearch: mockHasUsedSearch }))
 
+import { TooManyRequestsError } from '@/api/errors'
 import SearchResults from '@/pages/SearchResults'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const encyclopediaResult = {
   source: 'database',
@@ -136,6 +140,14 @@ describe('SearchResults', () => {
     expect(within(link).getByText('Classic Sandwich')).toBeInTheDocument()
     expect(within(link).getByText('Corned beef on rye.')).toBeInTheDocument()
     expect(within(link).getByText('United States · ★ 4.5 (12)')).toBeInTheDocument()
+  })
+
+  it('loads result pictures only when they scroll into view', async () => {
+    mockSearch.mockResolvedValue(page([{ ...encyclopediaResult, details: { ...encyclopediaResult.details, image_url: 'https://cdn.example.com/reuben.jpg' } }]))
+    renderAt()
+
+    const link = await screen.findByRole('link', { name: /^Reuben/ })
+    expect(link.querySelector('img')).toHaveAttribute('loading', 'lazy')
   })
 
   it('shows a community result', async () => {
@@ -270,6 +282,13 @@ describe('SearchResults paging, empty results and errors', () => {
     expect(screen.getByRole('link', { name: 'Roll a sandwich' })).toHaveAttribute('href', '/')
   })
 
+  it('asks people to slow down when they search too quickly', async () => {
+    mockSearch.mockRejectedValueOnce(new TooManyRequestsError("You're searching very quickly. Please wait a moment."))
+    renderAt()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("You're searching very quickly. Please wait a moment.")
+  })
+
   it('offers to try again when the search fails', async () => {
     const user = userEvent.setup()
     mockSearch.mockRejectedValueOnce(new Error('offline'))
@@ -289,6 +308,7 @@ describe('SearchResults analytics', () => {
     await screen.findByText('Reuben')
 
     expect(mockPerformed).toHaveBeenCalledWith({ query: 'reuben', source: 'blog', resultsCount: 7, surface: 'page' })
+    expect(mockHasUsedSearch).toHaveBeenCalled()
   })
 
   it('does not count loading more as a new search', async () => {
@@ -317,5 +337,14 @@ describe('SearchResults analytics', () => {
       position: 2,
       surface: 'page',
     })
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderAt()
+    await screen.findByText('Reuben')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

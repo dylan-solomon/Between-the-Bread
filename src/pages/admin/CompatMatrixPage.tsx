@@ -77,7 +77,7 @@ export default function CompatMatrixPage() {
         <table className="border-collapse text-sm">
           <thead>
             <tr>
-              <th className="p-1" />
+              <th className="p-1"><span className="sr-only">Flavour group</span></th>
               {GROUPS.map((g) => (
                 <th key={g} className="p-1 text-xs font-medium text-neutral-500">{g}</th>
               ))}

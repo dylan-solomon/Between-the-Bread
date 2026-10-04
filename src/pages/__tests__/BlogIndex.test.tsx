@@ -22,6 +22,7 @@ vi.mock('@/analytics/events', () => ({
 }))
 
 import BlogIndex from '@/pages/BlogIndex'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const post = {
   slug: 'vegan-builds',
@@ -138,5 +139,14 @@ describe('BlogIndex sent with the page', () => {
     expect(await screen.findByRole('link', { name: 'Vegan builds' })).toBeInTheDocument()
     expect(mockFetchPosts).toHaveBeenCalled()
     expect(mockFetchCategories).toHaveBeenCalled()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderPage()
+    await screen.findByRole('link', { name: 'Vegan builds' })
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })

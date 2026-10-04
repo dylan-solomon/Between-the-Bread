@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const { mockUpload, mockGetPublicUrl, mockFrom } = vi.hoisted(() => ({
+const { mockUpload, mockGetPublicUrl, mockFrom, mockResize } = vi.hoisted(() => ({
   mockUpload: vi.fn(),
   mockGetPublicUrl: vi.fn(),
   mockFrom: vi.fn(),
+  mockResize: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase', () => ({ supabase: { storage: { from: mockFrom } } }))
 vi.mock('nanoid', () => ({ nanoid: () => 'abc123' }))
+vi.mock('@/utils/resizeImage', () => ({ resizeImage: mockResize }))
 
 import { uploadImage } from '@/api/images'
 
@@ -17,62 +19,86 @@ const makeFile = (overrides: { name?: string; type?: string; size?: number } = {
   return file
 }
 
+const shrunk = (type = 'image/webp', size = 200 * 1024): Blob => {
+  const blob = new Blob(['y'], { type })
+  Object.defineProperty(blob, 'size', { value: size })
+  return blob
+}
+
 beforeEach(() => {
   vi.resetAllMocks()
   mockFrom.mockReturnValue({ upload: mockUpload, getPublicUrl: mockGetPublicUrl })
   mockUpload.mockResolvedValue({ error: null })
-  mockGetPublicUrl.mockReturnValue({ data: { publicUrl: 'https://cdn.example.com/blog-images/abc123.png' } })
+  mockResize.mockResolvedValue(shrunk())
+  mockGetPublicUrl.mockReturnValue({ data: { publicUrl: 'https://cdn.example.com/blog-images/abc123.webp' } })
 })
 
 describe('uploadImage', () => {
-  it('uploads to the blog-images bucket and returns the public URL', async () => {
+  it('shrinks the image to 1600px wide as WebP and uploads that', async () => {
     const file = makeFile()
+    const blob = shrunk()
+    mockResize.mockResolvedValue(blob)
 
     const url = await uploadImage({ bucket: 'blog-images', file })
 
+    expect(mockResize).toHaveBeenCalledWith(file, 1600, { type: 'image/webp', quality: 0.85 })
     expect(mockFrom).toHaveBeenCalledWith('blog-images')
-    expect(mockFrom).not.toHaveBeenCalledWith('sandwich-images')
-    expect(mockUpload).toHaveBeenCalledWith('abc123.png', file, { contentType: 'image/png', cacheControl: '31536000' })
-    expect(mockGetPublicUrl).toHaveBeenCalledWith('abc123.png')
-    expect(url).toBe('https://cdn.example.com/blog-images/abc123.png')
+    expect(mockUpload).toHaveBeenCalledWith('abc123.webp', blob, { contentType: 'image/webp', cacheControl: '31536000' })
+    expect(url).toBe('https://cdn.example.com/blog-images/abc123.webp')
   })
 
   it('uploads sandwich photos to the sandwich-images bucket', async () => {
-    mockGetPublicUrl.mockReturnValue({ data: { publicUrl: 'https://cdn.example.com/sandwich-images/abc123.png' } })
-
-    const url = await uploadImage({ bucket: 'sandwich-images', file: makeFile() })
+    await uploadImage({ bucket: 'sandwich-images', file: makeFile() })
 
     expect(mockFrom).toHaveBeenCalledWith('sandwich-images')
-    expect(mockFrom).not.toHaveBeenCalledWith('blog-images')
-    expect(url).toBe('https://cdn.example.com/sandwich-images/abc123.png')
   })
 
-  it.each([
-    ['image/jpeg', 'jpg'],
-    ['image/png', 'png'],
-    ['image/webp', 'webp'],
-  ])('names a %s upload with the .%s extension', async (type, extension) => {
-    await uploadImage({ bucket: 'blog-images', file: makeFile({ type }) })
+  it('keeps the format the browser produced when it cannot make WebP', async () => {
+    mockResize.mockResolvedValue(shrunk('image/png'))
 
-    expect(mockUpload.mock.calls[0][0]).toBe(`abc123.${extension}`)
+    await uploadImage({ bucket: 'blog-images', file: makeFile() })
+
+    expect(mockUpload.mock.calls[0][0]).toBe('abc123.png')
+    expect(mockUpload.mock.calls[0][2]).toMatchObject({ contentType: 'image/png' })
+  })
+
+  it.each(['image/jpeg', 'image/png', 'image/webp'])('accepts a %s image', async (type) => {
+    await expect(uploadImage({ bucket: 'blog-images', file: makeFile({ type }) })).resolves.toBeTypeOf('string')
   })
 
   it('refuses a file that is not a JPEG, PNG or WebP image', async () => {
     await expect(uploadImage({ bucket: 'blog-images', file: makeFile({ name: 'a.gif', type: 'image/gif' }) })).rejects.toThrow(
       'Please choose a JPEG, PNG, or WebP image.',
     )
-    expect(mockUpload).not.toHaveBeenCalled()
+    expect(mockResize).not.toHaveBeenCalled()
   })
 
-  it('refuses a file over 5MB', async () => {
-    await expect(uploadImage({ bucket: 'blog-images', file: makeFile({ size: 5 * 1024 * 1024 + 1 }) })).rejects.toThrow(
-      'Images must be 5MB or smaller.',
+  it('accepts large originals up to 20MB, since they are shrunk first', async () => {
+    await expect(uploadImage({ bucket: 'blog-images', file: makeFile({ size: 20 * 1024 * 1024 }) })).resolves.toBeTypeOf('string')
+  })
+
+  it('refuses an original over 20MB', async () => {
+    await expect(uploadImage({ bucket: 'blog-images', file: makeFile({ size: 20 * 1024 * 1024 + 1 }) })).rejects.toThrow(
+      'Images must be 20MB or smaller.',
     )
     expect(mockUpload).not.toHaveBeenCalled()
   })
 
-  it('accepts a file of exactly 5MB', async () => {
-    await expect(uploadImage({ bucket: 'blog-images', file: makeFile({ size: 5 * 1024 * 1024 }) })).resolves.toBeTypeOf('string')
+  it('refuses an image that is still over 5MB after shrinking', async () => {
+    mockResize.mockResolvedValue(shrunk('image/webp', 5 * 1024 * 1024 + 1))
+
+    await expect(uploadImage({ bucket: 'blog-images', file: makeFile() })).rejects.toThrow(
+      'That image is still too large after shrinking. Please try a smaller one.',
+    )
+    expect(mockUpload).not.toHaveBeenCalled()
+  })
+
+  it('explains when the image cannot be read', async () => {
+    mockResize.mockRejectedValue(new Error('Failed to load image.'))
+
+    await expect(uploadImage({ bucket: 'blog-images', file: makeFile() })).rejects.toThrow(
+      "We couldn't read that image. Please try another.",
+    )
   })
 
   it('fails with a clear message when the upload is rejected', async () => {

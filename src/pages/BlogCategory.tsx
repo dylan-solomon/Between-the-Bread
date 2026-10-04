@@ -19,7 +19,7 @@ export default function BlogCategory() {
   if (status === 'loading') {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10">
-        <div role="status" aria-label="Loading category" className="text-center text-neutral-400">Loading…</div>
+        <div role="status" aria-label="Loading category" className="text-center text-neutral-500">Loading…</div>
       </div>
     )
   }

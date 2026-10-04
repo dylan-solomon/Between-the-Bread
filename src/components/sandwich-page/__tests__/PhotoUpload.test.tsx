@@ -3,7 +3,8 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 
-const { mockUseAuth, mockResizeImage, mockUpload, mockRegisterPhoto } = vi.hoisted(() => ({
+const { mockUseAuth, mockResizeImage, mockUpload, mockRegisterPhoto, mockPhotoUploaded } = vi.hoisted(() => ({
+  mockPhotoUploaded: vi.fn(),
   mockUseAuth: vi.fn(),
   mockResizeImage: vi.fn(),
   mockUpload: vi.fn(),
@@ -16,8 +17,10 @@ vi.mock('@/api/sandwichPage', () => ({ registerPhoto: mockRegisterPhoto }))
 vi.mock('@/lib/supabase', () => ({
   supabase: { storage: { from: () => ({ upload: mockUpload }) } },
 }))
+vi.mock('@/analytics/events', () => ({ capturePhotoUploaded: mockPhotoUploaded }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
+import { TooManyRequestsError } from '@/api/errors'
 import PhotoUpload from '@/components/sandwich-page/PhotoUpload'
 
 const loggedInAuth = { user: { id: 'user-1' }, session: { access_token: 'token-abc' } }
@@ -76,6 +79,7 @@ describe('PhotoUpload', () => {
       targetType: 'database', slug: 'reuben', targetId: 'target-1', caption: 'Yum',
     }))
     expect(screen.queryByRole('img', { name: /preview/i })).not.toBeInTheDocument()
+    expect(mockPhotoUploaded).toHaveBeenCalledWith({ targetType: 'database', slug: 'reuben' })
   })
 
   it('shows an error toast when the storage upload fails', async () => {
@@ -102,6 +106,20 @@ describe('PhotoUpload', () => {
     await userEvent.click(screen.getByRole('button', { name: /^upload$/i }))
 
     await waitFor(() => { expect(toast.error).toHaveBeenCalled() })
+    expect(mockPhotoUploaded).not.toHaveBeenCalled()
+  })
+
+  it('tells people when they are uploading too quickly', async () => {
+    mockResizeImage.mockResolvedValue(new Blob(['resized'], { type: 'image/jpeg' }))
+    mockUpload.mockResolvedValue({ error: null })
+    mockRegisterPhoto.mockRejectedValue(new TooManyRequestsError("You're uploading photos too quickly."))
+
+    render(<PhotoUpload targetType="database" slug="reuben" targetId="target-1" onUploaded={vi.fn()} />)
+    await userEvent.upload(screen.getByLabelText(/choose photo/i), makeFile())
+    await waitFor(() => { expect(screen.getByRole('img', { name: /preview/i })).toBeInTheDocument() })
+    await userEvent.click(screen.getByRole('button', { name: /^upload$/i }))
+
+    await waitFor(() => { expect(toast.error).toHaveBeenCalledWith("You're uploading photos too quickly.") })
   })
 
   it('clears the preview when Cancel is clicked, without uploading', async () => {

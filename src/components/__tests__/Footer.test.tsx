@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Footer from '@/components/Footer'
+import { accessibilityProblems } from '@/test/accessibility'
 
 const renderFooter = () =>
   render(
@@ -62,5 +63,14 @@ describe('Footer', () => {
   it('renders a contentinfo landmark', () => {
     renderFooter()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+  })
+})
+
+describe('accessibility', () => {
+  it('has no accessibility problems', async () => {
+    renderFooter()
+    await screen.findByRole('contentinfo')
+
+    expect(await accessibilityProblems(document.body)).toEqual([])
   })
 })
