@@ -26,11 +26,17 @@ describe('toSql', () => {
     expect(sql).toContain("'rachel'")
   })
 
-  it('never publishes an entry on import', () => {
+  it('leaves imported entries unpublished', () => {
     const sql = toSql([makeEntry()], {})
 
-    expect(sql).toMatch(/false\)\s*\nON CONFLICT/)
+    expect(sql).toMatch(/NULL, false\)\s*\nON CONFLICT/)
     expect(sql).not.toMatch(/published\s*=\s*true/)
+  })
+
+  it('restores the published state and photo of an entry saved from the live site', () => {
+    const sql = toSql([makeEntry({ published: true, image_url: 'https://cdn.example.com/reuben-1600.webp' })], {})
+
+    expect(sql).toMatch(/'https:\/\/cdn\.example\.com\/reuben-1600\.webp', true\)\s*\nON CONFLICT/)
   })
 
   it('stores the ingredients as category-keyed json', () => {
