@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { captureSearchPerformed, captureSearchResultClicked } from '@/analytics/events'
 import { setHasUsedSearch } from '@/analytics/userProperties'
+import { messageFor } from '@/api/errors'
 import { searchSite } from '@/api/search'
 import type { SearchResult } from '@/api/search'
 import { resultLink, searchPageLink, SOURCE_LABELS } from '@/components/search/resultLinks'
@@ -12,7 +13,7 @@ const DEBOUNCE_MS = 300
 const MIN_LENGTH = 2
 const INSTANT_LIMIT = 5
 
-type Answer = { query: string; items: SearchResult[] } | { query: string; failed: true }
+type Answer = { query: string; items: SearchResult[] } | { query: string; failed: string }
 
 type Props = { onClose: () => void }
 
@@ -46,7 +47,9 @@ export default function SearchOverlay({ onClose }: Props) {
           captureSearchPerformed({ query, source: 'all', resultsCount: page.totalCount, surface: 'header' })
           setHasUsedSearch()
         })
-        .catch(() => { if (!cancelled) setAnswer({ query, failed: true }) })
+        .catch((error: unknown) => {
+          if (!cancelled) setAnswer({ query, failed: messageFor(error, "Search isn't working right now. Please try again.") })
+        })
     }, DEBOUNCE_MS)
     return () => {
       cancelled = true
@@ -86,7 +89,7 @@ export default function SearchOverlay({ onClose }: Props) {
             {searchable && current === null && <p role="status" className="text-neutral-400">Searching…</p>}
 
             {current !== null && 'failed' in current && (
-              <p className="text-neutral-600">Search isn&apos;t working right now. Please try again.</p>
+              <p className="text-neutral-600">{current.failed}</p>
             )}
 
             {current !== null && 'items' in current && current.items.length === 0 && (

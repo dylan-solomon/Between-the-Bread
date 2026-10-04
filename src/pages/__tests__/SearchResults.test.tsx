@@ -17,6 +17,7 @@ vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/analytics/events', () => ({ captureSearchPerformed: mockPerformed, captureSearchResultClicked: mockClicked }))
 vi.mock('@/analytics/userProperties', () => ({ setHasUsedSearch: mockHasUsedSearch }))
 
+import { TooManyRequestsError } from '@/api/errors'
 import SearchResults from '@/pages/SearchResults'
 
 const encyclopediaResult = {
@@ -270,6 +271,13 @@ describe('SearchResults paging, empty results and errors', () => {
 
     expect(await screen.findByText('No sandwiches found for "xylophone". Try a different search or roll a new one!')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Roll a sandwich' })).toHaveAttribute('href', '/')
+  })
+
+  it('asks people to slow down when they search too quickly', async () => {
+    mockSearch.mockRejectedValueOnce(new TooManyRequestsError("You're searching very quickly. Please wait a moment."))
+    renderAt()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("You're searching very quickly. Please wait a moment.")
   })
 
   it('offers to try again when the search fails', async () => {

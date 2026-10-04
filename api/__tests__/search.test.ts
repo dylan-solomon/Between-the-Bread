@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const { mockPublicRpc, mockUserRpc, mockCreateClient } = vi.hoisted(() => ({
+const { mockPublicRpc, mockUserRpc, mockCreateClient, mockLimitRpc } = vi.hoisted(() => ({
+  mockLimitRpc: vi.fn(),
   mockPublicRpc: vi.fn(),
   mockUserRpc: vi.fn(),
   mockCreateClient: vi.fn(),
@@ -44,7 +45,11 @@ beforeEach(() => {
   vi.resetAllMocks()
   vi.stubEnv('SUPABASE_URL', 'https://test.supabase.co')
   vi.stubEnv('SUPABASE_ANON_KEY', 'anon-key')
-  mockCreateClient.mockReturnValue({ rpc: mockUserRpc })
+  vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', '')
+  mockCreateClient.mockImplementation((_url: string, key: string) =>
+    key === 'service-key' ? { rpc: mockLimitRpc } : { rpc: mockUserRpc },
+  )
+  mockLimitRpc.mockResolvedValue({ data: true, error: null })
   mockPublicRpc.mockResolvedValue(publicAnswer([hit('database', 'Reuben', 3.2), hit('blog', 'Best Reuben Variations', 2.1)]))
   mockUserRpc.mockResolvedValue(savedAnswer([hit('saved', 'My Reuben', 2.5)]))
 })
@@ -212,5 +217,48 @@ describe('GET /api/search for signed-in people', () => {
     expect(res._status).toBe(200)
     expect((dataOf(res) as Hit[]).map((item) => item.title)).toEqual(['Reuben', 'Best Reuben Variations'])
     expect(metaOf(res)).toMatchObject({ counts: { saved: null } })
+  })
+})
+
+describe('GET /api/search rate limit', () => {
+  const withLimits = () => { vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-key') }
+
+  it('counts each search against the visitor\'s address, 30 a minute', async () => {
+    withLimits()
+
+    await search({ q: 'reuben' }, { 'x-forwarded-for': '1.2.3.4, 10.0.0.1' })
+
+    expect(mockLimitRpc).toHaveBeenCalledWith('hit_rate_limit', {
+      p_bucket: 'search',
+      p_subject: '1.2.3.4',
+      p_limit: 30,
+      p_window_seconds: 60,
+    })
+  })
+
+  it('says when someone is searching too fast', async () => {
+    withLimits()
+    mockLimitRpc.mockResolvedValue({ data: false, error: null })
+
+    const res = await search({ q: 'reuben' }, { 'x-forwarded-for': '1.2.3.4' })
+
+    expect(res._status).toBe(429)
+    expect(errorOf(res)).toMatchObject({ code: 'RATE_LIMITED', message: "You're searching very quickly. Please wait a moment." })
+    expect(mockPublicRpc).not.toHaveBeenCalled()
+  })
+
+  it('still searches when the limit cannot be checked', async () => {
+    withLimits()
+    mockLimitRpc.mockResolvedValue({ data: null, error: { message: 'boom' } })
+
+    const res = await search({ q: 'reuben' }, { 'x-forwarded-for': '1.2.3.4' })
+
+    expect(res._status).toBe(200)
+  })
+
+  it('does not check the limit when the server key is not set up', async () => {
+    await search({ q: 'reuben' }, { 'x-forwarded-for': '1.2.3.4' })
+
+    expect(mockLimitRpc).not.toHaveBeenCalled()
   })
 })

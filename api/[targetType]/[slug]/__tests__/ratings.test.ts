@@ -152,6 +152,18 @@ describe('POST /api/[targetType]/[slug]/ratings', () => {
     expect(body.error.code).toBe('INTERNAL_ERROR')
   })
 
+  it('says when someone is rating too fast', async () => {
+    setupUpsertMock({ code: 'P0429', message: 'Too many ratings. Please wait a minute.' }, null)
+    const res = makeRes()
+    await handler(makeReq(), res)
+
+    expect(res._status).toBe(429)
+    expect((res._json as { error: { code: string; message: string } }).error).toMatchObject({
+      code: 'RATE_LIMITED',
+      message: "You're rating too quickly. Please wait a minute and try again.",
+    })
+  })
+
   it('returns 405 for non-POST requests', async () => {
     const res = makeRes()
     await handler(makeReq({ method: 'GET' }), res)

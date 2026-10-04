@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useAuthPrompt } from '@/context/AuthPromptContext'
 import { useUsername } from '@/context/UsernameContext'
 import { captureCommentPosted } from '@/analytics/events'
+import { messageFor } from '@/api/errors'
 import { postComment } from '@/api/sandwichPage'
 import type { Comment, CommentTargetType } from '@/api/sandwichPage'
 
@@ -47,8 +48,8 @@ export default function CommentForm({ targetType, slug, targetId, parentId, onPo
       onPosted(comment)
       captureCommentPosted({ targetType, slug, isReply: parentId !== undefined })
       setBody('')
-    } catch {
-      toast.error('Failed to post comment. Please try again.')
+    } catch (error) {
+      toast.error(messageFor(error, 'Failed to post comment. Please try again.'))
     } finally {
       setSubmitting(false)
     }

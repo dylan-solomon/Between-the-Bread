@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ok, err } from '../../_lib/response.js'
 import { authenticateRequest } from '../../_lib/auth.js'
+import { isRateLimited, respondRateLimited } from '../../_lib/rateLimited.js'
 
 const VALID_TARGET_TYPES = ['database', 'community'] as const
 type TargetType = (typeof VALID_TARGET_TYPES)[number]
@@ -52,6 +53,11 @@ export default async function handler(
     )
     .select('id, target_type, target_id, score, created_at, updated_at')
     .single()
+
+  if (isRateLimited(error)) {
+    respondRateLimited(res, "You're rating too quickly. Please wait a minute and try again.")
+    return
+  }
 
   if (error !== null) {
     res.status(500).json(err('INTERNAL_ERROR', 'Failed to save rating.', 500))

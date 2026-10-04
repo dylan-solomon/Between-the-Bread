@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ok, err } from '../../_lib/response.js'
 import { authenticateRequest } from '../../_lib/auth.js'
+import { isRateLimited, respondRateLimited } from '../../_lib/rateLimited.js'
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -184,14 +185,14 @@ const handlePost = async (req: VercelRequest, res: VercelResponse, targetType: T
     .select('id, user_id, target_type, target_id, parent_id, body, like_count, reply_count, created_at')
     .single()
 
-  if (error !== null) {
-    res.status(500).json(err('INTERNAL_ERROR', 'Failed to create comment.', 500))
+  if (isRateLimited(error)) {
+    respondRateLimited(res, "You're commenting too quickly. Please wait a minute and try again.")
     return
   }
 
-  if (replyParentId !== null) {
-    // Best-effort: the comment itself was created successfully either way.
-    await supabase.rpc('adjust_comment_reply_count', { p_comment_id: replyParentId, p_delta: 1 })
+  if (error !== null) {
+    res.status(500).json(err('INTERNAL_ERROR', 'Failed to create comment.', 500))
+    return
   }
 
   res.status(201).json(ok({ ...data, username, author_is_admin: authorIsAdmin }))

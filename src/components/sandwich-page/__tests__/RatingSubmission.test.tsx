@@ -16,6 +16,7 @@ vi.mock('@/api/sandwichPage', () => ({ submitRating: mockSubmitRating }))
 vi.mock('@/analytics/events', () => ({ captureSandwichRated: mockRated }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
+import { TooManyRequestsError } from '@/api/errors'
 import RatingSubmission from '@/components/sandwich-page/RatingSubmission'
 
 const guestAuth = { user: null, session: null }
@@ -59,6 +60,16 @@ describe('RatingSubmission', () => {
     })
     expect(toast.success).toHaveBeenCalled()
     expect(mockRated).toHaveBeenCalledWith({ targetType: 'database', slug: 'reuben', score: 4 })
+  })
+
+  it('tells people when they are rating too quickly', async () => {
+    mockUseAuth.mockReturnValue(loggedInAuth)
+    mockSubmitRating.mockRejectedValue(new TooManyRequestsError("You're rating too quickly."))
+    render(<RatingSubmission targetType="database" slug="reuben" targetId="target-1" />)
+
+    await userEvent.click(screen.getAllByRole('button')[3])
+
+    expect(toast.error).toHaveBeenCalledWith("You're rating too quickly.")
   })
 
   it('shows an error toast when submission fails', async () => {

@@ -16,6 +16,7 @@ vi.mock('@/context/AuthContext', () => ({ useAuth: mockUseAuth }))
 vi.mock('@/analytics/events', () => ({ captureSearchPerformed: mockPerformed, captureSearchResultClicked: mockClicked }))
 vi.mock('@/analytics/userProperties', () => ({ setHasUsedSearch: mockHasUsedSearch }))
 
+import { TooManyRequestsError } from '@/api/errors'
 import SearchOverlay from '@/components/search/SearchOverlay'
 
 const results = [
@@ -170,6 +171,16 @@ describe('SearchOverlay', () => {
     await user.type(box(), 'xylophone')
 
     expect(await screen.findByText('No results for "xylophone".')).toBeInTheDocument()
+  })
+
+  it('asks people to slow down when they search too quickly', async () => {
+    mockSearch.mockRejectedValue(new TooManyRequestsError("You're searching very quickly. Please wait a moment."))
+    const user = userEvent.setup()
+    renderOverlay()
+
+    await user.type(box(), 'reuben')
+
+    expect(await screen.findByText("You're searching very quickly. Please wait a moment.")).toBeInTheDocument()
   })
 
   it('says when search is not working', async () => {

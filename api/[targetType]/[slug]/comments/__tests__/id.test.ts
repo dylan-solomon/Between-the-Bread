@@ -77,16 +77,15 @@ describe('DELETE /api/[targetType]/[slug]/comments/:id', () => {
     expect(mockRpc).not.toHaveBeenCalled()
   })
 
-  it("decrements the parent's reply_count when deleting a reply", async () => {
+  it('leaves the reply count to the database when deleting a reply', async () => {
     setupDeleteChain()
     mockDeleteEqSelect.mockResolvedValue({ data: [{ parent_id: 'parent-1' }], error: null })
-    mockRpc.mockResolvedValue({ data: 0, error: null })
 
     const res = makeRes()
     await handler(makeReq(), res)
 
     expect(res._status).toBe(204)
-    expect(mockRpc).toHaveBeenCalledWith('adjust_comment_reply_count', { p_comment_id: 'parent-1', p_delta: -1 })
+    expect(mockRpc).not.toHaveBeenCalled()
   })
 
   it('does not call adjust_comment_reply_count when nothing was deleted', async () => {

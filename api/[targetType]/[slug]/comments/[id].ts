@@ -9,7 +9,7 @@ const handleDelete = async (req: VercelRequest, res: VercelResponse): Promise<vo
   const { supabase } = auth
   const { id } = req.query as { id: string }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('comments')
     .delete()
     .eq('id', id)
@@ -18,13 +18,6 @@ const handleDelete = async (req: VercelRequest, res: VercelResponse): Promise<vo
   if (error !== null) {
     res.status(500).json(err('DELETE_FAILED', 'Failed to delete comment.', 500))
     return
-  }
-
-  const deletedRows = data as { parent_id: string | null }[]
-  const parentId = deletedRows[0]?.parent_id ?? null
-
-  if (parentId !== null) {
-    await supabase.rpc('adjust_comment_reply_count', { p_comment_id: parentId, p_delta: -1 })
   }
 
   res.status(204).end()

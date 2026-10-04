@@ -1,4 +1,5 @@
 import type { CommunityComposition } from './community'
+import { failureFrom } from './errors'
 
 export type SearchSource = 'database' | 'community' | 'blog' | 'saved'
 
@@ -72,7 +73,7 @@ export const searchSite = async ({ token, ...query }: SearchQuery): Promise<Sear
   const response = await fetch(url.toString(), {
     headers: token === undefined ? {} : { Authorization: `Bearer ${token}` },
   })
-  if (!response.ok) throw new Error(`Failed to search: ${String(response.status)}`)
+  if (!response.ok) throw await failureFrom(response, 'Failed to search')
 
   const body = (await response.json()) as { data: SearchResult[]; meta: { counts: SearchCounts; total_count: number } }
   return { items: body.data, counts: body.meta.counts, totalCount: body.meta.total_count }

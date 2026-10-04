@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { capturePhotoUploaded } from '@/analytics/events'
+import { messageFor } from '@/api/errors'
 import { registerPhoto } from '@/api/sandwichPage'
 import type { Photo, TargetType } from '@/api/sandwichPage'
 import { resizeImage } from '@/utils/resizeImage'
@@ -84,8 +85,8 @@ export default function PhotoUpload({ targetType, slug, targetId, onUploaded }: 
       capturePhotoUploaded({ targetType, slug })
       toast.success('Photo submitted for review!')
       reset()
-    } catch {
-      toast.error('Failed to upload photo. Please try again.')
+    } catch (error) {
+      toast.error(messageFor(error, 'Failed to upload photo. Please try again.'))
     } finally {
       setUploading(false)
     }

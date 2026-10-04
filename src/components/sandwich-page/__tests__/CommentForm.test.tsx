@@ -18,6 +18,7 @@ vi.mock('@/context/UsernameContext', () => ({ useUsername: mockUseUsername }))
 vi.mock('@/analytics/events', () => ({ captureCommentPosted: mockCommentPosted }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
+import { TooManyRequestsError } from '@/api/errors'
 import CommentForm from '@/components/sandwich-page/CommentForm'
 
 const guestAuth = { user: null, session: null }
@@ -105,6 +106,18 @@ describe('CommentForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /post/i }))
 
     expect(mockPostComment).toHaveBeenCalledWith('token-abc', expect.objectContaining({ parentId: 'c1' }))
+  })
+
+  it('tells people when they are commenting too quickly and keeps their words', async () => {
+    mockUseAuth.mockReturnValue(loggedInAuth)
+    mockPostComment.mockRejectedValue(new TooManyRequestsError("You're commenting too quickly."))
+
+    render(<CommentForm targetType="database" slug="reuben" targetId="target-1" onPosted={vi.fn()} />)
+    await userEvent.type(screen.getByRole('textbox'), 'Great sandwich!')
+    await userEvent.click(screen.getByRole('button', { name: /post/i }))
+
+    expect(toast.error).toHaveBeenCalledWith("You're commenting too quickly.")
+    expect(screen.getByRole('textbox')).toHaveValue('Great sandwich!')
   })
 
   it('shows an error toast when posting fails', async () => {
