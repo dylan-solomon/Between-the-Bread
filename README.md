@@ -58,4 +58,4 @@ For a new staging copy, or to recover from a lost database. Run each file in the
 This brings back the site's own content. Three things are not covered:
 - People's accounts, ratings and comments exist only in the live database, so protecting them needs a database backup.
 - Photo files (encyclopedia, blog and user uploads) are stored in Supabase Storage. `live.json` keeps the links to them, not the pictures, so they would need re-uploading in a new project.
-- Edited blog posts: the blog seed holds the posts as first written.
+- Blog posts written or edited in the admin. The blog seed only has the launch posts as first written.
