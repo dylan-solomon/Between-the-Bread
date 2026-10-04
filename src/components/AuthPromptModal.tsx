@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useDialogFocus } from '@/hooks/useDialogFocus'
 
 type Props = {
   isOpen: boolean
@@ -25,7 +26,12 @@ export default function AuthPromptModal({ isOpen, actionLabel, onDismiss }: Prop
 
   if (!isOpen) return null
 
-  const redirectParam = encodeURIComponent(location.pathname + location.search)
+  return <AuthPrompt actionLabel={actionLabel} onDismiss={onDismiss} redirect={location.pathname + location.search} />
+}
+
+function AuthPrompt({ actionLabel, onDismiss, redirect }: { actionLabel: string; onDismiss: () => void; redirect: string }) {
+  const dialogRef = useDialogFocus<HTMLDivElement>()
+  const redirectParam = encodeURIComponent(redirect)
   const trigger = actionLabel.includes('save') ? 'save_prompt'
     : actionLabel.includes('rate') ? 'rate_prompt'
     : actionLabel.includes('history') ? 'history_prompt'
@@ -38,6 +44,7 @@ export default function AuthPromptModal({ isOpen, actionLabel, onDismiss }: Prop
       onClick={onDismiss}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={`Log in to ${actionLabel}`}

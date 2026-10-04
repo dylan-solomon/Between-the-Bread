@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
@@ -117,6 +117,7 @@ describe('Header', () => {
     await user.keyboard('{Escape}')
 
     expect(screen.queryByRole('dialog', { name: 'Search' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Search' })).toHaveFocus()
   })
 
   it('records when the site search is opened and closed', async () => {
@@ -138,9 +139,9 @@ describe('Header', () => {
   it('links to the community leaderboard between the encyclopedia and the blog', () => {
     renderHeader()
     expect(screen.getByRole('link', { name: 'Community' })).toHaveAttribute('href', '/community')
-    const nav = screen.getByRole('link', { name: 'Community' }).closest('nav')
-    expect([...(nav?.querySelectorAll('a') ?? [])].map((link) => link.textContent)).toEqual([
-      'Between the Bread',
+    const nav = screen.getByRole('navigation', { name: 'Main' })
+    expect(screen.getByRole('link', { name: 'Between the Bread' })).toHaveAttribute('href', '/')
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual([
       'Sandwiches',
       'Community',
       'Blog',

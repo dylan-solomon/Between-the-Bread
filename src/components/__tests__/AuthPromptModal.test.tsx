@@ -80,6 +80,17 @@ describe('AuthPromptModal', () => {
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
   })
 
+  it('keeps keyboard focus inside the prompt', async () => {
+    const user = userEvent.setup()
+    renderModal()
+
+    expect(screen.getByRole('link', { name: /log in/i })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('button', { name: /not now/i })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('link', { name: /log in/i })).toHaveFocus()
+  })
+
   it('calls onDismiss when the Log in link is clicked', async () => {
     const onDismiss = vi.fn()
     renderModal({ onDismiss })

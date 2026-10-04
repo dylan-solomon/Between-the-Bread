@@ -72,6 +72,22 @@ describe('PhotoGallery', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  it('keeps keyboard focus on the lightbox, closes it on Escape and returns to the photo', async () => {
+    const user = userEvent.setup()
+    mockFetchPhotos.mockResolvedValue({ data: [makePhoto()], meta: { total_count: 1, limit: 20, offset: 0 } })
+    render(<PhotoGallery targetType="database" slug="reuben" targetId="target-1" />)
+    const thumbnail = await screen.findByRole('button', { name: 'Yum' })
+
+    await user.click(thumbnail)
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus()
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(thumbnail).toHaveFocus()
+  })
+
   it('prompts for auth when a guest clicks "Upload photo"', async () => {
     mockUseAuth.mockReturnValue(guestAuth)
     mockFetchPhotos.mockResolvedValue({ data: [], meta: { total_count: 0, limit: 20, offset: 0 } })

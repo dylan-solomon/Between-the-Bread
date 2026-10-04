@@ -104,6 +104,19 @@ describe('SearchOverlay', () => {
     await waitFor(() => { expect(mockSearch).toHaveBeenCalledWith({ q: 'reuben', limit: 5, token: 'token-abc' }) })
   })
 
+  it('keeps keyboard focus inside the search box and its matches', async () => {
+    const user = userEvent.setup()
+    renderOverlay()
+    await user.type(box(), 'reuben')
+    await screen.findByRole('link', { name: /Reuben Melt/ })
+
+    await user.tab({ shift: true })
+    expect(screen.getByRole('link', { name: 'See all results for "reuben"' })).toHaveFocus()
+    await user.tab()
+
+    expect(box()).toHaveFocus()
+  })
+
   it('closes after a match is picked', async () => {
     const user = userEvent.setup()
     const { onClose } = renderOverlay()

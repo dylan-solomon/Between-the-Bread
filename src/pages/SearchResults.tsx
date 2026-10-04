@@ -277,7 +277,7 @@ export default function SearchResults() {
 
           <div className="mt-6">
             {status === 'loading' && (
-              <div role="status" aria-label="Searching" className="text-center text-neutral-400">Searching…</div>
+              <div role="status" aria-label="Searching" className="text-center text-neutral-500">Searching…</div>
             )}
 
             {status === 'error' && (

@@ -14,6 +14,8 @@
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
+    "e2e": "playwright test",
+    "e2e:local": "E2E_BASE_URL=http://localhost:4173 playwright test",
     "import:encyclopedia": "tsx scripts/importEncyclopedia.ts",
     "seed:blog": "tsx scripts/generateBlogSeed.ts",
     "posthog:setup": "tsx --env-file-if-exists=.env.local scripts/posthog/main.ts",
@@ -43,7 +45,9 @@
     ]
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

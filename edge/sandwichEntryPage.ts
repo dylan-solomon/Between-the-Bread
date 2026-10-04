@@ -55,7 +55,7 @@ const dietaryTags = (entry: SandwichEntry): string => {
         `<li class="rounded-full px-3 py-1 text-xs ${kind === 'avoid' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-100 text-neutral-600'}">${escapeHtml(label)}</li>`,
     )
     .join('')
-  return `<div><ul class="flex flex-wrap gap-2">${items}</ul><p class="mt-2 text-xs text-neutral-400">${escapeHtml(DIETARY_DISCLAIMER)}</p></div>`
+  return `<div><ul class="flex flex-wrap gap-2">${items}</ul><p class="mt-2 text-xs text-neutral-500">${escapeHtml(DIETARY_DISCLAIMER)}</p></div>`
 }
 
 const blogPostLink = (post: BlogPostPreview): string =>

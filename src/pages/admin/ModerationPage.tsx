@@ -146,7 +146,7 @@ export default function ModerationPage() {
                   <p className="text-sm text-neutral-800">
                     {isComment(item) ? item.body : (item.caption ?? item.storage_path)}
                   </p>
-                  <p className="mt-1 text-xs text-neutral-400">
+                  <p className="mt-1 text-xs text-neutral-500">
                     By user {item.user_id.slice(0, 8)} &middot; {item.target_type}/{item.target_id} &middot; {formatDate(item.created_at)}
                   </p>
                 </div>

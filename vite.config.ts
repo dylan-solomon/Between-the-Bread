@@ -21,6 +21,11 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    proxy: {
+      '/api': { target: 'https://betweenbread.co', changeOrigin: true },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

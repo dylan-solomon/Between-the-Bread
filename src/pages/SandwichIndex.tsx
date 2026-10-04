@@ -220,11 +220,11 @@ export default function SandwichIndex() {
           ))}
         </fieldset>
       </div>
-      <p className="mt-2 text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
+      <p className="mt-2 text-xs text-neutral-500">{DIETARY_DISCLAIMER}</p>
 
       <div className="mt-8">
         {status === 'loading' && (
-          <div role="status" aria-label="Loading sandwiches" className="text-center text-neutral-400">Loading…</div>
+          <div role="status" aria-label="Loading sandwiches" className="text-center text-neutral-500">Loading…</div>
         )}
 
         {status === 'error' && (

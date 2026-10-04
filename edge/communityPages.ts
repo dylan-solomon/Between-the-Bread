@@ -105,7 +105,7 @@ const sandwichHtml = (sandwich: CommunitySandwich): string => {
     ingredientList(sandwich.composition),
     badges === ''
       ? ''
-      : `<div><ul class="flex flex-wrap gap-2">${badges}</ul><p class="mt-2 text-xs text-neutral-400">${escapeHtml(DIETARY_DISCLAIMER)}</p></div>`,
+      : `<div><ul class="flex flex-wrap gap-2">${badges}</ul><p class="mt-2 text-xs text-neutral-500">${escapeHtml(DIETARY_DISCLAIMER)}</p></div>`,
     '</div></div>',
     '</div>',
   ].join('')
@@ -180,7 +180,7 @@ const filters = (): string =>
         `<label class="flex items-center gap-1 text-sm text-neutral-700"><input type="checkbox" />${escapeHtml(filterLabel)}</label>`,
     ).join(''),
     '</fieldset></div>',
-    `<p class="mt-2 text-xs text-neutral-400">${escapeHtml(DIETARY_DISCLAIMER)}</p>`,
+    `<p class="mt-2 text-xs text-neutral-500">${escapeHtml(DIETARY_DISCLAIMER)}</p>`,
   ].join('')
 
 const leaderboardHtml = ({ items, totalCount }: CommunityPage): string =>

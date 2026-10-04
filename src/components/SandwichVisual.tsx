@@ -12,7 +12,7 @@ export default function SandwichVisual({ composition, size = 'regular' }: Props)
   if (composition === null) {
     return (
       <div className="flex h-48 overflow-hidden items-center justify-center">
-        <p className="font-display italic text-neutral-400">
+        <p className="font-display italic text-neutral-500">
           Roll the dice to build your sandwich…
         </p>
       </div>

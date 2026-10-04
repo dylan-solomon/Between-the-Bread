@@ -116,7 +116,7 @@ function Info({ entry, categoryNames }: { entry: SandwichEntry; categoryNames: M
               )
             })}
           </ul>
-          <p className="mt-2 text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
+          <p className="mt-2 text-xs text-neutral-500">{DIETARY_DISCLAIMER}</p>
         </div>
       )}
 
@@ -174,7 +174,7 @@ export default function SandwichDetail() {
   if (state.status === 'loading') {
     return (
       <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-label="Loading sandwich">
-        <div className="text-neutral-400">Loading…</div>
+        <div className="text-neutral-500">Loading…</div>
       </div>
     )
   }

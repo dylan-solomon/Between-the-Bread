@@ -116,7 +116,7 @@ export default function SummaryCard({ composition, isRolling = false, costDataLa
 
           <p
             data-testid="cost-disclaimer"
-            className="text-xs text-neutral-400"
+            className="text-xs text-neutral-500"
           >
             Estimated pricing is approximate. {DISCLAIMER_TEXT[costContext]} Pricing data last updated: {costDataLastUpdated}.
           </p>

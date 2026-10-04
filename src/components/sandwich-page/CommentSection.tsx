@@ -171,7 +171,7 @@ export default function CommentSection({ targetType, slug, targetId }: Props) {
           {comments.map((comment) => (
             <li key={comment.id} className="py-3">
               <AuthorName username={comment.username} isAdmin={comment.author_is_admin} />
-              <p className="text-xs text-neutral-400">{formatDate(comment.created_at)}</p>
+              <p className="text-xs text-neutral-500">{formatDate(comment.created_at)}</p>
               <p className="mt-1 text-sm text-neutral-700">{comment.body}</p>
               {renderActions(comment)}
 
@@ -198,7 +198,7 @@ export default function CommentSection({ targetType, slug, targetId }: Props) {
                   {comment.replies.map((reply) => (
                     <li key={reply.id}>
                       <AuthorName username={reply.username} isAdmin={reply.author_is_admin} />
-                      <p className="text-xs text-neutral-400">{formatDate(reply.created_at)}</p>
+                      <p className="text-xs text-neutral-500">{formatDate(reply.created_at)}</p>
                       <p className="mt-1 text-sm text-neutral-700">{reply.body}</p>
                       {renderActions(reply)}
                     </li>

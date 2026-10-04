@@ -92,7 +92,7 @@ export default function BlogPost() {
   if (state.status === 'loading') {
     return (
       <div className="mx-auto max-w-[720px] px-4 py-12">
-        <div role="status" aria-label="Loading post" className="text-center text-neutral-400">Loading…</div>
+        <div role="status" aria-label="Loading post" className="text-center text-neutral-500">Loading…</div>
       </div>
     )
   }

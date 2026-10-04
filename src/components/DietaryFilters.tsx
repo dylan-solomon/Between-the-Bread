@@ -29,7 +29,7 @@ export default function DietaryFilters({ activeTags, onToggle }: Props) {
           )
         })}
       </div>
-      <p className="mt-2 text-center text-xs text-neutral-400">{DIETARY_DISCLAIMER}</p>
+      <p className="mt-2 text-center text-xs text-neutral-500">{DIETARY_DISCLAIMER}</p>
     </div>
   )
 }

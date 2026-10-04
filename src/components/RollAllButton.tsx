@@ -14,7 +14,7 @@ export default function RollAllButton({ hasRolled, isRolling, disabled = false, 
       type="button"
       onClick={onClick}
       disabled={isRolling || disabled}
-      className={`w-full rounded-full bg-primary py-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 ${pulse ? 'animate-pulse' : ''}`}
+      className={`w-full rounded-full bg-primary py-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 ${pulse ? 'animate-glow' : ''}`}
     >
       {label}
     </button>

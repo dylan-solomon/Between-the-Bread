@@ -152,6 +152,7 @@ describe('Blog posts in the first response', () => {
     const root = rootContent(await pageFor('/blog/vegan-builds', post))
 
     expect(root).toMatch(/<header[^>]*>/)
+    expect(root).toMatch(/<a href="\/"[^>]*>Between the Bread<\/a><nav aria-label="Main"/)
     expect(root).toMatch(/<a href="\/sandwiches"[^>]*>Sandwiches<\/a>/)
     expect(root).toMatch(/<a href="\/community"[^>]*>Community<\/a>/)
     expect(root).toMatch(/<a href="\/blog"[^>]*>Blog<\/a>/)

@@ -93,6 +93,19 @@ describe('UsernameProvider for someone without a username', () => {
     expect(screen.getByTestId('needs')).toHaveTextContent('true')
   })
 
+  it('puts the cursor in the username box and keeps keyboard focus inside', async () => {
+    signedIn()
+    const user = userEvent.setup()
+    renderAt()
+    await screen.findByRole('dialog', { name: 'Pick a username' })
+
+    await waitFor(() => { expect(screen.getByLabelText('Username')).toHaveFocus() })
+    await user.tab({ shift: true })
+    expect(screen.getByRole('button', { name: 'Later' })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByLabelText('Username')).toHaveFocus()
+  })
+
   it('saves the chosen username and stops asking', async () => {
     signedIn()
     const user = userEvent.setup()
